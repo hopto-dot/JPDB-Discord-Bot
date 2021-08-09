@@ -8,15 +8,22 @@ namespace DiscordBot
         {
             Console.ForegroundColor = ConsoleColor.White;
             Bot bot = new Bot();
-            try 
+            try
             {
                 bot.RunAsync().GetAwaiter().GetResult();
-            } catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.ToString());
-                Console.ForegroundColor = ConsoleColor.White;
             }
+            catch (Exception ex)
+            {
+                Program.PrintError(ex.ToString());
+            }
+            bot.
+        }
+
+        public static void PrintError(string error)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(error);
+            Console.ForegroundColor = ConsoleColor.White;
         }
     }
 }

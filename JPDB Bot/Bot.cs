@@ -27,15 +27,32 @@ namespace DiscordBot
             Console.WriteLine("Reading config file...");
             var json = string.Empty;
 
-            using (var fs = File.OpenRead("config.json"))
+            try
             {
-                using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
+                using (var fs = File.OpenRead("config.json"))
                 {
-                    json = await sr.ReadToEndAsync().ConfigureAwait(false);
+                    using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
+                    {
+                        json = await sr.ReadToEndAsync().ConfigureAwait(false);
 
+                    }
                 }
+            } catch
+            {
+                Program.PrintError("Couldn't read config.json");
             }
-            var configJson = JsonConvert.DeserializeObject<ConfigJson>(json);
+            
+
+            ConfigJson configJson;
+            try
+            {
+                configJson = JsonConvert.DeserializeObject<ConfigJson>(json);
+            } catch
+            {
+                Program.PrintError("Couldn't deserialize config.json");
+                return;
+            }
+            
 
             Console.WriteLine("Setting config...");
             DiscordConfiguration config;
@@ -43,7 +60,7 @@ namespace DiscordBot
             {
                 config = new DiscordConfiguration
                 {
-                    Token = configJson.Token,
+                    Token = configJson.DiscordToken,
                     TokenType = TokenType.Bot,
                     AutoReconnect = true,
                     MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Warning,
@@ -53,7 +70,7 @@ namespace DiscordBot
             {
                 config = new DiscordConfiguration
                 {
-                    Token = configJson.Token,
+                    Token = configJson.DiscordToken,
                     TokenType = TokenType.Bot,
                     AutoReconnect = true,
                     MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug,
@@ -79,6 +96,7 @@ namespace DiscordBot
             Commands.RegisterCommands<TestCommands>();
             await Client.ConnectAsync();
             await Task.Delay(-1);
+            
         }
         private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
@@ -86,19 +104,5 @@ namespace DiscordBot
             return Task.CompletedTask;
         }
 
-        public async Task ScanSubreddit(string inLast)
-        {
-            WebClient WebClient = new WebClient();
-            string HTML = "";
-            //int snipIndex = -1;
-            WebClient.Encoding = System.Text.Encoding.UTF8;
-
-            HTML = WebClient.DownloadString(new Uri("https://www.google.co.uk/search?q=%22jap%22+site:reddit.com/r/learnjapanese&source=lnt&tbs=qdr:m&sa=X&ved=2ahUKEwjRw9nf_qHyAhWsQEEAHa9cCEYQpwV6BAgBECM&biw=1536&bih=722"));
-            HTML = HTML.Substring(HTML.IndexOf("div class=\"yuRUbf\""));
-
-            //Client.GetChannelAsync(873903350771515414).SendMessageAsync("Message");
-
-            await Task.Delay(0);
-        }
     }
 }

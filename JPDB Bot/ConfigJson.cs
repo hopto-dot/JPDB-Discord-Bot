@@ -9,11 +9,11 @@ namespace DiscordBot
 {
     struct ConfigJson
     {
-        [JsonProperty("token")]
-        public string Token { get; private set; }
-        [JsonProperty("prefix")]
+        [JsonProperty("DiscordToken")]
+        public string DiscordToken { get; private set; }
+        [JsonProperty("Prefix")]
         public string Prefix { get; private set; }
-
-
+        [JsonProperty("JPDBToken")]
+        public string JPDBToken { get; private set; }
     }
 }
