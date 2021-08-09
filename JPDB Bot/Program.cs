@@ -16,7 +16,6 @@ namespace DiscordBot
             {
                 Program.PrintError(ex.ToString());
             }
-            bot.
         }
 
         public static void PrintError(string error)

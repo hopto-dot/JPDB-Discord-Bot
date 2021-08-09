@@ -12,6 +12,7 @@ namespace DiscordBot.Commands
     public class TestCommands : BaseCommandModule
     {
         [Command("hi")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Get a nice response")]
         public async Task hi(CommandContext ctx)
         {
@@ -27,42 +28,43 @@ namespace DiscordBot.Commands
             
         }
 
-        [Command("content")]
+        [Command("changelog")]
         [Cooldown(2, 10, CooldownBucketType.User)]
+        [Description("Get a nice response")]
+        public async Task changeLog(CommandContext ctx)
+        {
+            Console.WriteLine(ctx.User.Username + " <- Hello");
+            if (ctx.Member.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster"))
+            {
+                await ctx.Channel.SendMessageAsync("Hello " + ctx.User.Username + "様 :)").ConfigureAwait(false);
+            }
+            else
+            {
+                await ctx.Channel.SendMessageAsync("Hello " + ctx.User.Username + "").ConfigureAwait(false);
+            }
+
+        }
+
+        [Command("content")]
+        [Cooldown(3, 10, CooldownBucketType.User)]
         [DSharpPlus.CommandsNext.Attributes.Hidden]
         [Description("Search for content in the JPDB database\nFor example: !content \"steins gate\"")]
         public async Task content(CommandContext ctx, [DescriptionAttribute("Name of the content you are searching")] string searchString)
+
+
         {
             Console.WriteLine(ctx.User.Username + " <- Searching for " + searchString + "...");
-            await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
+            //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
 
 
             WebClient Client = new WebClient();
             Client.Encoding = System.Text.Encoding.UTF8;
             string HTML = "";
             int snipIndex = -1;
-            //int pageStart = 0;
-            //int pageEnd = 50;
 
             string OriginalFilter = "anime";
             bool ScrapeKanji = false;
-            // If Strings.Left(cbbSearchType.Text, 1) = "K" Then
-            // ScrapeKanji = True
-            // End If
-
-            //if (NovelLink.Contains("https://") == false)
-            //{
-            //    SearchDecks("All", "Difficulty", Form1.cbSearchReverse.Checked, "", Form1.SearchPageIndex);
-            //    return;
-            //}
-
-            //if (NovelLink.Contains("/vocabulary-list") == false)
-            //    HTML = Form1.LinkGet(NovelLink);
-            //else
-            //{
-            //    HTML = NovelLink;
-            //    HTML = HTML.Replace("?sort_by=by-frequency-local", "").Replace("?sort_by=chronological", "").Replace("?sort_by=by-frequency-global", "").Replace("&show_only=new", "").Replace("&offset=50", "").Replace("&offset=100", "").Replace("#a", "");
-            //}
+            
 
             if (HTML.Length > 250) return;
 
@@ -85,12 +87,13 @@ namespace DiscordBot.Commands
                     pageDone = true;
                 }
 
-                // debug.WriteLine("-- " & pageInterval & " --")
-
                 snipIndex = HTML.IndexOf("30rem;\">") + 8;
+            if (snipIndex == 7)
+            {
+                await ctx.RespondAsync("No content found UwU").ConfigureAwait(false);
+                return;
+            }
                 wordTemp = HTML.Substring(snipIndex);
-                // snipIndex = HTML.IndexOf("#a") + 2
-                // HTML = Mid(HTML, snipIndex)
                 HTML = wordTemp;
 
                 snipIndex = wordTemp.IndexOf("<");
