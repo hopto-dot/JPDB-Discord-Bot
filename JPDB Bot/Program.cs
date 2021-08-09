@@ -6,8 +6,17 @@ namespace DiscordBot
     {
         static void Main(string[] args)
         {
+            Console.ForegroundColor = ConsoleColor.White;
             Bot bot = new Bot();
-            bot.RunAsync().GetAwaiter().GetResult();
+            try 
+            {
+                bot.RunAsync().GetAwaiter().GetResult();
+            } catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.ToString());
+                Console.ForegroundColor = ConsoleColor.White;
+            }
         }
     }
 }
