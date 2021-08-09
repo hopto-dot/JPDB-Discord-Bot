@@ -18,12 +18,12 @@ namespace DiscordBot
         public CommandsNextExtension Commands { get; private set; }
         public async Task RunAsync()
         {
-            Console.WriteLine("Would you like to enable debug logging (y/n)");
+            //Console.WriteLine("Would you like to enable debug logging (y/n)");
             bool debug = false;
-            if (Console.ReadLine().Contains("y") == true)
+            /*if (Console.ReadLine().Contains("y") == true)
             {
                 debug = true;
-            }
+            }*/
             Console.WriteLine("Reading config file...");
             var json = string.Empty;
 
@@ -53,8 +53,6 @@ namespace DiscordBot
                 return;
             }
             
-
-            Console.WriteLine("Setting config...");
             DiscordConfiguration config;
             if (debug == false)
             {
@@ -76,8 +74,8 @@ namespace DiscordBot
                     MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug,
                 };
             }
-            
 
+            Console.WriteLine("Connecting bot...");
             Client = new DiscordClient(config);
             Client.Ready += Client_Ready;
             //Client.MessageCreated

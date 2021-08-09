@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 
 namespace DiscordBot.Commands
 {
@@ -19,35 +20,51 @@ namespace DiscordBot.Commands
             Console.WriteLine(ctx.User.Username + " <- Hello");
             if (ctx.Member.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster"))
             {
-                await ctx.Channel.SendMessageAsync("Hello " + ctx.User.Username + "様 :)").ConfigureAwait(false);
+                await ctx.RespondAsync("Hello " + ctx.User.Username + "様 :)").ConfigureAwait(false);
             }
             else
             {
-                await ctx.Channel.SendMessageAsync("Hello " + ctx.User.Username + "").ConfigureAwait(false);
+                await ctx.RespondAsync("Hello " + ctx.User.Username + "").ConfigureAwait(false);
             }
             
         }
 
         [Command("changelog")]
-        [Cooldown(2, 10, CooldownBucketType.User)]
-        [Description("Get a nice response")]
+        [Cooldown(1, 20, CooldownBucketType.User)]
+        [Description("Shows the latest addition to the changelog")]
         public async Task changeLog(CommandContext ctx)
         {
-            Console.WriteLine(ctx.User.Username + " <- Hello");
-            if (ctx.Member.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster"))
-            {
-                await ctx.Channel.SendMessageAsync("Hello " + ctx.User.Username + "様 :)").ConfigureAwait(false);
-            }
-            else
-            {
-                await ctx.Channel.SendMessageAsync("Hello " + ctx.User.Username + "").ConfigureAwait(false);
-            }
+            string Date = String.Empty;
 
+            /*WebClient Client = new WebClient();
+            Client.Encoding = System.Text.Encoding.UTF8;
+            string HTML = "";
+            string sniptemp = string.Empty;
+            HTML = Client.DownloadString(new Uri("https://jpdb.io/changelog"));
+            int snipIndex = HTML.IndexOf("<h5 id=") + 8;
+            HTML = HTML.Substring(snipIndex);
+            snipIndex = HTML.IndexOf(">") + 1;
+            HTML = HTML.Substring(snipIndex);
+
+            sniptemp = HTML;
+            snipIndex = sniptemp.IndexOf("<");
+            sniptemp = sniptemp.Substring(0, snipIndex);
+
+            var changelogEmbed = new discordembed*/
+
+            HtmlWeb web = new HtmlWeb();
+            var htmlDoc = web.Load("https://jpdb.io/changelog");
+            string ChangeDate = htmlDoc.DocumentNode.SelectNodes("/html/body/div[2]/h5[1]")
+    .First()
+    .InnerHtml;
+            string Information = htmlDoc.DocumentNode.SelectNodes("/html/body/div[2]/h5[1]").First().NextSibling.InnerHtml;
+
+            await ctx.RespondAsync(ChangeDate).ConfigureAwait(false);
+            Console.WriteLine(ctx.User.Username + " <- " + ChangeDate + " (Changelog)");
         }
 
         [Command("content")]
         [Cooldown(3, 10, CooldownBucketType.User)]
-        [DSharpPlus.CommandsNext.Attributes.Hidden]
         [Description("Search for content in the JPDB database\nFor example: !content \"steins gate\"")]
         public async Task content(CommandContext ctx, [DescriptionAttribute("Name of the content you are searching")] string searchString)
 
