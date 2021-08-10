@@ -1,5 +1,6 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Interactivity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using DSharpPlus.Interactivity.Extensions;
 
 namespace DiscordBot.Commands
 {
@@ -110,6 +112,20 @@ namespace DiscordBot.Commands
                 }
             }
             await ctx.RespondAsync(Output).ConfigureAwait(false);
+        }
+
+        [Command("guessgame")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Description("Check the time in Japan")]
+        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your JPDB username")] string player1)
+        {
+            await ctx.RespondAsync("Respond with *confirm* to continue.");
+            var result = await ctx.Message.GetNextMessageAsync(m =>
+            {
+                return m.Content.ToLower() == "confirm";
+            });
+
+            if (!result.TimedOut) await ctx.RespondAsync("Action confirmed.");
         }
 
         [Command("changelog")]

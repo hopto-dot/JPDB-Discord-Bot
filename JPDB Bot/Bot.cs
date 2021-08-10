@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Interactivity;
 using System;
 using System.Collections.Generic;
 using System.IO;
