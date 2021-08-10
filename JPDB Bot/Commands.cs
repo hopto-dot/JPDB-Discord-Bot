@@ -115,8 +115,9 @@ namespace DiscordBot.Commands
         }
 
         [Command("guessgame")]
-        [Cooldown(2, 10, CooldownBucketType.User)]
-        [Description("Check the time in Japan")]
+        [Cooldown(1, 20, CooldownBucketType.User)]
+        [Hidden()]
+        [Description("Play a guessing game with another person")]
         public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your JPDB username")] string player1)
         {
             await ctx.RespondAsync("Respond with *confirm* to continue.");
@@ -280,14 +281,14 @@ namespace DiscordBot.Commands
             DateTimeOffset localServerTime = DateTimeOffset.Now;
             DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
             String TimeInJapan = localTime.ToString("dd/MM/yyyy HH:mm:ss");
-            if (localTime.Hour > 21 || localTime.Hour < 5)
+            var Kou = await ctx.Client.GetUserAsync(399993082806009856);
+            if ((localTime.Hour > 21 || localTime.Hour < 5) && Kou.Presence.Status != DSharpPlus.Entities.UserStatus.Offline)
             {
-                await ctx.RespondAsync("日本: " + TimeInJapan + "\nこう is up late working on JPDB for us all <3").ConfigureAwait(false);
+                await ctx.RespondAsync("日本: " + TimeInJapan + $"\n{Kou.Username} is up last working on JPDB for us all <3").ConfigureAwait(false);
             } else
             {
                 await ctx.RespondAsync("日本: " + TimeInJapan).ConfigureAwait(false);
             }
-            Console.WriteLine(ctx.User.Username + " <- japanetime");
         }
     }
 

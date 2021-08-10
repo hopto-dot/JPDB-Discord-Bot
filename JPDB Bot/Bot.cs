@@ -63,7 +63,7 @@ namespace DiscordBot
                     TokenType = TokenType.Bot,
                     AutoReconnect = true,
                     MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Warning,
-
+                    Intents = DiscordIntents.All,
                 };
             } else
             {
@@ -73,6 +73,7 @@ namespace DiscordBot
                     TokenType = TokenType.Bot,
                     AutoReconnect = true,
                     MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug,
+                    Intents = DiscordIntents.All,
                 };
             }
 
