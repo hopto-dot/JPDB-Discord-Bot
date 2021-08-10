@@ -14,19 +14,102 @@ namespace DiscordBot.Commands
     {
         [Command("hi")]
         [Cooldown(2, 10, CooldownBucketType.User)]
-        [Description("Get a nice response")]
+        [Description("Get a nice (or bad) response")]
         public async Task hi(CommandContext ctx)
         {
             Console.WriteLine(ctx.User.Username + " <- Hello");
+            Random random = new Random();
+            int randomInt = random.Next(1, 16);
+            string Output = string.Empty;
             if (ctx.Member.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster"))
             {
-                await ctx.RespondAsync("Hello " + ctx.User.Username + "様 :)").ConfigureAwait(false);
+                switch (randomInt)
+                {
+                    case 1:
+                        goto case 7;
+                    case 2:
+                        goto case 7;
+                    case 3:
+                        goto case 7;
+                    case 4:
+                        goto case 7;
+                    case 5:
+                        Output = "Hi " + ctx.User.Username + "様, I can speak English too ya know >:)";
+                        break;
+                    case 6:
+                        goto case 11;
+                    case 7:
+                        Output = "どうも、" + ctx.User.Username + "様 :)";
+                        break;
+                    case 8:
+                        Output = "どうも、" + ctx.User.Username + "様 ;)";
+                        break;
+                    case 9:
+                        Output = "よおおおおおおおぉ " + ctx.User.Username + "様！ :)";
+                        break;
+                    case 10:
+                        goto case 11;
+                    case 11:
+                        Output = "また会えて嬉しいね " + ctx.User.Username + "様 :)";
+                        break;
+                    case 12:
+                        Output = "やっほおおおおおお～ " + ctx.User.Username + "様 :)";
+                        break;
+                    case 13:
+                        Output = "おおおおっす! " + ctx.User.Username + "様 :)";
+                        break;
+                    case 14:
+                        Output = "ハロオオオ " + ctx.User.Username + "様！ :)";
+                        break;
+                    case 15:
+                        Output = "へっ！なんかあった？" + ctx.User.Username + "様 :O";
+                        break;
+                }
             }
             else
             {
-                await ctx.RespondAsync("Hello " + ctx.User.Username + "").ConfigureAwait(false);
+                switch (randomInt)
+                {
+                    case 1:
+                        goto case 7;
+                    case 2:
+                        goto case 7;
+                    case 3:
+                        goto case 7;
+                    case 4:
+                        goto case 7;
+                    case 5:
+                        goto case 7;
+                    case 6:
+                        goto case 11;
+                    case 7:
+                        Output = "どうも、" + ctx.User.Username + " :)";
+                        break;
+                    case 8:
+                        Output = "どうも、" + ctx.User.Username + " ;)";
+                        break;
+                    case 9:
+                        Output = "おいお前 JPDBの支援者になれ";
+                        break;
+                    case 10:
+                        goto case 12;
+                    case 11:
+                        goto case 12;
+                    case 12:
+                        Output = "元気はないんだなあ " + ctx.User.Username + "さん。JPDBを支援したら？うwう";
+                        break;
+                    case 13:
+                        Output = "おっす! " + ctx.User.Username + " :)";
+                        break;
+                    case 14:
+                        Output = "ハロー " + ctx.User.Username + "！ :)";
+                        break;
+                    case 15:
+                        Output = "へっ！なんかあった？" + ctx.User.Username + " :O";
+                        break;
+                }
             }
-            
+            await ctx.RespondAsync(Output).ConfigureAwait(false);
         }
 
         [Command("changelog")]
@@ -170,6 +253,25 @@ namespace DiscordBot.Commands
                 {
                 }
             }
+        }
+
+        [Command("japantime")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Description("Check the time in Japan")]
+        public async Task japantime(CommandContext ctx)
+        {
+            var info = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
+            DateTimeOffset localServerTime = DateTimeOffset.Now;
+            DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
+            String TimeInJapan = localTime.ToString("dd/MM/yyyy HH:mm:ss");
+            if (localTime.Hour > 21 || localTime.Hour < 5)
+            {
+                await ctx.RespondAsync("日本: " + TimeInJapan + "\nこう is up late working on JPDB for us all <3").ConfigureAwait(false);
+            } else
+            {
+                await ctx.RespondAsync("日本: " + TimeInJapan).ConfigureAwait(false);
+            }
+            Console.WriteLine(ctx.User.Username + " <- japanetime");
         }
     }
 
