@@ -118,15 +118,15 @@ namespace DiscordBot.Commands
             await ctx.RespondAsync(Output).ConfigureAwait(false);
         }
 
-        [Command("guessgame")]
-        [Cooldown(1, 20, CooldownBucketType.User)]
-        [Description("Play a word frequency guessing game against someone else")]
-        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your JPDB username")] string player1) //[DescriptionAttribute("Your JPDB username")] string player1
+        [Command("freqgame")]
+        [Cooldown(1, 10, CooldownBucketType.User)]
+        [Description("Play a game where you guess which word has the highest frequency")]
+        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string startPlayer)
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
 
             DiscordUser Player1 = ctx.Message.Author;
-            string User1 = player1;
+            string User1 = startPlayer;
 
             if  (ctx.User.Username != "JawGBoi")
             {
@@ -144,6 +144,7 @@ namespace DiscordBot.Commands
                 if (result.TimedOut)
                 {
                     await ctx.Channel.SendMessageAsync("Game timed out").ConfigureAwait(false);
+                    return;
                 } 
                 else if (result.Result.Author.Username == ctx.Message.Author.Username)
                 {
@@ -162,7 +163,7 @@ namespace DiscordBot.Commands
                 Description = $"{Player1.Username} ({User1}) 対 {Player2.Username} ({User2})",
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter {
-                    Text = "Who will win? :o",
+                    Text = "Currently, reactions don't do anything.",
                 }
             };
             await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
@@ -200,30 +201,108 @@ namespace DiscordBot.Commands
             }
 
 
-            //WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=" + User1 + "&user_2= " + User2);
-            WebRequest request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=1000&rank_at_most=100");
-            //request.Credentials = CredentialCache.DefaultCredentials
-            request.Method = "GET"; 
-            request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
-            
-            WebResponse response;
-            response = request.GetResponse();
-            Console.WriteLine((response as HttpWebResponse).StatusDescription);
 
-            //Get the stream containing content returned by the server.
-            Stream dataStream = response.GetResponseStream();
-            //Open the stream using a StreamReader for easy access.
-            StreamReader reader = new StreamReader(dataStream);
-            //Read the content.
-            String responseFromServer = reader.ReadToEnd();
-            //Display the content.
-            Console.WriteLine(responseFromServer);
-            //Clean up the streams and the response.
-            reader.Close();
-            response.Close();
-            //JsonArrayAttribute jsonResponse = JsonConvert.DeserializeObject<J>(responseFromServer);
-            JObject jsonServerResponse = JObject.Parse(responseFromServer);
-            Console.WriteLine("Parsed JSON response");
+
+            for (int round = 1; round <= 5; round ++)
+            {
+                //WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=AleMax&user_2=hou0bou");
+                WebRequest request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=3500&rank_at_most=400");
+                //request.Credentials = CredentialCache.DefaultCredentials
+                request.Method = "GET";
+                request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
+
+                WebResponse response;
+                response = request.GetResponse();
+                Console.WriteLine((response as HttpWebResponse).StatusDescription);
+
+                //Get the stream containing content returned by the server.
+                Stream dataStream = response.GetResponseStream();
+                //Open the stream using a StreamReader for easy access.
+                StreamReader reader = new StreamReader(dataStream);
+                //Read the content.
+                String responseFromServer = reader.ReadToEnd();
+                //Display the content.
+                Console.WriteLine(responseFromServer);
+                //Clean up the streams and the response.
+                reader.Close();
+                response.Close();
+                //JsonArrayAttribute jsonResponse = JsonConvert.DeserializeObject<J>(responseFromServer);
+                JObject jsonServerResponse = JObject.Parse(responseFromServer);
+                Console.WriteLine("Parsed JSON response");
+
+                await Task.Delay(1500);
+
+                Newtonsoft.Json.Linq.JToken token1 = jsonServerResponse.GetValue("word_1");
+                Newtonsoft.Json.Linq.JToken token2 = jsonServerResponse.GetValue("word_2");
+
+                Vocabulary Word1 = new Vocabulary
+                {
+                    vocabKanji = token1.SelectToken("spelling").ToString(),
+                    vocabReading = token1.SelectToken("reading").ToString(),
+                    vocabFreq = token1.SelectToken("rank").ToObject<int>(),
+                    //vocabMeaning = token1.SelectToken("spelling").ToObject<String []>(),
+                };
+                Vocabulary Word2 = new Vocabulary
+                {
+                    vocabKanji = token2.SelectToken("spelling").ToString(),
+                    vocabReading = token2.SelectToken("reading").ToString(),
+                    vocabFreq = token2.SelectToken("rank").ToObject<int>(),
+                    //vocabMeaning = token2.SelectToken("spelling").ToObject<String[]>(),
+                };
+                Console.WriteLine("Parsed words.");
+
+
+                ////////////////////////END OF API////////////////////////
+
+
+                Random randomInt = new Random();
+                int p1Points = 0; int p2Points = 0;
+                int ranInt = randomInt.Next(1, 3);
+                switch (ranInt)
+                {
+                    case 1:
+                        gameEmbed = new DiscordEmbedBuilder
+                        {
+                            Title = "Which word has a higher frequency?",
+                            Description = $"1 = {Word1.vocabKanji}\n2 = {Word2.vocabKanji}",
+                            Color = DiscordColor.Red,
+                            Footer = new DiscordEmbedBuilder.EmbedFooter
+                            {
+                                Text = $"{Player1.Username}: {p1Points} points\n{Player2.Username}: {p2Points} points",
+                            }
+                        };
+
+                        var interactivity = ctx.Client.GetInteractivity();
+                        var questionMessage = await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
+
+                        await questionMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client ,":one:"));
+                        await questionMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":two:"));
+
+                        //await Task.Delay(3000);
+
+                        var reactionResult = await interactivity.CollectReactionsAsync(questionMessage, TimeSpan.FromSeconds(3));
+                        var distinctResult = reactionResult.Distinct();
+
+                        
+
+
+                        if (Math.Min(Word1.vocabFreq, Word2.vocabFreq) == Word1.vocabFreq)
+                        {
+                            await ctx.Channel.SendMessageAsync($"The answer was 1 ({Word1.vocabKanji}) with a frequency of {Word1.vocabFreq}").ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            await ctx.Channel.SendMessageAsync($"The answer was 2 ({Word2.vocabKanji}) with a frequency of {Word2.vocabFreq}").ConfigureAwait(false);
+                        }
+
+                        await Task.Delay(2500);
+
+                        break;
+                    case 2:
+                        goto case 1;
+                        //break;
+                }
+            }
 
 
 
