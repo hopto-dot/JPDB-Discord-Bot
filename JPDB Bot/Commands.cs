@@ -11,6 +11,7 @@ using HtmlAgilityPack;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Entities;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace DiscordBot.Commands
 {
@@ -126,6 +127,11 @@ namespace DiscordBot.Commands
             DiscordUser Player1 = ctx.Message.Author;
             string User1 = player1;
 
+            if  (ctx.User.Username != "JawGBoi")
+            {
+                await ctx.RespondAsync("The game is being tested right now").ConfigureAwait(false);
+            }
+
             await ctx.Channel.SendMessageAsync($"Type \"!participate [username]\" to play with {ctx.User.Username}").ConfigureAwait(false);
 
             DSharpPlus.Interactivity.InteractivityResult<DSharpPlus.Entities.DiscordMessage> result;
@@ -160,27 +166,59 @@ namespace DiscordBot.Commands
             };
             await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
 
-        WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=" + User1 + "&user_2= " + User2);
-        //request.Credentials = CredentialCache.DefaultCredentials
-        request.Headers["Authorization"] = "Bearer ";
-        
-        WebResponse response;
-        response = request.GetResponse();
-        Console.WriteLine((response as HttpWebResponse).StatusDescription);
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Reading config file...");
+            var json = string.Empty;
 
-        //Get the stream containing content returned by the server.
-        Stream dataStream = response.GetResponseStream();
-        //Open the stream using a StreamReader for easy access.
-        StreamReader reader = new StreamReader(dataStream);
-        //Read the content.
-        String responseFromServer = reader.ReadToEnd();
-        //Display the content.
-        Console.WriteLine(responseFromServer);
-        //Clean up the streams and the response.
-        reader.Close();
-        response.Close();
+            try
+            {
+                using (var fs = File.OpenRead("config.json"))
+                {
+                    using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
+                    {
+                        json = await sr.ReadToEndAsync().ConfigureAwait(false);
+
+                    }
+                }
+            }
+            catch
+            {
+                Program.PrintError("Couldn't read config.json");
+                return;
+            }
+
+            ConfigJson configJson;
+            try
+            {
+                configJson = JsonConvert.DeserializeObject<ConfigJson>(json);
+            }
+            catch
+            {
+                Program.PrintError("Couldn't deserialize config.json");
+                return;
+            }
 
 
+            WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=" + User1 + "&user_2= " + User2);
+            //request.Credentials = CredentialCache.DefaultCredentials
+            request.Method = "GET"; 
+            request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
+            
+            WebResponse response;
+            response = request.GetResponse();
+            Console.WriteLine((response as HttpWebResponse).StatusDescription);
+
+            //Get the stream containing content returned by the server.
+            Stream dataStream = response.GetResponseStream();
+            //Open the stream using a StreamReader for easy access.
+            StreamReader reader = new StreamReader(dataStream);
+            //Read the content.
+            String responseFromServer = reader.ReadToEnd();
+            //Display the content.
+            Console.WriteLine(responseFromServer);
+            //Clean up the streams and the response.
+            reader.Close();
+            response.Close();
 
 
         }
@@ -256,6 +294,7 @@ namespace DiscordBot.Commands
             catch (Exception ex)
             {
                 pageDone = true;
+                return;
             }
 
             snipIndex = HTML.IndexOf("30rem;\">") + 8;
@@ -291,6 +330,7 @@ namespace DiscordBot.Commands
                 }
             catch (Exception ex)
                 {
+                    return;
                 }
             }
 

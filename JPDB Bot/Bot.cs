@@ -31,14 +31,13 @@ namespace DiscordBot
                     using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
                     {
                         json = await sr.ReadToEndAsync().ConfigureAwait(false);
-
                     }
                 }
             } catch
             {
                 Program.PrintError("Couldn't read config.json");
+                return;
             }
-
 
             ConfigJson configJson;
             try
@@ -74,7 +73,7 @@ namespace DiscordBot
             Client.UseInteractivity(new InteractivityConfiguration()
             {
                 PollBehaviour = PollBehaviour.KeepEmojis,
-                Timeout = TimeSpan.FromSeconds(30)
+                Timeout = TimeSpan.FromSeconds(10)
             });
             Client.Ready += Client_Ready;
 
