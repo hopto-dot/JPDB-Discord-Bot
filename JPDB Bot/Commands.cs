@@ -121,6 +121,10 @@ namespace DiscordBot.Commands
         public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your JPDB username")] string player1) //[DescriptionAttribute("Your JPDB username")] string player1
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+
+            DiscordUser Player1 = ctx.Message.Author;
+            string User1 = player1;
+
             await ctx.Channel.SendMessageAsync($"Type \"!participate [username]\" to play with {ctx.User.Username}").ConfigureAwait(false);
 
             DSharpPlus.Interactivity.InteractivityResult<DSharpPlus.Entities.DiscordMessage> result;
@@ -129,20 +133,31 @@ namespace DiscordBot.Commands
                 {
                     return (m.Content.ToLower()).Substring(0, 13) == "!participate ";
                 }).ConfigureAwait(false);
-            } while (result.Result.Author.Username == ctx.Message.Author.Username);
+                if (result.TimedOut)
+                {
+                    await ctx.Channel.SendMessageAsync("Game timed out").ConfigureAwait(false);
+                } 
+                else if (result.Result.Author.Username == ctx.Message.Author.Username)
+                {
+                    //await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
+                }
+                
+            } while (result.Result.Author.Username == ctx.Message.Author.Username && true == false);
 
-            if (result.Result.Author.Username == ctx.Message.Author.Username)
+            DiscordUser Player2 = result.Result.Author;
+            string User2 = result.Result.Content.Substring(13);
+            //await ctx.Channel.SendMessageAsync(User2);
+            //await ctx.RespondAsync($"{Player1.Username} ({User1}) 対 {Player2.Username} ({User2})").ConfigureAwait(false);
+            var gameEmbed = new DiscordEmbedBuilder
             {
-                await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
-            }
-
-            if (!result.TimedOut)
-            {
-                await ctx.RespondAsync($"{result.Result.Author.Username} 対 {ctx.Message.Author.Username}").ConfigureAwait(false);
-            } else
-            {
-                await ctx.Channel.SendMessageAsync("Game timed out").ConfigureAwait(false);
-            }
+                Title = "Guessing game",
+                Description = $"{Player1.Username} ({User1}) 対 {Player2.Username} ({User2})",
+                Color = DiscordColor.Red,
+                Footer = new DiscordEmbedBuilder.EmbedFooter {
+                    Text = "Who will win? :o",
+                }
+            };
+            await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
         }
 
         [Command("changelog")]

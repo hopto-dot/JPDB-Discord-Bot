@@ -8,14 +8,8 @@ namespace DiscordBot
         {
             Console.ForegroundColor = ConsoleColor.White;
             Bot bot = new Bot();
-            try
-            {
-                bot.RunAsync().GetAwaiter().GetResult();
-            }
-            catch (Exception ex)
-            {
-                Program.PrintError("[" + DateTime.Now + "] " + ex.ToString());
-            }
+
+            bot.RunAsync().GetAwaiter().GetResult();
         }
 
         public static void PrintError(string error)
