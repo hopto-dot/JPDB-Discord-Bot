@@ -38,7 +38,7 @@ namespace DiscordBot.Commands
                     case 3:
                         goto case 7;
                     case 4:
-                        goto case 7;
+                        goto case 15;
                     case 5:
                         Output = "Hi " + ctx.User.Username + "様, I can speak English too ya know >:)";
                         break;
@@ -83,11 +83,11 @@ namespace DiscordBot.Commands
                     case 3:
                         goto case 7;
                     case 4:
-                        goto case 7;
-                    case 5:
-                        goto case 7;
-                    case 6:
                         goto case 11;
+                    case 5:
+                        goto case 12;
+                    case 6:
+                        goto case 14;
                     case 7:
                         Output = "どうも、" + ctx.User.Username + " :)";
                         break;
@@ -121,49 +121,89 @@ namespace DiscordBot.Commands
         [Command("freqgame")]
         [Cooldown(1, 10, CooldownBucketType.User)]
         [Description("Play a game where you guess which word has the highest frequency")]
-        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string startPlayer)
+        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string startPlayer, [DescriptionAttribute("Easy|Medium|Hard|Extreme|Godmode (Medium by default)")] string difficulty = "medium")
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+
+            int minFreq; int maxFreq; double answerTime = 3;
+            difficulty = difficulty.ToLower();
+            switch (difficulty)
+            {
+                case "easy":
+                    minFreq = 100;
+                    maxFreq = 1500;
+                    answerTime = 4;
+                    difficulty = "Easy";
+                    break;
+                case "medium":
+                    minFreq = 2000;
+                    maxFreq = 3500;
+                    answerTime = 3.5;
+                    difficulty = "Medium";
+                    break;
+                case "hard":
+                    minFreq = 5500;
+                    maxFreq = 7000;
+                    difficulty = "Hard";
+                    break;
+                case "extreme":
+                    minFreq = 7000;
+                    maxFreq = 9000;
+                    answerTime = 2.6;
+                    difficulty = "Extreme";
+                    break;
+                case "godmode":
+                    minFreq = 15000;
+                    maxFreq = 25000;
+                    answerTime = 2.2;
+                    difficulty = "Extreme";
+                    break;
+                default:
+                    goto case "medium";
+            }
 
             DiscordUser Player1 = ctx.Message.Author;
             string User1 = startPlayer;
 
-            if  (ctx.User.Username != "JawGBoi")
-            {
-                await ctx.RespondAsync("The game is being tested right now").ConfigureAwait(false);
-            }
-
             await ctx.Channel.SendMessageAsync($"Type \"!participate [username]\" to play with {ctx.User.Username}").ConfigureAwait(false);
 
             DSharpPlus.Interactivity.InteractivityResult<DSharpPlus.Entities.DiscordMessage> result;
-            do {
-                result = await ctx.Channel.GetNextMessageAsync(m =>
+            try
+            {
+                do
                 {
-                    return (m.Content.ToLower()).Substring(0, 13) == "!participate ";
-                }).ConfigureAwait(false);
-                if (result.TimedOut)
-                {
-                    await ctx.Channel.SendMessageAsync("Game timed out").ConfigureAwait(false);
-                    return;
-                } 
-                else if (result.Result.Author.Username == ctx.Message.Author.Username)
-                {
-                    //await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
-                }
-                
-            } while (result.Result.Author.Username == ctx.Message.Author.Username && true == false);
+                    result = await ctx.Channel.GetNextMessageAsync(m =>
+                    {
+                        return (m.Content.ToLower()).Substring(0, 13) == "!participate ";
+                    }).ConfigureAwait(false);
+                    if (result.TimedOut)
+                    {
+                        await ctx.Channel.SendMessageAsync("Game timed out").ConfigureAwait(false);
+                        return;
+                    }
+                    else if (result.Result.Author.Username == ctx.Message.Author.Username)
+                    {
+                        //await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
+                    }
 
+                } while (result.Result.Author.Username == ctx.Message.Author.Username && true == false);
+            } catch
+            {
+                await ctx.Channel.SendMessageAsync("Game timed out.").ConfigureAwait(false);
+                return;
+            }
+            
             DiscordUser Player2 = result.Result.Author;
             string User2 = result.Result.Content.Substring(13);
             //await ctx.Channel.SendMessageAsync(User2);
             //await ctx.RespondAsync($"{Player1.Username} ({User1}) 対 {Player2.Username} ({User2})").ConfigureAwait(false);
             var gameEmbed = new DiscordEmbedBuilder
             {
-                Title = "Guessing game",
+                Title = $"Guessing game ({difficulty})",
                 Description = $"{Player1.Username} ({User1}) 対 {Player2.Username} ({User2})",
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter {
-                    Text = "Currently, reactions don't do anything.",
+                    Text = "Currently, reactions and usernames don't do anything.",
                 }
             };
             await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
@@ -206,7 +246,7 @@ namespace DiscordBot.Commands
             for (int round = 1; round <= 5; round ++)
             {
                 //WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=AleMax&user_2=hou0bou");
-                WebRequest request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=3500&rank_at_most=400");
+                WebRequest request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=" + maxFreq + "&rank_at_most=" + minFreq);
                 //request.Credentials = CredentialCache.DefaultCredentials
                 request.Method = "GET";
                 request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
@@ -230,7 +270,7 @@ namespace DiscordBot.Commands
                 JObject jsonServerResponse = JObject.Parse(responseFromServer);
                 Console.WriteLine("Parsed JSON response");
 
-                await Task.Delay(1500);
+                await Task.Delay(1400);
 
                 Newtonsoft.Json.Linq.JToken token1 = jsonServerResponse.GetValue("word_1");
                 Newtonsoft.Json.Linq.JToken token2 = jsonServerResponse.GetValue("word_2");
@@ -280,7 +320,7 @@ namespace DiscordBot.Commands
 
                         //await Task.Delay(3000);
 
-                        var reactionResult = await interactivity.CollectReactionsAsync(questionMessage, TimeSpan.FromSeconds(3));
+                        var reactionResult = await interactivity.CollectReactionsAsync(questionMessage, TimeSpan.FromSeconds(answerTime));
                         var distinctResult = reactionResult.Distinct();
 
                         
@@ -288,11 +328,11 @@ namespace DiscordBot.Commands
 
                         if (Math.Min(Word1.vocabFreq, Word2.vocabFreq) == Word1.vocabFreq)
                         {
-                            await ctx.Channel.SendMessageAsync($"The answer was 1 ({Word1.vocabKanji}) with a frequency of {Word1.vocabFreq}").ConfigureAwait(false);
+                            await ctx.Channel.SendMessageAsync($"The answer was 1 ({Word1.vocabKanji}) with a frequency of {Word1.vocabFreq} while {Word2.vocabKanji} was {Word2.vocabFreq}").ConfigureAwait(false);
                         }
                         else
                         {
-                            await ctx.Channel.SendMessageAsync($"The answer was 2 ({Word2.vocabKanji}) with a frequency of {Word2.vocabFreq}").ConfigureAwait(false);
+                            await ctx.Channel.SendMessageAsync($"The answer was 2 ({Word2.vocabKanji}) with a frequency of {Word2.vocabFreq} while {Word1.vocabKanji} was {Word1.vocabFreq}").ConfigureAwait(false);
                         }
 
                         await Task.Delay(2500);
