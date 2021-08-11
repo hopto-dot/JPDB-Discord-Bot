@@ -12,6 +12,7 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Entities;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace DiscordBot.Commands
 {
@@ -199,7 +200,8 @@ namespace DiscordBot.Commands
             }
 
 
-            WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=" + User1 + "&user_2= " + User2);
+            //WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=" + User1 + "&user_2= " + User2);
+            WebRequest request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=1000&rank_at_most=100");
             //request.Credentials = CredentialCache.DefaultCredentials
             request.Method = "GET"; 
             request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
@@ -219,6 +221,10 @@ namespace DiscordBot.Commands
             //Clean up the streams and the response.
             reader.Close();
             response.Close();
+            //JsonArrayAttribute jsonResponse = JsonConvert.DeserializeObject<J>(responseFromServer);
+            JObject jsonServerResponse = JObject.Parse(responseFromServer);
+            Console.WriteLine("Parsed JSON response");
+
 
 
         }
@@ -350,7 +356,7 @@ namespace DiscordBot.Commands
             var Kou = await ctx.Client.GetUserAsync(118408957416046593);
             if ((localTime.Hour > 21 || localTime.Hour < 5) && Kou.Presence.Status != DSharpPlus.Entities.UserStatus.Offline)
             {
-                await ctx.RespondAsync("日本: " + TimeInJapan + $"\n{Kou.Username} is up last working on JPDB for us all <3").ConfigureAwait(false);
+                await ctx.RespondAsync("日本: " + TimeInJapan + $"\n{Kou.Username} is up late working on JPDB for us all <3").ConfigureAwait(false);
             } else
             {
                 await ctx.RespondAsync("日本: " + TimeInJapan).ConfigureAwait(false);
