@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using DiscordBot.Commands;
 using System.Net;
+using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Interactivity.Enums;
 
 namespace DiscordBot
 {
@@ -69,6 +71,11 @@ namespace DiscordBot
 
             Console.WriteLine("Connecting bot...");
             Client = new DiscordClient(config);
+            Client.UseInteractivity(new InteractivityConfiguration()
+            {
+                PollBehaviour = PollBehaviour.KeepEmojis,
+                Timeout = TimeSpan.FromSeconds(30)
+            });
             Client.Ready += Client_Ready;
 
             var commandsConfig = new CommandsNextConfiguration

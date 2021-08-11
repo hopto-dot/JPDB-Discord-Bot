@@ -118,15 +118,31 @@ namespace DiscordBot.Commands
         [Command("guessgame")]
         [Cooldown(1, 20, CooldownBucketType.User)]
         [Description("Play a word frequency guessing game against someone else")]
-        public async Task guessgame(CommandContext ctx, DiscordMember member) //[DescriptionAttribute("Your JPDB username")] string player1
+        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your JPDB username")] string player1) //[DescriptionAttribute("Your JPDB username")] string player1
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
-            var emoji = DiscordEmoji.FromName(ctx.Client, ":ok_hand:");
-            var message = await ctx.RespondAsync($"{member.Mention}, react with {emoji}.");
+            await ctx.Channel.SendMessageAsync($"Type \"!participate [username]\" to play with {ctx.User.Username}").ConfigureAwait(false);
 
-            var result = await message.WaitForReactionAsync(member, emoji);
+            DSharpPlus.Interactivity.InteractivityResult<DSharpPlus.Entities.DiscordMessage> result;
+            do {
+                result = await ctx.Channel.GetNextMessageAsync(m =>
+                {
+                    return (m.Content.ToLower()).Substring(0, 13) == "!participate ";
+                }).ConfigureAwait(false);
+            } while (result.Result.Author.Username == ctx.Message.Author.Username);
 
-            if (!result.TimedOut) await ctx.RespondAsync("Thank you!");
+            if (result.Result.Author.Username == ctx.Message.Author.Username)
+            {
+                await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
+            }
+
+            if (!result.TimedOut)
+            {
+                await ctx.RespondAsync($"{result.Result.Author.Username} 対 {ctx.Message.Author.Username}").ConfigureAwait(false);
+            } else
+            {
+                await ctx.Channel.SendMessageAsync("Game timed out").ConfigureAwait(false);
+            }
         }
 
         [Command("changelog")]
