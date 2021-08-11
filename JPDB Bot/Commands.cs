@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using HtmlAgilityPack;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Entities;
+using System.IO;
 
 namespace DiscordBot.Commands
 {
@@ -158,6 +159,30 @@ namespace DiscordBot.Commands
                 }
             };
             await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
+
+        WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=" + User1 + "&user_2= " + User2);
+        //request.Credentials = CredentialCache.DefaultCredentials
+        request.Headers["Authorization"] = "Bearer ";
+        
+        WebResponse response;
+        response = request.GetResponse();
+        Console.WriteLine((response as HttpWebResponse).StatusDescription);
+
+        //Get the stream containing content returned by the server.
+        Stream dataStream = response.GetResponseStream();
+        //Open the stream using a StreamReader for easy access.
+        StreamReader reader = new StreamReader(dataStream);
+        //Read the content.
+        String responseFromServer = reader.ReadToEnd();
+        //Display the content.
+        Console.WriteLine(responseFromServer);
+        //Clean up the streams and the response.
+        reader.Close();
+        response.Close();
+
+
+
+
         }
 
         [Command("changelog")]
