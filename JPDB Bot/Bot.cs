@@ -19,12 +19,6 @@ namespace DiscordBot
         public CommandsNextExtension Commands { get; private set; }
         public async Task RunAsync()
         {
-            //Console.WriteLine("Would you like to enable debug logging (y/n)");
-            bool debug = false;
-            /*if (Console.ReadLine().Contains("y") == true)
-            {
-                debug = true;
-            }*/
             Console.WriteLine("Reading config file...");
             var json = string.Empty;
 
@@ -42,7 +36,7 @@ namespace DiscordBot
             {
                 Program.PrintError("Couldn't read config.json");
             }
-            
+
 
             ConfigJson configJson;
             try
@@ -54,33 +48,28 @@ namespace DiscordBot
                 return;
             }
             
-            DiscordConfiguration config;
-            if (debug == false)
+            Microsoft.Extensions.Logging.LogLevel LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Warning;
+            if (configJson.LogLevel.ToLower() == "debug")
             {
-                config = new DiscordConfiguration
-                {
-                    Token = configJson.DiscordToken,
-                    TokenType = TokenType.Bot,
-                    AutoReconnect = true,
-                    MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Warning,
-                    Intents = DiscordIntents.All,
-                };
-            } else
-            {
-                config = new DiscordConfiguration
-                {
-                    Token = configJson.DiscordToken,
-                    TokenType = TokenType.Bot,
-                    AutoReconnect = true,
-                    MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug,
-                    Intents = DiscordIntents.All,
-                };
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Debug logging enabled.");
+                Console.ForegroundColor = ConsoleColor.White;
+                LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Debug;
             }
+            DiscordConfiguration config;
+            
+            config = new DiscordConfiguration
+            {
+                Token = configJson.DiscordToken,
+                TokenType = TokenType.Bot,
+                AutoReconnect = true,
+                MinimumLogLevel = LoggingLevel,
+                Intents = DiscordIntents.All,
+            };
 
             Console.WriteLine("Connecting bot...");
             Client = new DiscordClient(config);
             Client.Ready += Client_Ready;
-            //Client.MessageCreated
 
             var commandsConfig = new CommandsNextConfiguration
             {
@@ -100,7 +89,9 @@ namespace DiscordBot
         }
         private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
-            Console.WriteLine("JPDB Bot is ready.");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("JPDB Bot is online.");
+            Console.ForegroundColor = ConsoleColor.White;
             return Task.CompletedTask;
         }
 

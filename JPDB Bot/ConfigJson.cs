@@ -15,5 +15,7 @@ namespace DiscordBot
         public string Prefix { get; private set; }
         [JsonProperty("JPDBToken")]
         public string JPDBToken { get; private set; }
+        [JsonProperty("LogLevel")]
+        public string LogLevel { get; private set; }
     }
 }

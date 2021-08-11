@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Entities;
 
 namespace DiscordBot.Commands
 {
@@ -19,7 +20,7 @@ namespace DiscordBot.Commands
         [Description("Get a nice (or bad) response")]
         public async Task hi(CommandContext ctx)
         {
-            Console.WriteLine(ctx.User.Username + " <- Hello");
+            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             Random random = new Random();
             int randomInt = random.Next(1, 16);
             string Output = string.Empty;
@@ -116,17 +117,16 @@ namespace DiscordBot.Commands
 
         [Command("guessgame")]
         [Cooldown(1, 20, CooldownBucketType.User)]
-        [Hidden()]
-        [Description("Play a guessing game with another person")]
-        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your JPDB username")] string player1)
+        [Description("Play a word frequency guessing game against someone else")]
+        public async Task guessgame(CommandContext ctx, DiscordMember member) //[DescriptionAttribute("Your JPDB username")] string player1
         {
-            await ctx.RespondAsync("Respond with *confirm* to continue.");
-            var result = await ctx.Message.GetNextMessageAsync(m =>
-            {
-                return m.Content.ToLower() == "confirm";
-            });
+            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+            var emoji = DiscordEmoji.FromName(ctx.Client, ":ok_hand:");
+            var message = await ctx.RespondAsync($"{member.Mention}, react with {emoji}.");
 
-            if (!result.TimedOut) await ctx.RespondAsync("Action confirmed.");
+            var result = await message.WaitForReactionAsync(member, emoji);
+
+            if (!result.TimedOut) await ctx.RespondAsync("Thank you!");
         }
 
         [Command("changelog")]
@@ -134,6 +134,7 @@ namespace DiscordBot.Commands
         [Description("Shows the latest addition to the changelog")]
         public async Task changeLog(CommandContext ctx)
         {
+            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             string Date = String.Empty;
 
             /*WebClient Client = new WebClient();
@@ -160,7 +161,6 @@ namespace DiscordBot.Commands
             string Information = htmlDoc.DocumentNode.SelectNodes("/html/body/div[2]/h5[1]").First().NextSibling.InnerHtml;
 
             await ctx.RespondAsync(ChangeDate).ConfigureAwait(false);
-            Console.WriteLine(ctx.User.Username + " <- " + ChangeDate + " (Changelog)");
         }
 
         [Command("content")]
@@ -170,7 +170,7 @@ namespace DiscordBot.Commands
 
 
         {
-            Console.WriteLine(ctx.User.Username + " <- Searching for " + searchString + "...");
+            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
 
 
@@ -192,84 +192,53 @@ namespace DiscordBot.Commands
             string wordTemp = "";
             string URL = "";
             List<string> wordIDs = new List<string>() { };
-            // "?sort_by=by-frequency-local&offset="
+            URL = "https://jpdb.io/prebuilt_decks?q=" + searchString;
+            try
+            {
+                HTML = Client.DownloadString(new Uri(URL));
+            }
+            catch (Exception ex)
+            {
+                pageDone = true;
+            }
 
-                URL = "https://jpdb.io/prebuilt_decks?q=" + searchString;
-                try
-                {
-                    HTML = Client.DownloadString(new Uri(URL));
-                }
-                catch (Exception ex)
-                {
-                    pageDone = true;
-                }
+            snipIndex = HTML.IndexOf("30rem;\">") + 8;
 
-                snipIndex = HTML.IndexOf("30rem;\">") + 8;
             if (snipIndex == 7)
             {
                 await ctx.RespondAsync("No content found UwU").ConfigureAwait(false);
                 return;
             }
-                wordTemp = HTML.Substring(snipIndex);
-                HTML = wordTemp;
+            wordTemp = HTML.Substring(snipIndex);
+            HTML = wordTemp;
 
-                snipIndex = wordTemp.IndexOf("<");
-                HTML = wordTemp.Substring(snipIndex);
-                string contentName = wordTemp.Substring(0, snipIndex);
+            snipIndex = wordTemp.IndexOf("<");
+            HTML = wordTemp.Substring(snipIndex);
+            string contentName = wordTemp.Substring(0, snipIndex);
 
-                snipIndex = HTML.IndexOf("margin-top: 0.5rem;\">") + 22;
-                wordTemp = HTML.Substring(snipIndex);
-                snipIndex = wordTemp.IndexOf("/") + 1;
-                wordTemp = wordTemp.Substring(snipIndex);
-                snipIndex = wordTemp.IndexOf("\"");
-                wordTemp = "https://jpdb.io/" + wordTemp.Substring(0, snipIndex);
+            snipIndex = HTML.IndexOf("margin-top: 0.5rem;\">") + 22;
+            wordTemp = HTML.Substring(snipIndex);
+            snipIndex = wordTemp.IndexOf("/") + 1;
+            wordTemp = wordTemp.Substring(snipIndex);
+            snipIndex = wordTemp.IndexOf("\"");
+            wordTemp = "https://jpdb.io/" + wordTemp.Substring(0, snipIndex);
 
             await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
 
             int Frequency = 1;
-                    //if (Form1.PreserveFreq == true)
-                    //{
-                    //    // snipping to start of frequency
-                    //    snipIndex = HTML.IndexOf("opacity: 0.5; margin-top: 1rem") + 34;
-                    //    if (snipIndex == 33)
-                    //        goto SkipFreq;
-                    //    HTML = Strings.Mid(HTML, snipIndex);
-
-                    //    // getting frequency
-                    //    snipIndex = HTML.IndexOf("<");
-                    //    Frequency = Strings.Left(HTML, snipIndex);
-
-                    //    HTML = Strings.Mid(HTML, snipIndex);
-                    //}
-                    //SkipFreq:
-
-
-                    if (wordTemp.Contains(">") == false && wordTemp.Contains("<") == false & wordTemp.Contains("=") == false & wordTemp.Contains("-") == false)
-                    {
-                        try
-                        {
-                            for (var I = 1; I <= Frequency; I++)
-                                wordIDs.Add(wordTemp);
-                        }
-                        catch (Exception ex)
-                        {
-                        }
-                    }
-
-                    snipIndex = HTML.IndexOf("#a") + 3;
-
-
-            // If Form1.cbbSearchType.Text = "Kanji" Then
-            // Form1.ExtractKanji(wordIDs)
-            // Return
-            // End If
-
-            if (wordIDs.Count > 1)
-            {
-                if (ScrapeKanji == false)
+            if (wordTemp.Contains(">") == false && wordTemp.Contains("<") == false & wordTemp.Contains("=") == false & wordTemp.Contains("-") == false)
+                {
+            try
+                {
+                for (var I = 1; I <= Frequency; I++)
+                wordIDs.Add(wordTemp);
+                }
+            catch (Exception ex)
                 {
                 }
             }
+
+                    snipIndex = HTML.IndexOf("#a") + 3;
         }
 
         [Command("japantime")]
@@ -277,11 +246,12 @@ namespace DiscordBot.Commands
         [Description("Check the time in Japan")]
         public async Task japantime(CommandContext ctx)
         {
+            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             var info = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
             DateTimeOffset localServerTime = DateTimeOffset.Now;
             DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
             String TimeInJapan = localTime.ToString("dd/MM/yyyy HH:mm:ss");
-            var Kou = await ctx.Client.GetUserAsync(399993082806009856);
+            var Kou = await ctx.Client.GetUserAsync(118408957416046593);
             if ((localTime.Hour > 21 || localTime.Hour < 5) && Kou.Presence.Status != DSharpPlus.Entities.UserStatus.Offline)
             {
                 await ctx.RespondAsync("日本: " + TimeInJapan + $"\n{Kou.Username} is up last working on JPDB for us all <3").ConfigureAwait(false);

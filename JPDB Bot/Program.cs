@@ -14,7 +14,7 @@ namespace DiscordBot
             }
             catch (Exception ex)
             {
-                Program.PrintError(ex.ToString());
+                Program.PrintError("[" + DateTime.Now + "] " + ex.ToString());
             }
         }
 
@@ -24,5 +24,12 @@ namespace DiscordBot
             Console.WriteLine(error);
             Console.ForegroundColor = ConsoleColor.White;
         }
+        public static void PrintCommandUse(string user, string command)
+        {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine($"[{DateTime.Now}] {user}: {command}");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
     }
 }
