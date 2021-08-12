@@ -8,21 +8,7 @@ namespace DiscordBot
         {
             Console.ForegroundColor = ConsoleColor.White;
             Bot bot = new Bot();
-
-            try
-            {
-                bot.RunAsync().GetAwaiter().GetResult();
-            } catch
-            {
-                try
-                {
-                    bot.RunAsync().GetAwaiter().GetResult();
-                } catch
-                {
-                    bot.RunAsync().GetAwaiter().GetResult();
-                }
-                
-            }
+            bot.RunAsync().GetAwaiter().GetResult();
             
         }
 

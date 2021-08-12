@@ -120,7 +120,7 @@ namespace DiscordBot.Commands
 
         [Command("freqgame")]
         [Cooldown(1, 10, CooldownBucketType.User)]
-        [Description("Play a game where you guess which word has the highest frequency")]
+        [Description("Play a game where you guess which word is more frequent")]
         public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string startPlayer, [DescriptionAttribute("Easy|Medium|Hard|Extreme|Godmode (Medium by default)")] string difficulty = "medium")
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
@@ -132,31 +132,32 @@ namespace DiscordBot.Commands
                 case "easy":
                     minFreq = 100;
                     maxFreq = 1500;
-                    answerTime = 4;
+                    answerTime = 5;
                     difficulty = "Easy";
                     break;
                 case "medium":
                     minFreq = 2000;
                     maxFreq = 3500;
-                    answerTime = 3.5;
+                    answerTime = 5;
                     difficulty = "Medium";
                     break;
                 case "hard":
                     minFreq = 5500;
                     maxFreq = 7000;
+                    answerTime = 4.5;
                     difficulty = "Hard";
                     break;
                 case "extreme":
                     minFreq = 7000;
                     maxFreq = 9000;
-                    answerTime = 2.6;
+                    answerTime = 4;
                     difficulty = "Extreme";
                     break;
                 case "godmode":
                     minFreq = 15000;
                     maxFreq = 25000;
-                    answerTime = 2.2;
-                    difficulty = "Extreme";
+                    answerTime = 3;
+                    difficulty = "Godmode";
                     break;
                 default:
                     goto case "medium";
@@ -242,18 +243,41 @@ namespace DiscordBot.Commands
 
 
 
-
-            for (int round = 1; round <= 5; round ++)
+            int p1Points = 0; int p2Points = 0;
+            for (int round = 1; round <= 3; round ++)
             {
-                //WebRequest request = WebRequest.Create($"https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=AleMax&user_2=hou0bou");
-                WebRequest request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=" + maxFreq + "&rank_at_most=" + minFreq);
+                
+                WebRequest request;
+                //request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=spectaku&user_2=alemax");
+                request =  WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=" + maxFreq + "&rank_at_most=" + minFreq);
                 //request.Credentials = CredentialCache.DefaultCredentials
                 request.Method = "GET";
                 request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
 
-                WebResponse response;
-                response = request.GetResponse();
-                Console.WriteLine((response as HttpWebResponse).StatusDescription);
+                HttpWebResponse response = null;
+                try
+                {
+                    response = (HttpWebResponse)request.GetResponse();
+                } catch (WebException e)
+                {
+                    //var eresponse = ((HttpWebResponse)e.Response);
+                    //var someheader = response.Headers["X-API-ERROR"];
+                    //// check header
+
+                    //if (e.Status == WebExceptionStatus.ProtocolError)
+                    //{
+                    //    // protocol errors find the statuscode in the Response
+                    //    // the enum statuscode can be cast to an int.
+                    //    int code = (int)((HttpWebResponse)e.Response).StatusCode;
+                    //    string content;
+                    //    var ereader = new StreamReader(e.Response.GetResponseStream());
+                    //    content = ereader.ReadToEnd();
+                    //}
+                    //// do what ever you want to store and return to your callers
+                    return;
+                }
+
+                Console.WriteLine(response.StatusDescription);
 
                 //Get the stream containing content returned by the server.
                 Stream dataStream = response.GetResponseStream();
@@ -270,19 +294,19 @@ namespace DiscordBot.Commands
                 JObject jsonServerResponse = JObject.Parse(responseFromServer);
                 Console.WriteLine("Parsed JSON response");
 
-                await Task.Delay(1400);
+                await Task.Delay(1000);
 
                 Newtonsoft.Json.Linq.JToken token1 = jsonServerResponse.GetValue("word_1");
                 Newtonsoft.Json.Linq.JToken token2 = jsonServerResponse.GetValue("word_2");
 
-                Vocabulary Word1 = new Vocabulary
+                Vocabulary wordA = new Vocabulary
                 {
                     vocabKanji = token1.SelectToken("spelling").ToString(),
                     vocabReading = token1.SelectToken("reading").ToString(),
                     vocabFreq = token1.SelectToken("rank").ToObject<int>(),
                     //vocabMeaning = token1.SelectToken("spelling").ToObject<String []>(),
                 };
-                Vocabulary Word2 = new Vocabulary
+                Vocabulary wordB = new Vocabulary
                 {
                     vocabKanji = token2.SelectToken("spelling").ToString(),
                     vocabReading = token2.SelectToken("reading").ToString(),
@@ -295,57 +319,119 @@ namespace DiscordBot.Commands
                 ////////////////////////END OF API////////////////////////
 
 
-                Random randomInt = new Random();
-                int p1Points = 0; int p2Points = 0;
-                int ranInt = randomInt.Next(1, 3);
-                switch (ranInt)
+                gameEmbed = new DiscordEmbedBuilder
                 {
-                    case 1:
-                        gameEmbed = new DiscordEmbedBuilder
+                    Title = "Which word is more frequent?",
+                    Description = $"A = {wordA.vocabKanji} ({wordA.vocabReading})\nB = {wordB.vocabKanji} ({wordB.vocabReading})",
+                    Color = DiscordColor.Red,
+                    Footer = new DiscordEmbedBuilder.EmbedFooter
+                    {
+                        Text = $"{Player1.Username}: {p1Points} points\n{Player2.Username}: {p2Points} points",
+                    }
+                };
+
+                var interactivity = ctx.Client.GetInteractivity();
+                var questionMessage = await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
+
+                await questionMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":regional_indicator_a:"));
+                await questionMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":regional_indicator_b:"));
+
+                //await Task.Delay(3000);
+
+                var reactionResult = await interactivity.CollectReactionsAsync(questionMessage, TimeSpan.FromSeconds(answerTime));
+                var distinctResult = reactionResult.ToArray();
+                string player1Choice = "0"; string player2Choice = "0";
+
+                foreach (var Reaction in distinctResult.ToArray())
+                {
+                    if (Reaction.Emoji.Name == "🇦")
+                    {   
+                        foreach (var User in Reaction.Users.ToArray()) //loop through all the users who've reacted with A
                         {
-                            Title = "Which word has a higher frequency?",
-                            Description = $"1 = {Word1.vocabKanji}\n2 = {Word2.vocabKanji}",
-                            Color = DiscordColor.Red,
-                            Footer = new DiscordEmbedBuilder.EmbedFooter
+                            if (User.Username == Player1.Username) {
+                                if (player1Choice != "0") //if player1 has voted on both options
+                                {
+                                    player1Choice = "-1";
+                                }
+                                else
+                                {
+                                    player1Choice = "A";
+                                }
+                            } 
+                            else if (User.Username == Player2.Username)
                             {
-                                Text = $"{Player1.Username}: {p1Points} points\n{Player2.Username}: {p2Points} points",
+                                if (player2Choice != "0") //if player2 has voted on both options
+                                {
+                                    player2Choice = "-1"; 
+                                }
+                                else
+                                {
+                                    player2Choice = "A";
+                                }
                             }
-                        };
-
-                        var interactivity = ctx.Client.GetInteractivity();
-                        var questionMessage = await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
-
-                        await questionMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client ,":one:"));
-                        await questionMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":two:"));
-
-                        //await Task.Delay(3000);
-
-                        var reactionResult = await interactivity.CollectReactionsAsync(questionMessage, TimeSpan.FromSeconds(answerTime));
-                        var distinctResult = reactionResult.Distinct();
-
-                        
-
-
-                        if (Math.Min(Word1.vocabFreq, Word2.vocabFreq) == Word1.vocabFreq)
-                        {
-                            await ctx.Channel.SendMessageAsync($"The answer was 1 ({Word1.vocabKanji}) with a frequency of {Word1.vocabFreq} while {Word2.vocabKanji} was {Word2.vocabFreq}").ConfigureAwait(false);
                         }
-                        else
+                    }
+                    else if (Reaction.Emoji.Name == "🇧") //loop through all the users who've reacted with A
+                    {
+                        foreach (var User in Reaction.Users.ToArray()) //loop through all the users who've reacted with A
                         {
-                            await ctx.Channel.SendMessageAsync($"The answer was 2 ({Word2.vocabKanji}) with a frequency of {Word2.vocabFreq} while {Word1.vocabKanji} was {Word1.vocabFreq}").ConfigureAwait(false);
+                            if (User.Username == Player1.Username)
+                            {
+                                if (player1Choice != "0") //if player1 has voted on both options
+                                {
+                                    player1Choice = "-1";
+                                }
+                                else
+                                {
+                                    player1Choice = "B";
+                                }
+                            }
+                            else if (User.Username == Player2.Username)
+                            {
+                                if (player2Choice != "0") //if player2 has voted on both options
+                                {
+                                    player2Choice = "-1";
+                                }
+                                else
+                                {
+                                    player2Choice = "B";
+                                }
+                            }
                         }
-
-                        await Task.Delay(2500);
-
-                        break;
-                    case 2:
-                        goto case 1;
-                        //break;
+                    }
                 }
+
+                if (Math.Min(wordA.vocabFreq, wordB.vocabFreq) == wordA.vocabFreq)
+                {
+                    if (player1Choice == "A")
+                    {
+                        p1Points++;
+                        await ctx.Channel.SendMessageAsync($"{Player1.Username} was correct!");
+                    }
+                    if (player2Choice == "A")
+                    {
+                        p2Points++;
+                        await ctx.Channel.SendMessageAsync($"{Player2.Username} was correct!");
+                    }
+                    await ctx.Channel.SendMessageAsync($"The answer was A ({wordA.vocabKanji}) with a frequency of {wordA.vocabFreq} while {wordB.vocabKanji} was {wordB.vocabFreq}").ConfigureAwait(false);
+                }
+                else
+                {
+                    if (player1Choice == "B")
+                    {
+                        p1Points++;
+                        await ctx.Channel.SendMessageAsync($"{Player1.Username} was correct!");
+                    }
+                    if (player2Choice == "B")
+                    {
+                        p2Points++;
+                        await ctx.Channel.SendMessageAsync($"{Player2.Username} was correct!");
+                    }
+                    await ctx.Channel.SendMessageAsync($"The answer was B ({wordB.vocabKanji}) with a frequency of {wordB.vocabFreq} while {wordA.vocabKanji} was {wordA.vocabFreq}").ConfigureAwait(false);
+                }
+
+                await Task.Delay(4500);
             }
-
-
-
         }
 
         [Command("changelog")]
@@ -398,16 +484,11 @@ namespace DiscordBot.Commands
             string HTML = "";
             int snipIndex = -1;
 
-            string OriginalFilter = "anime";
-            bool ScrapeKanji = false;
-            
+            string OriginalFilter = string.Empty;
+            OriginalFilter = "anime";
 
             if (HTML.Length > 250) return;
 
-            int snipIndex2 = -1;
-
-            bool pageDone = false;
-            int pageInterval = 0;
             string wordTemp = "";
             string URL = "";
             List<string> wordIDs = new List<string>() { };
@@ -418,7 +499,7 @@ namespace DiscordBot.Commands
             }
             catch (Exception ex)
             {
-                pageDone = true;
+                Program.PrintError(ex.Message);
                 return;
             }
 
@@ -455,6 +536,7 @@ namespace DiscordBot.Commands
                 }
             catch (Exception ex)
                 {
+                    Program.PrintError(ex.Message);
                     return;
                 }
             }
