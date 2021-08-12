@@ -144,19 +144,19 @@ namespace DiscordBot.Commands
                 case "hard":
                     minFreq = 5500;
                     maxFreq = 7000;
-                    answerTime = 4.5;
+                    answerTime = 5;
                     difficulty = "Hard";
                     break;
                 case "extreme":
                     minFreq = 7000;
                     maxFreq = 9000;
-                    answerTime = 4;
+                    answerTime = 4.5;
                     difficulty = "Extreme";
                     break;
                 case "godmode":
                     minFreq = 15000;
                     maxFreq = 25000;
-                    answerTime = 3;
+                    answerTime = 3.5;
                     difficulty = "Godmode";
                     break;
                 default:
@@ -175,7 +175,13 @@ namespace DiscordBot.Commands
                 {
                     result = await ctx.Channel.GetNextMessageAsync(m =>
                     {
-                        return (m.Content.ToLower()).Substring(0, 13) == "!participate ";
+                        if (m.Content.ToLower().Length > 13)
+                        {
+                            return (m.Content.ToLower()).Substring(0, 13) == "!participate ";
+                        } else
+                        {
+                            return false;
+                        }
                     }).ConfigureAwait(false);
                     if (result.TimedOut)
                     {
@@ -184,10 +190,10 @@ namespace DiscordBot.Commands
                     }
                     else if (result.Result.Author.Username == ctx.Message.Author.Username)
                     {
-                        //await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
+                        await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
                     }
 
-                } while (result.Result.Author.Username == ctx.Message.Author.Username && true == false);
+                } while (result.Result.Author.Username == ctx.Message.Author.Username);
             } catch
             {
                 await ctx.Channel.SendMessageAsync("Game timed out.").ConfigureAwait(false);
@@ -204,7 +210,7 @@ namespace DiscordBot.Commands
                 Description = $"{Player1.Username} ({User1}) 対 {Player2.Username} ({User2})",
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter {
-                    Text = "Currently, reactions and usernames don't do anything.",
+                    Text = "Currently, usernames don't do anything.",
                 }
             };
             await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
@@ -244,7 +250,7 @@ namespace DiscordBot.Commands
 
 
             int p1Points = 0; int p2Points = 0;
-            for (int round = 1; round <= 3; round ++)
+            for (int round = 1; round <= 5; round ++)
             {
                 
                 WebRequest request;
@@ -277,7 +283,7 @@ namespace DiscordBot.Commands
                     return;
                 }
 
-                Console.WriteLine(response.StatusDescription);
+                //Console.WriteLine(response.StatusDescription);
 
                 //Get the stream containing content returned by the server.
                 Stream dataStream = response.GetResponseStream();
@@ -413,6 +419,16 @@ namespace DiscordBot.Commands
                         p2Points++;
                         await ctx.Channel.SendMessageAsync($"{Player2.Username} was correct!");
                     }
+                    if (player1Choice == "0")
+                    {
+                        p1Points++;
+                        await ctx.Channel.SendMessageAsync($"{Player1.Username}, your answer can't be both!");
+                    }
+                    if (player2Choice == "0")
+                    {
+                        p2Points++;
+                        await ctx.Channel.SendMessageAsync($"{Player2.Username} your answer can't be both!");
+                    }
                     await ctx.Channel.SendMessageAsync($"The answer was A ({wordA.vocabKanji}) with a frequency of {wordA.vocabFreq} while {wordB.vocabKanji} was {wordB.vocabFreq}").ConfigureAwait(false);
                 }
                 else
@@ -427,11 +443,49 @@ namespace DiscordBot.Commands
                         p2Points++;
                         await ctx.Channel.SendMessageAsync($"{Player2.Username} was correct!");
                     }
+                    if (player1Choice == "0")
+                    {
+                        p1Points++;
+                        await ctx.Channel.SendMessageAsync($"{Player1.Username}, your answer can't be both!");
+                    }
+                    if (player2Choice == "0")
+                    {
+                        p2Points++;
+                        await ctx.Channel.SendMessageAsync($"{Player2.Username} your answer can't be both!");
+                    }
                     await ctx.Channel.SendMessageAsync($"The answer was B ({wordB.vocabKanji}) with a frequency of {wordB.vocabFreq} while {wordA.vocabKanji} was {wordA.vocabFreq}").ConfigureAwait(false);
                 }
 
-                await Task.Delay(4500);
+                if (round != 5)
+                {
+                    await Task.Delay(4500);
+                }
             }
+
+
+            string embedDesc = string.Empty;
+            if (p1Points > p2Points)
+            {
+                embedDesc = $"{Player1.Username} wins!";
+            } else if (p2Points > p1Points)
+            {
+                embedDesc = $"{Player2.Username} wins!";
+            } else
+            {
+                embedDesc = "It's a draw!";
+            }
+
+            gameEmbed = new DiscordEmbedBuilder
+            {
+                Title = "Game Results",
+                Description = embedDesc,
+                Color = DiscordColor.Red,
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    Text = $"{Player1.Username}: {p1Points} points\n{Player2.Username}: {p2Points} points",
+                }
+            };
+            await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
         }
 
         [Command("changelog")]
@@ -541,7 +595,7 @@ namespace DiscordBot.Commands
                 }
             }
 
-                    snipIndex = HTML.IndexOf("#a") + 3;
+            snipIndex = HTML.IndexOf("#a") + 3;
         }
 
         [Command("japantime")]
