@@ -10,4 +10,12 @@ namespace DiscordBot
         public int vocabFreq = -1;
     }
 
+    public class gamePlayer
+    {
+        public string username = string.Empty;
+        public string jpdbUsername = string.Empty;
+        public int points = 0;
+        public string choice = "0";
+    }
+
 }

@@ -73,7 +73,7 @@ namespace DiscordBot
             Client.UseInteractivity(new InteractivityConfiguration()
             {
                 PollBehaviour = PollBehaviour.KeepEmojis,
-                Timeout = TimeSpan.FromSeconds(25)
+                Timeout = TimeSpan.FromSeconds(30)
             });
             Client.Ready += Client_Ready;
 
@@ -100,6 +100,5 @@ namespace DiscordBot
             Console.ForegroundColor = ConsoleColor.White;
             return Task.CompletedTask;
         }
-
     }
 }

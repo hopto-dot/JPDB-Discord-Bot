@@ -121,53 +121,25 @@ namespace DiscordBot.Commands
         [Command("freqgame")]
         [Cooldown(1, 10, CooldownBucketType.User)]
         [Description("Play a game where you guess which word is more frequent")]
-        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string startPlayer, [DescriptionAttribute("Easy|Medium|Hard|Extreme|Godmode (Medium by default)")] string difficulty = "medium")
+        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string jpdbUser = "")
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
 
-            int minFreq; int maxFreq; double answerTime = 3;
-            difficulty = difficulty.ToLower();
-            switch (difficulty)
-            {
-                case "easy":
-                    minFreq = 100;
-                    maxFreq = 1500;
-                    answerTime = 5;
-                    difficulty = "Easy";
-                    break;
-                case "medium":
-                    minFreq = 2000;
-                    maxFreq = 3500;
-                    answerTime = 5;
-                    difficulty = "Medium";
-                    break;
-                case "hard":
-                    minFreq = 5500;
-                    maxFreq = 7000;
-                    answerTime = 5;
-                    difficulty = "Hard";
-                    break;
-                case "extreme":
-                    minFreq = 7000;
-                    maxFreq = 9000;
-                    answerTime = 4.5;
-                    difficulty = "Extreme";
-                    break;
-                case "godmode":
-                    minFreq = 15000;
-                    maxFreq = 25000;
-                    answerTime = 3.5;
-                    difficulty = "Godmode";
-                    break;
-                default:
-                    goto case "medium";
-            }
-
+            double answerTime = 4;
+ 
             DiscordUser Player1 = ctx.Message.Author;
-            string User1 = startPlayer;
+           
+            await ctx.Channel.SendMessageAsync($"Type \"!me [jpdb username]\" to play with {ctx.User.Username}, a jpdb username isn't required.\nType \"!start\" once you're all ready.");
+            //!quizgame t
+            bool gameReady = false;
+            List<gamePlayer> players = new List<gamePlayer>();
 
-            await ctx.Channel.SendMessageAsync($"Type \"!participate [username]\" to play with {ctx.User.Username}").ConfigureAwait(false);
-
+            gamePlayer newPlayer = new gamePlayer()
+            {
+                username = ctx.Message.Author.Username,
+                jpdbUsername = ctx.Message.Content.ToLower().Length > 9 ? ctx.Message.Content.ToLower().Substring(10) : string.Empty,
+            };
+            players.Add(newPlayer);
             DSharpPlus.Interactivity.InteractivityResult<DSharpPlus.Entities.DiscordMessage> result;
             try
             {
@@ -175,39 +147,104 @@ namespace DiscordBot.Commands
                 {
                     result = await ctx.Channel.GetNextMessageAsync(m =>
                     {
-                        if (m.Content.ToLower().Length > 13)
+
+                        foreach (gamePlayer player in players)
                         {
-                            return (m.Content.ToLower()).Substring(0, 13) == "!participate ";
-                        } else
+                            if (player.username == m.Author.Username && m.Content != "!start")
+                            {
+                                return false;
+                            }
+                            if (m.Content.Length > 4)
+                            {
+                                if (m.Content.ToLower().Substring(0, 4) == "!me ")
+                                {
+                                    if (m.Content.ToLower().Substring(4) == player.jpdbUsername)
+                                    {
+                                        return false;
+                                    }
+                                }
+                            }
+                        };
+
+                        if (m.Content == "!start")
                         {
+                            gameReady = true;
+                            return m.Content.ToLower() == "!start";
+                        }
+                        else if (m.Content.ToLower().Length == 3)
+                        {
+                            gamePlayer newPlayer = new gamePlayer()
+                            {
+                                username = m.Author.Username
+                            };
+                            players.Add(newPlayer);
+                            return m.Content.ToLower() == "!me";
+                        }
+                        else if (m.Content.ToLower().Length > 4)
+                        {
+                            if (m.Content.ToLower().Substring(0, 4) == "!me ")
+                            {
+                                gamePlayer newPlayer = new gamePlayer()
+                                {
+                                    username = m.Author.Username,
+                                    jpdbUsername = m.Content.ToLower().Substring(4),
+                                };
+                                players.Add(newPlayer);
+                                return m.Content.ToLower().Substring(5) == "!me ";
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                            
+                        } 
+                        else
+                        {
+                            gameReady = false;
                             return false;
                         }
                     }).ConfigureAwait(false);
+
                     if (result.TimedOut)
                     {
                         await ctx.Channel.SendMessageAsync("Game timed out").ConfigureAwait(false);
                         return;
                     }
-                    else if (result.Result.Author.Username == ctx.Message.Author.Username)
+                    foreach (gamePlayer Person in players)
                     {
-                        await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
+                        if (result.Result.Author.Username == Person.username && result.Result.Content != "!start")
+                        {
+                            await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
+                            gameReady = false;
+                        }
                     }
 
-                } while (result.Result.Author.Username == ctx.Message.Author.Username);
-            } catch
+                } while (gameReady == false);
+            }
+            catch
             {
                 await ctx.Channel.SendMessageAsync("Game timed out.").ConfigureAwait(false);
                 return;
             }
-            
-            DiscordUser Player2 = result.Result.Author;
-            string User2 = result.Result.Content.Substring(13);
+
             //await ctx.Channel.SendMessageAsync(User2);
-            //await ctx.RespondAsync($"{Player1.Username} ({User1}) 対 {Player2.Username} ({User2})").ConfigureAwait(false);
+            List<string> playerNames = new List<string>();
+            foreach (gamePlayer player in players)
+            {
+                string playerName = player.jpdbUsername;
+                if (playerName == "")
+                {
+                    playerName = "*No jpdb name*";
+                }
+                playerNames.Add(player.username + $" ({playerName})");
+            }
+
+            await ctx.Channel.SendMessageAsync($"{string.Join(" 対 ", playerNames)}").ConfigureAwait(false);
+
             var gameEmbed = new DiscordEmbedBuilder
             {
-                Title = $"Guessing game ({difficulty})",
-                Description = $"{Player1.Username} ({User1}) 対 {Player2.Username} ({User2})",
+                Title = $"Guessing game",
+                Description = $"Participants:\n"+ string.Join("\n", playerNames),
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter {
                     Text = "Currently, usernames don't do anything.",
@@ -248,14 +285,12 @@ namespace DiscordBot.Commands
             }
 
 
-
-            int p1Points = 0; int p2Points = 0;
             for (int round = 1; round <= 5; round ++)
             {
                 
-                WebRequest request;
+                WebRequest request; ///pick_words?count=2&spread=100&users=user1,user2,user3
                 //request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=spectaku&user_2=alemax");
-                request =  WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=" + maxFreq + "&rank_at_most=" + minFreq);
+                request = WebRequest.Create("https://jpdb.io/api/experimental/pick_words?count=2&spread=200");//&users=user1,user2,user3";
                 //request.Credentials = CredentialCache.DefaultCredentials
                 request.Method = "GET";
                 request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
@@ -264,22 +299,10 @@ namespace DiscordBot.Commands
                 try
                 {
                     response = (HttpWebResponse)request.GetResponse();
-                } catch (WebException e)
+                } 
+                catch (WebException e)
                 {
-                    //var eresponse = ((HttpWebResponse)e.Response);
-                    //var someheader = response.Headers["X-API-ERROR"];
-                    //// check header
-
-                    //if (e.Status == WebExceptionStatus.ProtocolError)
-                    //{
-                    //    // protocol errors find the statuscode in the Response
-                    //    // the enum statuscode can be cast to an int.
-                    //    int code = (int)((HttpWebResponse)e.Response).StatusCode;
-                    //    string content;
-                    //    var ereader = new StreamReader(e.Response.GetResponseStream());
-                    //    content = ereader.ReadToEnd();
-                    //}
-                    //// do what ever you want to store and return to your callers
+                    await ctx.Channel.SendMessageAsync("api request failed").ConfigureAwait(false);
                     return;
                 }
 
@@ -296,34 +319,44 @@ namespace DiscordBot.Commands
                 //Clean up the streams and the response.
                 reader.Close();
                 response.Close();
-                //JsonArrayAttribute jsonResponse = JsonConvert.DeserializeObject<J>(responseFromServer);
-                JObject jsonServerResponse = JObject.Parse(responseFromServer);
+                responseFromServer = responseFromServer.Replace(@"\" + "\"word" + @"\" + "\"", ""); //  \"words\":
+                JToken[] fullJson = JObject.Parse(responseFromServer).SelectToken("words").ToArray();
+
                 Console.WriteLine("Parsed JSON response");
 
                 await Task.Delay(1000);
 
-                Newtonsoft.Json.Linq.JToken token1 = jsonServerResponse.GetValue("word_1");
-                Newtonsoft.Json.Linq.JToken token2 = jsonServerResponse.GetValue("word_2");
+                Newtonsoft.Json.Linq.JToken token1 = fullJson[0];
+                Newtonsoft.Json.Linq.JToken token2 = fullJson[1];
 
                 Vocabulary wordA = new Vocabulary
                 {
                     vocabKanji = token1.SelectToken("spelling").ToString(),
                     vocabReading = token1.SelectToken("reading").ToString(),
-                    vocabFreq = token1.SelectToken("rank").ToObject<int>(),
-                    //vocabMeaning = token1.SelectToken("spelling").ToObject<String []>(),
+                    vocabFreq = token1.SelectToken("vrank").ToObject<int>(),
                 };
                 Vocabulary wordB = new Vocabulary
                 {
                     vocabKanji = token2.SelectToken("spelling").ToString(),
                     vocabReading = token2.SelectToken("reading").ToString(),
-                    vocabFreq = token2.SelectToken("rank").ToObject<int>(),
-                    //vocabMeaning = token2.SelectToken("spelling").ToObject<String[]>(),
+                    vocabFreq = token2.SelectToken("vrank").ToObject<int>(),
                 };
                 Console.WriteLine("Parsed words.");
 
 
                 ////////////////////////END OF API////////////////////////
 
+                //await ctx.Channel.SendMessageAsync(User2);
+                List<string> playerPoints = new List<string>();
+                foreach (gamePlayer player in players)
+                {
+                    string playerName = player.jpdbUsername;
+                    if (playerName == "")
+                    {
+                        playerName = "*No jpdb name*";
+                    }
+                    playerNames.Add($"{player.username}: {player.points})");
+                }
 
                 gameEmbed = new DiscordEmbedBuilder
                 {
@@ -332,7 +365,7 @@ namespace DiscordBot.Commands
                     Color = DiscordColor.Red,
                     Footer = new DiscordEmbedBuilder.EmbedFooter
                     {
-                        Text = $"{Player1.Username}: {p1Points} points\n{Player2.Username}: {p2Points} points",
+                        Text = string.Join("\n", playerPoints)
                     }
                 };
 
@@ -342,119 +375,105 @@ namespace DiscordBot.Commands
                 await questionMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":regional_indicator_a:"));
                 await questionMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":regional_indicator_b:"));
 
-                //await Task.Delay(3000);
-
                 var reactionResult = await interactivity.CollectReactionsAsync(questionMessage, TimeSpan.FromSeconds(answerTime));
                 var distinctResult = reactionResult.ToArray();
-                string player1Choice = "0"; string player2Choice = "0";
+
+                //resetting the players' choices
+                foreach (gamePlayer Person in players)
+                {
+                    Person.choice = "0";
+                }
 
                 foreach (var Reaction in distinctResult.ToArray())
                 {
                     if (Reaction.Emoji.Name == "🇦")
-                    {   
+                    {
                         foreach (var User in Reaction.Users.ToArray()) //loop through all the users who've reacted with A
                         {
-                            if (User.Username == Player1.Username) {
-                                if (player1Choice != "0") //if player1 has voted on both options
-                                {
-                                    player1Choice = "-1";
-                                }
-                                else
-                                {
-                                    player1Choice = "A";
-                                }
-                            } 
-                            else if (User.Username == Player2.Username)
+                            if (User.Username == "JPDB Bot (Unofficial)")
                             {
-                                if (player2Choice != "0") //if player2 has voted on both options
+                                goto SkipA;
+                            }
+                            foreach (gamePlayer Person in players)
+                            {
+                                if (Person.choice != "0") //if player2 has voted on both options
                                 {
-                                    player2Choice = "-1"; 
+                                    Person.choice = "-1";
                                 }
                                 else
                                 {
-                                    player2Choice = "A";
+                                    Person.choice = "A";
                                 }
                             }
+                        SkipA:;
                         }
                     }
                     else if (Reaction.Emoji.Name == "🇧") //loop through all the users who've reacted with A
                     {
                         foreach (var User in Reaction.Users.ToArray()) //loop through all the users who've reacted with A
                         {
-                            if (User.Username == Player1.Username)
+                            if (User.Username == "JPDB Bot (Unofficial)")
                             {
-                                if (player1Choice != "0") //if player1 has voted on both options
+                                goto SkipB;
+                            }
+                            foreach (gamePlayer Person in players)
+                            {
+                                if (Person.choice != "0") //if player2 has voted on both options
                                 {
-                                    player1Choice = "-1";
+                                    Person.choice = "-1";
                                 }
                                 else
                                 {
-                                    player1Choice = "B";
+                                    Person.choice = "B";
                                 }
                             }
-                            else if (User.Username == Player2.Username)
-                            {
-                                if (player2Choice != "0") //if player2 has voted on both options
-                                {
-                                    player2Choice = "-1";
-                                }
-                                else
-                                {
-                                    player2Choice = "B";
-                                }
-                            }
+                        SkipB:;
                         }
                     }
                 }
 
-                if (Math.Min(wordA.vocabFreq, wordB.vocabFreq) == wordA.vocabFreq)
+
+                List<string> correctPlayers = new List<string>();
+                if (wordA.vocabFreq < wordB.vocabFreq) //if word A is more frequent
                 {
-                    if (player1Choice == "A")
+                    await ctx.Channel.SendMessageAsync("A was the correct answer!").ConfigureAwait(false);
+                    foreach (gamePlayer Person in players)
                     {
-                        p1Points++;
-                        await ctx.Channel.SendMessageAsync($"{Player1.Username} was correct!");
+                        if (Person.choice == "A")
+                        {
+                            correctPlayers.Add(Person.username);
+                        }
                     }
-                    if (player2Choice == "A")
+                }
+                else //if word B is more frequent
+                {
+                    await ctx.Channel.SendMessageAsync("B was the correct answer!").ConfigureAwait(false);
+                    foreach (gamePlayer Person in players)
                     {
-                        p2Points++;
-                        await ctx.Channel.SendMessageAsync($"{Player2.Username} was correct!");
+                        if (Person.choice == "B")
+                        {
+                            correctPlayers.Add(Person.username);
+                        }
                     }
-                    if (player1Choice == "0")
-                    {
-                        p1Points++;
-                        await ctx.Channel.SendMessageAsync($"{Player1.Username}, your answer can't be both!");
-                    }
-                    if (player2Choice == "0")
-                    {
-                        p2Points++;
-                        await ctx.Channel.SendMessageAsync($"{Player2.Username} your answer can't be both!");
-                    }
-                    await ctx.Channel.SendMessageAsync($"The answer was A ({wordA.vocabKanji}) with a frequency of {wordA.vocabFreq} while {wordB.vocabKanji} was {wordB.vocabFreq}").ConfigureAwait(false);
+                }
+
+                if (correctPlayers.Count > 1)
+                {
+                    await ctx.Channel.SendMessageAsync($"{string.Join(", ", correctPlayers)} got it right!").ConfigureAwait(false);
+                }
+                else if (correctPlayers.Count == players.Count && players.Count > 1)
+                {
+                    await ctx.Channel.SendMessageAsync("Everyone got it right!").ConfigureAwait(false);
+                }
+                else if (correctPlayers.Count == 0 && players.Count > 3)
+                {
+                    await ctx.Channel.SendMessageAsync("How did no one get that right!?").ConfigureAwait(false);
                 }
                 else
                 {
-                    if (player1Choice == "B")
-                    {
-                        p1Points++;
-                        await ctx.Channel.SendMessageAsync($"{Player1.Username} was correct!");
-                    }
-                    if (player2Choice == "B")
-                    {
-                        p2Points++;
-                        await ctx.Channel.SendMessageAsync($"{Player2.Username} was correct!");
-                    }
-                    if (player1Choice == "0")
-                    {
-                        p1Points++;
-                        await ctx.Channel.SendMessageAsync($"{Player1.Username}, your answer can't be both!");
-                    }
-                    if (player2Choice == "0")
-                    {
-                        p2Points++;
-                        await ctx.Channel.SendMessageAsync($"{Player2.Username} your answer can't be both!");
-                    }
-                    await ctx.Channel.SendMessageAsync($"The answer was B ({wordB.vocabKanji}) with a frequency of {wordB.vocabFreq} while {wordA.vocabKanji} was {wordA.vocabFreq}").ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync("No one got it right!").ConfigureAwait(false);
                 }
+
 
                 if (round != 5)
                 {
@@ -462,27 +481,20 @@ namespace DiscordBot.Commands
                 }
             }
 
-
-            string embedDesc = string.Empty;
-            if (p1Points > p2Points)
+            List<string> endPlayerPoints = new List<string>();
+            foreach (gamePlayer player in players)
             {
-                embedDesc = $"{Player1.Username} wins!";
-            } else if (p2Points > p1Points)
-            {
-                embedDesc = $"{Player2.Username} wins!";
-            } else
-            {
-                embedDesc = "It's a draw!";
+                 endPlayerPoints.Add($"{player.username}: {player.points})");
             }
 
             gameEmbed = new DiscordEmbedBuilder
             {
-                Title = "Game Results",
-                Description = embedDesc,
+                Title = "Game result:",
+                Description = $"Points:",
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
-                    Text = $"{Player1.Username}: {p1Points} points\n{Player2.Username}: {p2Points} points",
+                    Text = string.Join("\n", endPlayerPoints)
                 }
             };
             await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
