@@ -290,7 +290,7 @@ namespace DiscordBot.Commands
                 
                 WebRequest request; ///pick_words?count=2&spread=100&users=user1,user2,user3
                 //request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=spectaku&user_2=alemax");
-                request = WebRequest.Create("https://jpdb.io/api/experimental/pick_words?count=2&spread=200");//&users=user1,user2,user3";
+                request = WebRequest.Create("https://jpdb.io/api/experimental/pick_words?count=2&spread=350");//&users=user1,user2,user3";
                 //request.Credentials = CredentialCache.DefaultCredentials
                 request.Method = "GET";
                 request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
@@ -396,13 +396,16 @@ namespace DiscordBot.Commands
                             }
                             foreach (gamePlayer Person in players)
                             {
-                                if (Person.choice != "0") //if player2 has voted on both options
+                                if (Person.username == User.Username)
                                 {
-                                    Person.choice = "-1";
-                                }
-                                else
-                                {
-                                    Person.choice = "A";
+                                    if (Person.choice != "0") //if player2 has voted on both options
+                                    {
+                                        Person.choice = "-1";
+                                    }
+                                    else
+                                    {
+                                        Person.choice = "A";
+                                    }
                                 }
                             }
                         SkipA:;
@@ -418,13 +421,16 @@ namespace DiscordBot.Commands
                             }
                             foreach (gamePlayer Person in players)
                             {
-                                if (Person.choice != "0") //if player2 has voted on both options
+                                if (Person.username == User.Username)
                                 {
-                                    Person.choice = "-1";
-                                }
-                                else
-                                {
-                                    Person.choice = "B";
+                                    if (Person.choice != "0") //if player2 has voted on both options
+                                    {
+                                        Person.choice = "-1";
+                                    }
+                                    else
+                                    {
+                                        Person.choice = "B";
+                                    }
                                 }
                             }
                         SkipB:;
@@ -457,7 +463,7 @@ namespace DiscordBot.Commands
                     }
                 }
 
-                if (correctPlayers.Count > 1)
+                if (correctPlayers.Count > 0)
                 {
                     await ctx.Channel.SendMessageAsync($"{string.Join(", ", correctPlayers)} got it right!").ConfigureAwait(false);
                 }
@@ -477,14 +483,14 @@ namespace DiscordBot.Commands
 
                 if (round != 5)
                 {
-                    await Task.Delay(4500);
+                    await Task.Delay(3500);
                 }
             }
 
             List<string> endPlayerPoints = new List<string>();
             foreach (gamePlayer player in players)
             {
-                 endPlayerPoints.Add($"{player.username}: {player.points})");
+                 endPlayerPoints.Add($"{player.username}: {player.points}");
             }
 
             gameEmbed = new DiscordEmbedBuilder
