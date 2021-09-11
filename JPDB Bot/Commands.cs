@@ -126,11 +126,10 @@ namespace DiscordBot.Commands
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
 
             double answerTime = 4;
- 
+
             DiscordUser Player1 = ctx.Message.Author;
-           
+
             await ctx.Channel.SendMessageAsync($"Type \"!me [jpdb username]\" to play with {ctx.User.Username}, a jpdb username isn't required.\nType \"!start\" once you're all ready.");
-            //!quizgame t
             bool gameReady = false;
             List<gamePlayer> players = new List<gamePlayer>();
 
@@ -147,7 +146,6 @@ namespace DiscordBot.Commands
                 {
                     result = await ctx.Channel.GetNextMessageAsync(m =>
                     {
-
                         foreach (gamePlayer player in players)
                         {
                             if (player.username == m.Author.Username && m.Content != "!start")
@@ -160,7 +158,7 @@ namespace DiscordBot.Commands
                                 {
                                     if (m.Content.ToLower().Substring(4) == player.jpdbUsername)
                                     {
-                                        return false;
+                                        return false; //if username in "!me [username]" is the same as one of the existing game players
                                     }
                                 }
                             }
@@ -196,8 +194,8 @@ namespace DiscordBot.Commands
                             {
                                 return false;
                             }
-                            
-                        } 
+
+                        }
                         else
                         {
                             gameReady = false;
@@ -244,9 +242,10 @@ namespace DiscordBot.Commands
             var gameEmbed = new DiscordEmbedBuilder
             {
                 Title = $"Guessing game",
-                Description = $"Participants:\n"+ string.Join("\n", playerNames),
+                Description = $"Participants:\n" + string.Join("\n", playerNames),
                 Color = DiscordColor.Red,
-                Footer = new DiscordEmbedBuilder.EmbedFooter {
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
                     Text = "Currently, usernames don't do anything.",
                 }
             };
@@ -285,9 +284,9 @@ namespace DiscordBot.Commands
             }
 
 
-            for (int round = 1; round <= 5; round ++)
+            for (int round = 1; round <= 5; round++)
             {
-                
+
                 WebRequest request; ///pick_words?count=2&spread=100&users=user1,user2,user3
                 //request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=spectaku&user_2=alemax");
                 request = WebRequest.Create("https://jpdb.io/api/experimental/pick_words?count=2&spread=350");//&users=user1,user2,user3";
@@ -299,8 +298,8 @@ namespace DiscordBot.Commands
                 try
                 {
                     response = (HttpWebResponse)request.GetResponse();
-                } 
-                catch (WebException e)
+                }
+                catch
                 {
                     await ctx.Channel.SendMessageAsync("api request failed").ConfigureAwait(false);
                     return;
@@ -490,7 +489,7 @@ namespace DiscordBot.Commands
             List<string> endPlayerPoints = new List<string>();
             foreach (gamePlayer player in players)
             {
-                 endPlayerPoints.Add($"{player.username}: {player.points}");
+                endPlayerPoints.Add($"{player.username}: {player.points}");
             }
 
             gameEmbed = new DiscordEmbedBuilder
@@ -600,13 +599,13 @@ namespace DiscordBot.Commands
 
             int Frequency = 1;
             if (wordTemp.Contains(">") == false && wordTemp.Contains("<") == false & wordTemp.Contains("=") == false & wordTemp.Contains("-") == false)
+            {
+                try
                 {
-            try
-                {
-                for (var I = 1; I <= Frequency; I++)
-                wordIDs.Add(wordTemp);
+                    for (var I = 1; I <= Frequency; I++)
+                        wordIDs.Add(wordTemp);
                 }
-            catch (Exception ex)
+                catch (Exception ex)
                 {
                     Program.PrintError(ex.Message);
                     return;
@@ -630,7 +629,8 @@ namespace DiscordBot.Commands
             if ((localTime.Hour > 21 || localTime.Hour < 5) && Kou.Presence.Status != DSharpPlus.Entities.UserStatus.Offline)
             {
                 await ctx.RespondAsync("日本: " + TimeInJapan + $"\n{Kou.Username} is up late working on JPDB for us all <3").ConfigureAwait(false);
-            } else
+            }
+            else
             {
                 await ctx.RespondAsync("日本: " + TimeInJapan).ConfigureAwait(false);
             }
