@@ -121,12 +121,12 @@ namespace DiscordBot.Commands
         [Command("freqgame")]
         [Cooldown(1, 10, CooldownBucketType.User)]
         [Description("Play a game where you guess which word is more frequent")]
-        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string jpdbUser = "")
+        public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string jpdbUser = "", [DescriptionAttribute("Number of rounds")] int rounds = 5)
         {
             if (ctx.Guild.Name == "jpdb.io official")
             {
-                await ctx.Channel.SendMessageAsync($"The bot is currently being tested");
-                return;
+                //await ctx.Channel.SendMessageAsync($"The bot is currently being tested");
+                //return;
             }
 
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
@@ -193,6 +193,7 @@ namespace DiscordBot.Commands
                                     username = m.Author.Username,
                                     jpdbUsername = m.Content.ToLower().Substring(4),
                                 };
+
                                 players.Add(newPlayer);
                                 return m.Content.ToLower().Substring(5) == "!me ";
                             }
@@ -247,8 +248,8 @@ namespace DiscordBot.Commands
 
             var gameEmbed = new DiscordEmbedBuilder
             {
-                Title = $"Guessing game",
-                Description = $"Participants:\n" + string.Join("\n", playerNames),
+                Title = $"Freq guessing game",
+                Description = $"**Guess which word is more frequent**\n\nParticipants:\n" + string.Join("\n", playerNames),
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
@@ -256,6 +257,8 @@ namespace DiscordBot.Commands
                 }
             };
             await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
+
+            await Task.Delay(1500);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Reading config file...");
@@ -289,9 +292,16 @@ namespace DiscordBot.Commands
                 return;
             }
 
-
-            for (int round = 1; round <= 3; round++)
+            Random random = new Random();
+            
+            if (rounds < 1 || rounds > 20)
             {
+                rounds = 5;
+            }
+            for (int round = 1; round <= rounds; round++)
+            {
+                
+
 
                 WebRequest request; ///pick_words?count=2&spread=100&users=user1,user2,user3
                 //request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=spectaku&user_2=alemax");
@@ -336,16 +346,51 @@ namespace DiscordBot.Commands
 
                 Vocabulary wordA = new Vocabulary
                 {
-                    vocabKanji = token1.SelectToken("spelling").ToString(),
-                    vocabReading = token1.SelectToken("reading").ToString(),
-                    vocabFreq = token1.SelectToken("vrank").ToObject<int>(),
+                    vocabKanji = string.Empty,
+                    vocabReading = string.Empty,
+                    vocabFreq = -1,
                 };
                 Vocabulary wordB = new Vocabulary
                 {
-                    vocabKanji = token2.SelectToken("spelling").ToString(),
-                    vocabReading = token2.SelectToken("reading").ToString(),
-                    vocabFreq = token2.SelectToken("vrank").ToObject<int>(),
+                    vocabKanji = string.Empty,
+                    vocabReading = string.Empty,
+                    vocabFreq = -1,
                 };
+
+                int randomInt = random.Next(0, 2);
+                if (randomInt == 0)
+                {
+                    wordA = new Vocabulary
+                    {
+                        vocabKanji = token1.SelectToken("spelling").ToString(),
+                        vocabReading = token1.SelectToken("reading").ToString(),
+                        vocabFreq = token1.SelectToken("vrank").ToObject<int>(),
+                    };
+                    wordB = new Vocabulary
+                    {
+                        vocabKanji = token2.SelectToken("spelling").ToString(),
+                        vocabReading = token2.SelectToken("reading").ToString(),
+                        vocabFreq = token2.SelectToken("vrank").ToObject<int>(),
+                    };
+                } else
+                {
+                    wordA = new Vocabulary
+                    {
+                        vocabKanji = token2.SelectToken("spelling").ToString(),
+                        vocabReading = token2.SelectToken("reading").ToString(),
+                        vocabFreq = token2.SelectToken("vrank").ToObject<int>(),
+                    };
+                    wordB = new Vocabulary
+                    {
+                        vocabKanji = token1.SelectToken("spelling").ToString(),
+                        vocabReading = token1.SelectToken("reading").ToString(),
+                        vocabFreq = token1.SelectToken("vrank").ToObject<int>(),
+                    };
+                }
+                //
+                
+
+
                 Console.WriteLine("Parsed words.");
 
 
@@ -503,7 +548,7 @@ namespace DiscordBot.Commands
             gameEmbed = new DiscordEmbedBuilder
             {
                 Title = "Game result:",
-                Description = $"Points:",
+                Description = $"**Points:**",
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
