@@ -123,6 +123,12 @@ namespace DiscordBot.Commands
         [Description("Play a game where you guess which word is more frequent")]
         public async Task guessgame(CommandContext ctx, [DescriptionAttribute("Your jpdb username")] string jpdbUser = "")
         {
+            if (ctx.Guild.Name == "jpdb.io official")
+            {
+                await ctx.Channel.SendMessageAsync($"The bot is currently being tested");
+                return;
+            }
+
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
 
             double answerTime = 4;
@@ -210,7 +216,7 @@ namespace DiscordBot.Commands
                     }
                     foreach (gamePlayer Person in players)
                     {
-                        if (result.Result.Author.Username == Person.username && result.Result.Content != "!start")
+                        if (result.Result.Content.Contains(Person.username) && result.Result.Content != "!start")
                         {
                             await ctx.RespondAsync("You can't play against yourself lol").ConfigureAwait(false);
                             gameReady = false;
@@ -284,7 +290,7 @@ namespace DiscordBot.Commands
             }
 
 
-            for (int round = 1; round <= 5; round++)
+            for (int round = 1; round <= 3; round++)
             {
 
                 WebRequest request; ///pick_words?count=2&spread=100&users=user1,user2,user3
@@ -446,6 +452,7 @@ namespace DiscordBot.Commands
                     {
                         if (Person.choice == "A")
                         {
+                            Person.points += 1;
                             correctPlayers.Add(Person.username);
                         }
                     }
@@ -457,6 +464,7 @@ namespace DiscordBot.Commands
                     {
                         if (Person.choice == "B")
                         {
+                            Person.points += 1;
                             correctPlayers.Add(Person.username);
                         }
                     }
@@ -482,7 +490,7 @@ namespace DiscordBot.Commands
 
                 if (round != 5)
                 {
-                    await Task.Delay(3500);
+                    await Task.Delay(2500);
                 }
             }
 
