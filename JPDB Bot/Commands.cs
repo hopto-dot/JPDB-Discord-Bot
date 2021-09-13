@@ -414,6 +414,16 @@ namespace DiscordBot.Commands
 
                 ////////////////////////END OF API////////////////////////
 
+                int randomInteger = random.Next(1, 6);
+                bool specialRound = false;
+                answerTime = 6;
+                if (randomInteger == 2 && round != 1)
+                {
+                    answerTime = 7;
+                    specialRound = true;
+                    await ctx.Channel.SendMessageAsync("**BONUS POINTS ROUND!!!\nCorrectly answering scores you 3 points!**").ConfigureAwait(false);
+                }
+
                 //await ctx.Channel.SendMessageAsync(User2);
                 List<string> playerPoints = new List<string>();
                 foreach (gamePlayer player in players)
@@ -470,22 +480,34 @@ namespace DiscordBot.Commands
                 {
                     foreach (var User in Reaction.Users.ToArray())
                     {
-                        bool playerExists = false;
-                        foreach (gamePlayer Person in players)
+                        if (User.Username != "JPDB Bot (Unofficial)")
                         {
-                            if (Person.username == User.Username)
+                            bool playerExists = false;
+                            foreach (gamePlayer Person in players)
                             {
-                                playerExists = true;
+                                if (Person.username == User.Username)
+                                {
+                                    playerExists = true;
+                                }
                             }
-                        }
-                        if (playerExists == false)
-                        {
-                            gamePlayer addPlayer = new gamePlayer
+                            if (playerExists == false)
                             {
-                                username = User.Username,
-                                jpdbUsername = string.Empty
-                            };
-                            players.Add(addPlayer);
+                                if (User.Id == 118408957416046593)
+                                {
+                                    await ctx.Channel.SendMessageAsync($"God (-こう-) joined mid-game! :OO").ConfigureAwait(false);
+                                }
+                                else
+                                {
+                                    await ctx.Channel.SendMessageAsync($"{User.Username} joined mid-game!").ConfigureAwait(false);
+                                }
+                                
+                                gamePlayer addPlayer = new gamePlayer
+                                {
+                                    username = User.Username,
+                                    jpdbUsername = string.Empty
+                                };
+                                players.Add(addPlayer);
+                            }
                         }
                     }  
                 }
@@ -555,7 +577,14 @@ namespace DiscordBot.Commands
                     {
                         if (Person.choice == "A")
                         {
-                            Person.points += 1;
+                            if (specialRound == true)
+                            {
+                                Person.points += 3;
+                            }
+                            else
+                            {
+                                Person.points += 1;
+                            }
                             correctPlayers.Add(Person.username);
                         }
                     }
@@ -567,13 +596,24 @@ namespace DiscordBot.Commands
                     {
                         if (Person.choice == "B")
                         {
-                            Person.points += 1;
+                            if (specialRound == true)
+                            {
+                                Person.points += 3;
+                            }
+                            else
+                            {
+                                Person.points += 1;
+                            }
                             correctPlayers.Add(Person.username);
                         }
                     }
                 }
 
-                if (correctPlayers.Count == 1)
+                if (correctPlayers.Count == 1 && players.Count == 1)
+                {
+                    await ctx.Channel.SendMessageAsync($"{string.Join(" and ", correctPlayers)} got it right!").ConfigureAwait(false);
+                }
+                if (correctPlayers.Count == 1 && players.Count > 1)
                 {
                     await ctx.Channel.SendMessageAsync($"Only {string.Join(" and ", correctPlayers)} got it right!").ConfigureAwait(false);
                 }
