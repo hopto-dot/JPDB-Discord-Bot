@@ -75,7 +75,7 @@ namespace DiscordBot
             Client.UseInteractivity(new InteractivityConfiguration()
             {
                 PollBehaviour = PollBehaviour.KeepEmojis,
-                Timeout = TimeSpan.FromSeconds(30)
+                Timeout = TimeSpan.FromSeconds(35)
             });
             Client.Ready += Client_Ready;
             Client.MessageCreated += Bot_MessageCreated;

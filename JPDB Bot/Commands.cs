@@ -135,7 +135,7 @@ namespace DiscordBot.Commands
 
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
 
-            double answerTime = 4;
+            double answerTime = 6;
 
             DiscordUser Player1 = ctx.Message.Author;
 
@@ -256,7 +256,7 @@ namespace DiscordBot.Commands
             var gameEmbed = new DiscordEmbedBuilder
             {
                 Title = $"Freq guessing game",
-                Description = $"**Guess which word is more frequent**\n\nParticipants:\n" + string.Join("\n", playerNames),
+                Description = $"**Guess which word is more frequent ({rounds} Rounds)**\n\nParticipants:\n" + string.Join("\n", playerNames),
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
@@ -265,7 +265,7 @@ namespace DiscordBot.Commands
             };
             await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
 
-            await Task.Delay(1500);
+            await Task.Delay(3000);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Reading config file...");
@@ -362,8 +362,6 @@ namespace DiscordBot.Commands
 
                 Console.WriteLine("Parsed JSON response");
 
-                await Task.Delay(1500);
-
                 Newtonsoft.Json.Linq.JToken token1 = fullJson[0];
                 Newtonsoft.Json.Linq.JToken token2 = fullJson[1];
 
@@ -411,11 +409,8 @@ namespace DiscordBot.Commands
                     };
                 }
                 //
-                
-
-
+               
                 Console.WriteLine("Parsed words.");
-
 
                 ////////////////////////END OF API////////////////////////
 
@@ -433,7 +428,7 @@ namespace DiscordBot.Commands
 
                 gameEmbed = new DiscordEmbedBuilder
                 {
-                    Title = "Which word is more frequent?",
+                    Title = $"Round {round}: Which word is more frequent?",
                     Description = $"A = {wordA.vocabKanji} ({wordA.vocabReading})\nB = {wordB.vocabKanji} ({wordB.vocabReading})",
                     Color = DiscordColor.Red,
                     Footer = new DiscordEmbedBuilder.EmbedFooter
@@ -463,9 +458,6 @@ namespace DiscordBot.Commands
                     await ctx.Channel.SendMessageAsync("Game is inactive so the game has been stopped!").ConfigureAwait(false);
                     return;
                 }
-                Console.WriteLine($"noReponse: {noReponse}");
-                Console.WriteLine($"distinctResult.Length: {distinctResult.Length}");
-
 
                 //resetting the players' choices
                 foreach (gamePlayer Person in players)
@@ -473,6 +465,31 @@ namespace DiscordBot.Commands
                     Person.choice = "0";
                 }
 
+
+                foreach (var Reaction in distinctResult.ToArray())
+                {
+                    foreach (var User in Reaction.Users.ToArray())
+                    {
+                        bool playerExists = false;
+                        foreach (gamePlayer Person in players)
+                        {
+                            if (Person.username == User.Username)
+                            {
+                                playerExists = true;
+                            }
+                        }
+                        if (playerExists == false)
+                        {
+                            gamePlayer addPlayer = new gamePlayer
+                            {
+                                username = User.Username,
+                                jpdbUsername = string.Empty
+                            };
+                            players.Add(addPlayer);
+                        }
+                    }  
+                }
+                
                 foreach (var Reaction in distinctResult.ToArray())
                 {
                     if (Reaction.Emoji.Name == "🇦")
@@ -483,6 +500,7 @@ namespace DiscordBot.Commands
                             {
                                 goto SkipA;
                             }
+
                             foreach (gamePlayer Person in players)
                             {
                                 if (Person.username == User.Username)
@@ -508,6 +526,7 @@ namespace DiscordBot.Commands
                             {
                                 goto SkipB;
                             }
+
                             foreach (gamePlayer Person in players)
                             {
                                 if (Person.username == User.Username)
@@ -554,13 +573,21 @@ namespace DiscordBot.Commands
                     }
                 }
 
-                if (correctPlayers.Count > 0)
+                if (correctPlayers.Count == 1)
                 {
-                    await ctx.Channel.SendMessageAsync($"{string.Join(", ", correctPlayers)} got it right!").ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync($"Only {string.Join(" and ", correctPlayers)} got it right!").ConfigureAwait(false);
                 }
-                else if (correctPlayers.Count == players.Count && players.Count > 1)
+                else if (correctPlayers.Count == 2)
+                {
+                    await ctx.Channel.SendMessageAsync($"{string.Join(" and ", correctPlayers)} got it right!").ConfigureAwait(false);
+                }
+                else if (correctPlayers.Count == players.Count && players.Count > 2)
                 {
                     await ctx.Channel.SendMessageAsync("Everyone got it right!").ConfigureAwait(false);
+                }
+                else if (correctPlayers.Count > 2)
+                {
+                    await ctx.Channel.SendMessageAsync($"{string.Join(", ", correctPlayers)} got it right!").ConfigureAwait(false);
                 }
                 else if (correctPlayers.Count == 0 && players.Count > 3)
                 {
@@ -574,7 +601,7 @@ namespace DiscordBot.Commands
 
                 if (round != 5)
                 {
-                    await Task.Delay(3500);
+                    await Task.Delay(4000);
                 }
             }
 
