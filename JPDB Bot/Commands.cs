@@ -31,6 +31,8 @@ namespace DiscordBot.Commands
             {
                 switch (randomInt)
                 {
+                    default:
+                        goto case 5;
                     case 1:
                         goto case 7;
                     case 2:
@@ -76,6 +78,8 @@ namespace DiscordBot.Commands
             {
                 switch (randomInt)
                 {
+                    default:
+                        goto case 5;
                     case 1:
                         goto case 7;
                     case 2:
@@ -138,11 +142,13 @@ namespace DiscordBot.Commands
             await ctx.Channel.SendMessageAsync($"Type \"!me [jpdb username]\" to play with {ctx.User.Username}, a jpdb username isn't required.\nType \"!start\" once you're all ready.");
             bool gameReady = false;
             List<gamePlayer> players = new List<gamePlayer>();
-
+            //!freqgame 
+            string[] jpdbName = ctx.Message.Content.ToLower().Length > 10 ? ctx.Message.Content.ToLower().Substring(10).Split(" ") : new string[] { ctx.Message.Content.ToLower() };
             gamePlayer newPlayer = new gamePlayer()
             {
                 username = ctx.Message.Author.Username,
-                jpdbUsername = ctx.Message.Content.ToLower().Length > 9 ? ctx.Message.Content.ToLower().Substring(10) : string.Empty,
+                jpdbUsername = ctx.Message.Content.ToLower().Length > 9 ? jpdbName[0] : string.Empty,
+                //jpdbUsername = ctx.Message.Content.ToLower().Length > 9 ? ctx.Message.Content.ToLower().Substring(10) : string.Empty,
             };
             players.Add(newPlayer);
             DSharpPlus.Interactivity.InteractivityResult<DSharpPlus.Entities.DiscordMessage> result;
@@ -188,10 +194,11 @@ namespace DiscordBot.Commands
                         {
                             if (m.Content.ToLower().Substring(0, 4) == "!me ")
                             {
+                                string[] jpdbName = m.Content.ToLower().Substring(4).Split(" ");
                                 gamePlayer newPlayer = new gamePlayer()
                                 {
                                     username = m.Author.Username,
-                                    jpdbUsername = m.Content.ToLower().Substring(4),
+                                    jpdbUsername = jpdbName[0],
                                 };
 
                                 players.Add(newPlayer);
@@ -298,15 +305,31 @@ namespace DiscordBot.Commands
             {
                 rounds = 5;
             }
+
+            string jpdbUsernames = string.Empty;
+            foreach (gamePlayer player in players)
+            {
+                if (player.jpdbUsername != string.Empty)
+                {
+                    if (jpdbUsernames.Length != 0)
+                    {
+                        jpdbUsernames += ",";
+                    } else
+                    {
+                        jpdbUsernames = "&users=";
+                    }
+                    jpdbUsernames += player.jpdbUsername;
+                }
+            }
+
+            int noReponse = 0;
             for (int round = 1; round <= rounds; round++)
             {
-                
-
-
                 WebRequest request; ///pick_words?count=2&spread=100&users=user1,user2,user3
-                //request = WebRequest.Create("https://jpdb.io/api/experimental/pick_word_pair?rank_at_least=2000&rank_at_most=100&user_1=spectaku&user_2=alemax");
-                request = WebRequest.Create("https://jpdb.io/api/experimental/pick_words?count=2&spread=350");//&users=user1,user2,user3";
-                //request.Credentials = CredentialCache.DefaultCredentials
+                request = WebRequest.Create("https://jpdb.io/api/experimental/pick_words?count=2&spread=300" + jpdbUsernames);
+                //request = WebRequest.Create("https://jpdb.io/api/experimental/pick_words?count=2&spread=300");//&users=user1,user2,user3";
+                Program.PrintAPIUse("Freqgame", "https://jpdb.io/api/experimental/pick_words?count=2&spread=300" + jpdbUsernames);
+
                 request.Method = "GET";
                 request.Headers["Authorization"] = "Bearer " + configJson.JPDBToken;
 
@@ -317,7 +340,7 @@ namespace DiscordBot.Commands
                 }
                 catch
                 {
-                    await ctx.Channel.SendMessageAsync("api request failed").ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync("API request failed, this is usually because of an incorrect jpdb username.\nThe game has been aborted.").ConfigureAwait(false);
                     return;
                 }
 
@@ -339,7 +362,7 @@ namespace DiscordBot.Commands
 
                 Console.WriteLine("Parsed JSON response");
 
-                await Task.Delay(1000);
+                await Task.Delay(1500);
 
                 Newtonsoft.Json.Linq.JToken token1 = fullJson[0];
                 Newtonsoft.Json.Linq.JToken token2 = fullJson[1];
@@ -428,6 +451,22 @@ namespace DiscordBot.Commands
                 var reactionResult = await interactivity.CollectReactionsAsync(questionMessage, TimeSpan.FromSeconds(answerTime));
                 var distinctResult = reactionResult.ToArray();
 
+                if (distinctResult.Length == 0)
+                {
+                    noReponse += 1;
+                } else
+                {
+                    noReponse = 0;
+                }
+                if (noReponse > 1)
+                {
+                    await ctx.Channel.SendMessageAsync("Game is inactive so the game has been stopped!").ConfigureAwait(false);
+                    return;
+                }
+                Console.WriteLine($"noReponse: {noReponse}");
+                Console.WriteLine($"distinctResult.Length: {distinctResult.Length}");
+
+
                 //resetting the players' choices
                 foreach (gamePlayer Person in players)
                 {
@@ -492,7 +531,7 @@ namespace DiscordBot.Commands
                 List<string> correctPlayers = new List<string>();
                 if (wordA.vocabFreq < wordB.vocabFreq) //if word A is more frequent
                 {
-                    await ctx.Channel.SendMessageAsync("A was the correct answer!").ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync($"{wordA.vocabKanji} ({wordA.vocabFreq}) was the correct answer! While {wordB.vocabKanji} has freq of {wordB.vocabFreq}").ConfigureAwait(false);
                     foreach (gamePlayer Person in players)
                     {
                         if (Person.choice == "A")
@@ -504,7 +543,7 @@ namespace DiscordBot.Commands
                 }
                 else //if word B is more frequent
                 {
-                    await ctx.Channel.SendMessageAsync("B was the correct answer!").ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync($"{wordB.vocabKanji} ({wordB.vocabFreq}) was the correct answer! While {wordA.vocabKanji} has freq of {wordA.vocabFreq}").ConfigureAwait(false);
                     foreach (gamePlayer Person in players)
                     {
                         if (Person.choice == "B")
@@ -535,7 +574,7 @@ namespace DiscordBot.Commands
 
                 if (round != 5)
                 {
-                    await Task.Delay(2500);
+                    await Task.Delay(3500);
                 }
             }
 

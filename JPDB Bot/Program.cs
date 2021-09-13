@@ -25,5 +25,12 @@ namespace DiscordBot
             Console.ForegroundColor = ConsoleColor.White;
         }
 
+        public static void PrintAPIUse(string command, string url)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine($"[{DateTime.Now}] API ({command}): {url}");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
     }
 }
