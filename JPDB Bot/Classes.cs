@@ -1,9 +1,9 @@
-﻿
+﻿using System.Collections.Generic;
 
 namespace DiscordBot
 {
-    public class Vocabulary {
-
+    public class Vocabulary
+    {
         public string vocabKanji = string.Empty;
         public string vocabReading = string.Empty;
         public string[] vocabMeaning = { "" };
@@ -18,4 +18,13 @@ namespace DiscordBot
         public string choice = "0";
     }
 
+    public class WeightedString
+    {
+        public string Value { get; set; }
+        public int Weight { get; set; }
+    }
+
+    public class GreetingsDB : Dictionary<string, WeightedString[]>
+    {
+    }
 }

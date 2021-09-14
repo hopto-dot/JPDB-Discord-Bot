@@ -14,6 +14,7 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot
 {
@@ -50,7 +51,7 @@ namespace DiscordBot
                 Program.PrintError("Couldn't deserialize config.json");
                 return;
             }
-            
+
             Microsoft.Extensions.Logging.LogLevel LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Warning;
             if (configJson.LogLevel.ToLower() == "debug")
             {
@@ -60,7 +61,7 @@ namespace DiscordBot
                 LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Debug;
             }
             DiscordConfiguration config;
-            
+
             config = new DiscordConfiguration
             {
                 Token = configJson.DiscordToken,
@@ -80,6 +81,12 @@ namespace DiscordBot
             Client.Ready += Client_Ready;
             Client.MessageCreated += Bot_MessageCreated;
 
+            // Dependency injection for Commands
+            ServiceProvider services = new ServiceCollection()
+                .AddSingleton<Random>(new Random())
+                .AddSingleton<GreetingsDB>(LoadGreetings())
+                .BuildServiceProvider();
+
             var commandsConfig = new CommandsNextConfiguration
             {
                 StringPrefixes = new string[] { configJson.Prefix },
@@ -88,13 +95,14 @@ namespace DiscordBot
                 DmHelp = false,
                 EnableDefaultHelp = true,
                 IgnoreExtraArguments = true,
+                Services = services,
             };
             Commands = Client.UseCommandsNext(commandsConfig);
 
             Commands.RegisterCommands<TestCommands>();
             await Client.ConnectAsync();
             await Task.Delay(-1);
-            
+
         }
 
         private async Task Bot_MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
@@ -137,6 +145,52 @@ namespace DiscordBot
             Console.WriteLine("JPDB Bot is online.");
             Console.ForegroundColor = ConsoleColor.White;
             return Task.CompletedTask;
+        }
+
+        public static GreetingsDB LoadGreetings()
+        {
+            try
+            {
+                using FileStream fs = File.OpenRead("greetings.json");
+                using StreamReader sr = new(fs, new UTF8Encoding(false));
+                string json = sr.ReadToEnd();
+                var data = JsonConvert.DeserializeObject<GreetingsDB>(json);
+                if (data == null)
+                    throw new NullReferenceException();
+                return data;
+            }
+            catch
+            {
+                WeightedString[] supporterGreetings =
+                {
+                    new WeightedString { Value = "Hi %username%様, I can speak English too ya know >:)", Weight = 1 },
+                    new WeightedString { Value = "どうも、%username%様 :)", Weight = 5 },
+                    new WeightedString { Value = "よおおおおおおおぉ %username%様！ :)", Weight = 1 },
+                    new WeightedString { Value = "また会えて嬉しいね %username%様 :)", Weight = 3 },
+                    new WeightedString { Value = "やっほおおおおおお～ %username%様 :)", Weight = 1 },
+                    new WeightedString { Value = "おおおおっす! %username%様 :)", Weight = 1 },
+                    new WeightedString { Value = "ハロオオオ %username%様！ :)", Weight = 1 },
+                    new WeightedString { Value = "へっ！なんかあった？%username%様 :O", Weight = 2 },
+                };
+
+                WeightedString[] defaultGreetings =
+                {
+                    new WeightedString { Value = "どうも、%username%様 :)", Weight = 5 },
+                    new WeightedString { Value = "おいお前 JPDBの支援者になれ", Weight = 1 },
+                    new WeightedString { Value = "元気はないんだなあ %username%さん。JPDBを支援したら？うwう", Weight = 5 },
+                    new WeightedString { Value = "おっす! %username% :)", Weight = 1 },
+                    new WeightedString { Value = "ハロー %username%！ :)", Weight = 2 },
+                    new WeightedString { Value = "へっ！なんかあった？%username%様 :O", Weight = 1 },
+                };
+
+                GreetingsDB data = new GreetingsDB
+                {
+                    { "Supporter", supporterGreetings },
+                    { "Default", defaultGreetings }
+                };
+
+                return data;
+            }
         }
     }
 }

@@ -18,108 +18,72 @@ namespace DiscordBot.Commands
 {
     public class TestCommands : BaseCommandModule
     {
+        // These will be populated by dependency injection
+        public Random random;
+        public GreetingsDB greetingsDb;
+
+        public T ChooseRandomItem<T>(IReadOnlyList<T> Items)
+        {
+            return Items.Count == 0 ? default(T) : Items[random.Next(Items.Count)];
+        }
+
+        public string ChooseRandomWeightedString(WeightedString[] Items)
+        {
+            int totalWeight = 0;
+            foreach (WeightedString item in Items)
+            {
+                totalWeight += item.Weight;
+            }
+
+            if (totalWeight > 0)
+            {
+                int selectedWeight = random.Next(totalWeight);
+                int weightSoFar = 0;
+                foreach (var item in Items)
+                {
+                    weightSoFar += item.Weight;
+                    if (weightSoFar >= selectedWeight)
+                    {
+                        return item.Value;
+                    }
+                }
+            }
+
+            // Fallback: Assign equal probability to each item
+            return ChooseRandomItem(Items).Value;
+        }
+
         [Command("hi")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Get a nice (or bad) response")]
         public async Task hi(CommandContext ctx)
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
-            Random random = new Random();
-            int randomInt = random.Next(1, 16);
-            string Output = string.Empty;
-            if (ctx.Member.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster"))
+
+            // Determine which set of greetings to use
+            string category = "Default";
+            if (ctx.Member.Roles.Any(r => r.Name is "Owner" or "Supporter" or "Server Booster"))
+                category = "Supporter";
+
+            // Choose a greeting
+            string greeting;
+            if (greetingsDb is not null && (
+                greetingsDb.TryGetValue(category, out WeightedString[] greetings) ||
+                greetingsDb.TryGetValue("default", out greetings)))
             {
-                switch (randomInt)
-                {
-                    default:
-                        goto case 5;
-                    case 1:
-                        goto case 7;
-                    case 2:
-                        goto case 7;
-                    case 3:
-                        goto case 7;
-                    case 4:
-                        goto case 15;
-                    case 5:
-                        Output = "Hi " + ctx.User.Username + "様, I can speak English too ya know >:)";
-                        break;
-                    case 6:
-                        goto case 11;
-                    case 7:
-                        Output = "どうも、" + ctx.User.Username + "様 :)";
-                        break;
-                    case 8:
-                        Output = "どうも、" + ctx.User.Username + "様 ;)";
-                        break;
-                    case 9:
-                        Output = "よおおおおおおおぉ " + ctx.User.Username + "様！ :)";
-                        break;
-                    case 10:
-                        goto case 11;
-                    case 11:
-                        Output = "また会えて嬉しいね " + ctx.User.Username + "様 :)";
-                        break;
-                    case 12:
-                        Output = "やっほおおおおおお～ " + ctx.User.Username + "様 :)";
-                        break;
-                    case 13:
-                        Output = "おおおおっす! " + ctx.User.Username + "様 :)";
-                        break;
-                    case 14:
-                        Output = "ハロオオオ " + ctx.User.Username + "様！ :)";
-                        break;
-                    case 15:
-                        Output = "へっ！なんかあった？" + ctx.User.Username + "様 :O";
-                        break;
-                }
+                string greetingTemplate = ChooseRandomWeightedString(greetings);
+                greeting = greetingTemplate.Replace("%username%", ctx.User.Username);
             }
             else
             {
-                switch (randomInt)
-                {
-                    default:
-                        goto case 5;
-                    case 1:
-                        goto case 7;
-                    case 2:
-                        goto case 7;
-                    case 3:
-                        goto case 7;
-                    case 4:
-                        goto case 11;
-                    case 5:
-                        goto case 12;
-                    case 6:
-                        goto case 14;
-                    case 7:
-                        Output = "どうも、" + ctx.User.Username + " :)";
-                        break;
-                    case 8:
-                        Output = "どうも、" + ctx.User.Username + " ;)";
-                        break;
-                    case 9:
-                        Output = "おいお前 JPDBの支援者になれ";
-                        break;
-                    case 10:
-                        goto case 12;
-                    case 11:
-                        goto case 12;
-                    case 12:
-                        Output = "元気はないんだなあ " + ctx.User.Username + "さん。JPDBを支援したら？うwう";
-                        break;
-                    case 13:
-                        Output = "おっす! " + ctx.User.Username + " :)";
-                        break;
-                    case 14:
-                        Output = "ハロー " + ctx.User.Username + "！ :)";
-                        break;
-                    case 15:
-                        Output = "へっ！なんかあった？" + ctx.User.Username + " :O";
-                        break;
-                }
+                // Greeting of last resort
+                Program.PrintError("!hi: Using greeting of last resort");
+                //greeting = "どうも、"+ ctx.User.Username +"様 :)";
+                greeting = "Hello, " + ctx.User.Username;
             }
-            await ctx.RespondAsync(Output).ConfigureAwait(false);
+
+            // Send the greeting
+            await ctx.RespondAsync(greeting).ConfigureAwait(false);
         }
 
         [Command("freqgame")]
@@ -142,7 +106,7 @@ namespace DiscordBot.Commands
             await ctx.Channel.SendMessageAsync($"Type \"!me [jpdb username]\" to play with {ctx.User.Username}, a jpdb username isn't required.\nType \"!start\" once you're all ready.");
             bool gameReady = false;
             List<gamePlayer> players = new List<gamePlayer>();
-            //!freqgame 
+            //!freqgame
             string[] jpdbName = ctx.Message.Content.ToLower().Length > 10 ? ctx.Message.Content.ToLower().Substring(10).Split(" ") : new string[] { ctx.Message.Content.ToLower() };
             gamePlayer newPlayer = new gamePlayer()
             {
@@ -300,7 +264,7 @@ namespace DiscordBot.Commands
             }
 
             Random random = new Random();
-            
+
             if (rounds < 1 || rounds > 20)
             {
                 rounds = 5;
@@ -409,7 +373,7 @@ namespace DiscordBot.Commands
                     };
                 }
                 //
-               
+
                 Console.WriteLine("Parsed words.");
 
                 ////////////////////////END OF API////////////////////////
@@ -500,7 +464,7 @@ namespace DiscordBot.Commands
                                 {
                                     await ctx.Channel.SendMessageAsync($"{User.Username} joined mid-game!").ConfigureAwait(false);
                                 }
-                                
+
                                 gamePlayer addPlayer = new gamePlayer
                                 {
                                     username = User.Username,
@@ -509,9 +473,9 @@ namespace DiscordBot.Commands
                                 players.Add(addPlayer);
                             }
                         }
-                    }  
+                    }
                 }
-                
+
                 foreach (var Reaction in distinctResult.ToArray())
                 {
                     if (Reaction.Emoji.Name == "🇦")
