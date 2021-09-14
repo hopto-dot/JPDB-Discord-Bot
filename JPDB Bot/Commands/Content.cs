@@ -20,24 +20,14 @@ namespace JPDB_Bot.Commands
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
 
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
 
-            WebClient Client = new WebClient();
-            Client.Encoding = System.Text.Encoding.UTF8;
-            string HTML = "";
-            int snipIndex = -1;
-
-            string OriginalFilter = string.Empty;
-            OriginalFilter = "anime";
-
-            if (HTML.Length > 250) return;
-
-            string wordTemp = "";
-            string URL = "";
-            List<string> wordIDs = new List<string>() { };
-            URL = "https://jpdb.io/prebuilt_decks?q=" + searchString;
+            string url = "https://jpdb.io/prebuilt_decks?q=" + searchString;
+            string html = "";
             try
             {
-                HTML = Client.DownloadString(new Uri(URL));
+                html = client.DownloadString(new Uri(url));
             }
             catch (Exception ex)
             {
@@ -45,7 +35,7 @@ namespace JPDB_Bot.Commands
                 return;
             }
 
-            snipIndex = HTML.IndexOf("30rem;\">") + 8;
+            int snipIndex = html.IndexOf("30rem;\">") + 8;
 
             if (snipIndex == 7)
             {
@@ -53,15 +43,15 @@ namespace JPDB_Bot.Commands
                 return;
             }
 
-            wordTemp = HTML.Substring(snipIndex);
-            HTML = wordTemp;
+            string wordTemp = html.Substring(snipIndex);
+            html = wordTemp;
 
             snipIndex = wordTemp.IndexOf("<");
-            HTML = wordTemp.Substring(snipIndex);
+            html = wordTemp.Substring(snipIndex);
             string contentName = wordTemp.Substring(0, snipIndex);
 
-            snipIndex = HTML.IndexOf("margin-top: 0.5rem;\">") + 22;
-            wordTemp = HTML.Substring(snipIndex);
+            snipIndex = html.IndexOf("margin-top: 0.5rem;\">") + 22;
+            wordTemp = html.Substring(snipIndex);
             snipIndex = wordTemp.IndexOf("/") + 1;
             wordTemp = wordTemp.Substring(snipIndex);
             snipIndex = wordTemp.IndexOf("\"");
@@ -69,7 +59,9 @@ namespace JPDB_Bot.Commands
 
             await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
 
+            /*
             int Frequency = 1;
+            List<string> wordIDs = new List<string>() { };
             if (wordTemp.Contains(">") == false && wordTemp.Contains("<") == false & wordTemp.Contains("=") == false &
                 wordTemp.Contains("-") == false)
             {
@@ -84,8 +76,7 @@ namespace JPDB_Bot.Commands
                     return;
                 }
             }
-
-            snipIndex = HTML.IndexOf("#a") + 3;
+            */
         }
     }
 }
