@@ -1,9 +1,9 @@
-﻿
+﻿using System.Collections.Generic;
 
 namespace DiscordBot
 {
-    public class Vocabulary {
-
+    public class Vocabulary
+    {
         public string vocabKanji = string.Empty;
         public string vocabReading = string.Empty;
         public string[] vocabMeaning = { "" };
@@ -17,5 +17,6 @@ namespace DiscordBot
         public int points = 0;
         public string choice = "0";
     }
+
 
 }

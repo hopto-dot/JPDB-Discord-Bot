@@ -14,6 +14,9 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
+using JPDB_Bot;
+using JPDB_Bot.Commands;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot
 {
@@ -50,7 +53,7 @@ namespace DiscordBot
                 Program.PrintError("Couldn't deserialize config.json");
                 return;
             }
-            
+
             Microsoft.Extensions.Logging.LogLevel LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Warning;
             if (configJson.LogLevel.ToLower() == "debug")
             {
@@ -60,7 +63,7 @@ namespace DiscordBot
                 LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Debug;
             }
             DiscordConfiguration config;
-            
+
             config = new DiscordConfiguration
             {
                 Token = configJson.DiscordToken,
@@ -80,6 +83,12 @@ namespace DiscordBot
             Client.Ready += Client_Ready;
             Client.MessageCreated += Bot_MessageCreated;
 
+            // Dependency injection for Commands
+            ServiceProvider services = new ServiceCollection()
+                .AddSingleton<Random>(new Random())
+                .AddSingleton<GreetingsData>(GreetingsData.LoadGreetings())
+                .BuildServiceProvider();
+
             var commandsConfig = new CommandsNextConfiguration
             {
                 StringPrefixes = new string[] { configJson.Prefix },
@@ -88,13 +97,15 @@ namespace DiscordBot
                 DmHelp = false,
                 EnableDefaultHelp = true,
                 IgnoreExtraArguments = true,
+                Services = services,
             };
             Commands = Client.UseCommandsNext(commandsConfig);
 
+            Commands.RegisterCommands<Greeter>();
             Commands.RegisterCommands<TestCommands>();
             await Client.ConnectAsync();
             await Task.Delay(-1);
-            
+
         }
 
         private async Task Bot_MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
@@ -138,5 +149,7 @@ namespace DiscordBot
             Console.ForegroundColor = ConsoleColor.White;
             return Task.CompletedTask;
         }
+
+
     }
 }

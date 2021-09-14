@@ -13,4 +13,8 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.36" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(ProjectDir)greetings.json&quot; &quot;$(TargetDir)&quot;" />
+  </Target>
+
 </Project>

@@ -1,0 +1,62 @@
+{
+  "Supporter": [
+    {
+      "Value": "Hi %username%様, I can speak English too ya know >:)",
+      "Weight": 1
+    },
+    {
+      "Value": "どうも、%username%様 :)",
+      "Weight": 5
+    },
+    {
+      "Value": "よおおおおおおおぉ %username%様！ :)",
+      "Weight": 1
+    },
+    {
+      "Value": "また会えて嬉しいね %username%様 :)",
+      "Weight": 3
+    },
+    {
+      "Value": "やっほおおおおおお～ %username%様 :)",
+      "Weight": 1
+    },
+    {
+      "Value": "おおおおっす! %username%様 :)",
+      "Weight": 1
+    },
+    {
+      "Value": "ハロオオオ %username%様！ :)",
+      "Weight": 1
+    },
+    {
+      "Value": "へっ！なんかあった？%username%様 :O",
+      "Weight": 2
+    }
+  ],
+  "Default": [
+    {
+      "Value": "どうも、%username%様 :)",
+      "Weight": 5
+    },
+    {
+      "Value": "おいお前 JPDBの支援者になれ",
+      "Weight": 1
+    },
+    {
+      "Value": "元気はないんだなあ %username%さん。JPDBを支援したら？うwう",
+      "Weight": 5
+    },
+    {
+      "Value": "おっす! %username% :)",
+      "Weight": 1
+    },
+    {
+      "Value": "ハロー %username%！ :)",
+      "Weight": 2
+    },
+    {
+      "Value": "へっ！なんかあった？%username%様 :O",
+      "Weight": 1
+    }
+  ]
+}
