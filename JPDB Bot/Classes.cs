@@ -18,13 +18,5 @@ namespace DiscordBot
         public string choice = "0";
     }
 
-    public class WeightedString
-    {
-        public string Value { get; set; }
-        public int Weight { get; set; }
-    }
 
-    public class GreetingsDB : Dictionary<string, WeightedString[]>
-    {
-    }
 }

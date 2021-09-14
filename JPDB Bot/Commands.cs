@@ -20,71 +20,6 @@ namespace DiscordBot.Commands
     {
         // These will be populated by dependency injection
         public Random random;
-        public GreetingsDB greetingsDb;
-
-        public T ChooseRandomItem<T>(IReadOnlyList<T> Items)
-        {
-            return Items.Count == 0 ? default(T) : Items[random.Next(Items.Count)];
-        }
-
-        public string ChooseRandomWeightedString(WeightedString[] Items)
-        {
-            int totalWeight = 0;
-            foreach (WeightedString item in Items)
-            {
-                totalWeight += item.Weight;
-            }
-
-            if (totalWeight > 0)
-            {
-                int selectedWeight = random.Next(totalWeight);
-                int weightSoFar = 0;
-                foreach (var item in Items)
-                {
-                    weightSoFar += item.Weight;
-                    if (weightSoFar >= selectedWeight)
-                    {
-                        return item.Value;
-                    }
-                }
-            }
-
-            // Fallback: Assign equal probability to each item
-            return ChooseRandomItem(Items).Value;
-        }
-
-        [Command("hi")]
-        [Cooldown(2, 10, CooldownBucketType.User)]
-        [Description("Get a nice (or bad) response")]
-        public async Task hi(CommandContext ctx)
-        {
-            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
-
-            // Determine which set of greetings to use
-            string category = "Default";
-            if (ctx.Member.Roles.Any(r => r.Name is "Owner" or "Supporter" or "Server Booster"))
-                category = "Supporter";
-
-            // Choose a greeting
-            string greeting;
-            if (greetingsDb is not null && (
-                greetingsDb.TryGetValue(category, out WeightedString[] greetings) ||
-                greetingsDb.TryGetValue("default", out greetings)))
-            {
-                string greetingTemplate = ChooseRandomWeightedString(greetings);
-                greeting = greetingTemplate.Replace("%username%", ctx.User.Username);
-            }
-            else
-            {
-                // Greeting of last resort
-                Program.PrintError("!hi: Using greeting of last resort");
-                //greeting = "どうも、"+ ctx.User.Username +"様 :)";
-                greeting = "Hello, " + ctx.User.Username;
-            }
-
-            // Send the greeting
-            await ctx.RespondAsync(greeting).ConfigureAwait(false);
-        }
 
         [Command("freqgame")]
         [Cooldown(1, 10, CooldownBucketType.User)]
@@ -262,8 +197,6 @@ namespace DiscordBot.Commands
                 Program.PrintError("Couldn't deserialize config.json");
                 return;
             }
-
-            Random random = new Random();
 
             if (rounds < 1 || rounds > 20)
             {

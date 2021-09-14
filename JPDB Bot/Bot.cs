@@ -14,6 +14,8 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
+using JPDB_Bot;
+using JPDB_Bot.Commands;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot
@@ -84,7 +86,7 @@ namespace DiscordBot
             // Dependency injection for Commands
             ServiceProvider services = new ServiceCollection()
                 .AddSingleton<Random>(new Random())
-                .AddSingleton<GreetingsDB>(LoadGreetings())
+                .AddSingleton<GreetingsData>(GreetingsData.LoadGreetings())
                 .BuildServiceProvider();
 
             var commandsConfig = new CommandsNextConfiguration
@@ -99,6 +101,7 @@ namespace DiscordBot
             };
             Commands = Client.UseCommandsNext(commandsConfig);
 
+            Commands.RegisterCommands<Greeter>();
             Commands.RegisterCommands<TestCommands>();
             await Client.ConnectAsync();
             await Task.Delay(-1);
@@ -147,50 +150,6 @@ namespace DiscordBot
             return Task.CompletedTask;
         }
 
-        public static GreetingsDB LoadGreetings()
-        {
-            try
-            {
-                using FileStream fs = File.OpenRead("greetings.json");
-                using StreamReader sr = new(fs, new UTF8Encoding(false));
-                string json = sr.ReadToEnd();
-                var data = JsonConvert.DeserializeObject<GreetingsDB>(json);
-                if (data == null)
-                    throw new NullReferenceException();
-                return data;
-            }
-            catch
-            {
-                WeightedString[] supporterGreetings =
-                {
-                    new WeightedString { Value = "Hi %username%様, I can speak English too ya know >:)", Weight = 1 },
-                    new WeightedString { Value = "どうも、%username%様 :)", Weight = 5 },
-                    new WeightedString { Value = "よおおおおおおおぉ %username%様！ :)", Weight = 1 },
-                    new WeightedString { Value = "また会えて嬉しいね %username%様 :)", Weight = 3 },
-                    new WeightedString { Value = "やっほおおおおおお～ %username%様 :)", Weight = 1 },
-                    new WeightedString { Value = "おおおおっす! %username%様 :)", Weight = 1 },
-                    new WeightedString { Value = "ハロオオオ %username%様！ :)", Weight = 1 },
-                    new WeightedString { Value = "へっ！なんかあった？%username%様 :O", Weight = 2 },
-                };
 
-                WeightedString[] defaultGreetings =
-                {
-                    new WeightedString { Value = "どうも、%username%様 :)", Weight = 5 },
-                    new WeightedString { Value = "おいお前 JPDBの支援者になれ", Weight = 1 },
-                    new WeightedString { Value = "元気はないんだなあ %username%さん。JPDBを支援したら？うwう", Weight = 5 },
-                    new WeightedString { Value = "おっす! %username% :)", Weight = 1 },
-                    new WeightedString { Value = "ハロー %username%！ :)", Weight = 2 },
-                    new WeightedString { Value = "へっ！なんかあった？%username%様 :O", Weight = 1 },
-                };
-
-                GreetingsDB data = new GreetingsDB
-                {
-                    { "Supporter", supporterGreetings },
-                    { "Default", defaultGreetings }
-                };
-
-                return data;
-            }
-        }
     }
 }
