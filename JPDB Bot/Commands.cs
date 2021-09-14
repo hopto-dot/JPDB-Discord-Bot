@@ -469,7 +469,7 @@ namespace DiscordBot.Commands
                 List<string> correctPlayers = new List<string>();
                 if (wordA.vocabFreq < wordB.vocabFreq) //if word A is more frequent
                 {
-                    await ctx.Channel.SendMessageAsync($"{wordA.vocabKanji} ({wordA.vocabFreq}) was the correct answer! While {wordB.vocabKanji} has freq of {wordB.vocabFreq}").ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync($"{wordA.vocabKanji} ({wordA.vocabFreq}) was the correct answer, while {wordB.vocabKanji} has a frequency of {wordB.vocabFreq}!").ConfigureAwait(false);
                     foreach (gamePlayer Person in players)
                     {
                         if (Person.choice == "A")
@@ -488,7 +488,7 @@ namespace DiscordBot.Commands
                 }
                 else //if word B is more frequent
                 {
-                    await ctx.Channel.SendMessageAsync($"{wordB.vocabKanji} ({wordB.vocabFreq}) was the correct answer! While {wordA.vocabKanji} has freq of {wordA.vocabFreq}").ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync($"{wordB.vocabKanji} ({wordB.vocabFreq}) was the correct answer, while {wordA.vocabKanji} has a frequency of {wordA.vocabFreq}!").ConfigureAwait(false);
                     foreach (gamePlayer Person in players)
                     {
                         if (Person.choice == "B")
@@ -506,7 +506,7 @@ namespace DiscordBot.Commands
                     }
                 }
 
-                if (correctPlayers.Count == 1 && players.Count == 1)
+                if (correctPlayers.Count == 1)
                 {
                     await ctx.Channel.SendMessageAsync($"{string.Join(" and ", correctPlayers)} got it right!").ConfigureAwait(false);
                 }
@@ -536,7 +536,7 @@ namespace DiscordBot.Commands
                 }
 
 
-                if (round != 5)
+                if (round != rounds)
                 {
                     await Task.Delay(4000);
                 }
