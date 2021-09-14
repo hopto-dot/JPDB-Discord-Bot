@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DiscordBot.Commands;
 using System.Net;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity.Enums;
@@ -102,7 +101,10 @@ namespace DiscordBot
             Commands = Client.UseCommandsNext(commandsConfig);
 
             Commands.RegisterCommands<Greeter>();
-            Commands.RegisterCommands<TestCommands>();
+            Commands.RegisterCommands<FreqGame>();
+            Commands.RegisterCommands<ChangeLog>();
+            Commands.RegisterCommands<Content>();
+            Commands.RegisterCommands<JapanTime>();
             await Client.ConnectAsync();
             await Task.Delay(-1);
 
