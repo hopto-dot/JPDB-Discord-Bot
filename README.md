@@ -9,5 +9,5 @@ _Note: the bot won't be online 24/7 as it is still in development._
 * !help - get help on commands
 * !japantime - get the time in japan
 * !content - search for content in the jpdb database
-* !freqgame - play a frequency guess game that uses data from jpdb
+* !freqgame - play a frequency guess game that uses data from jpdb (Work in Progress)
 * !hi - get a (usually) warm response from the bot
