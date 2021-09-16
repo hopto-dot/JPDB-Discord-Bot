@@ -2,7 +2,6 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using System;
 using System.Threading.Tasks;
-using DiscordBot;
 
 namespace JPDB_Bot.Commands
 {

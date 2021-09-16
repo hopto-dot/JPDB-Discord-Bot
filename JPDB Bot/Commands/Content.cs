@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using DiscordBot;
 
 namespace JPDB_Bot.Commands
 {
