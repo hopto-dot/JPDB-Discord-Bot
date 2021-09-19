@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DiscordBot
+namespace JPDB_Bot
 {
     class Program
     {
@@ -9,7 +9,7 @@ namespace DiscordBot
             Console.ForegroundColor = ConsoleColor.White;
             Bot bot = new Bot();
             bot.RunAsync().GetAwaiter().GetResult();
-            
+
         }
 
         public static void PrintError(string error)

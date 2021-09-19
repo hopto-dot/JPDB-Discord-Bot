@@ -1,13 +1,8 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace DiscordBot
+namespace JPDB_Bot
 {
-    struct ConfigJson
+    public class ConfigJson
     {
         [JsonProperty("DiscordToken")]
         public string DiscordToken { get; private set; }
