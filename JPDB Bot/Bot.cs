@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
@@ -152,7 +153,7 @@ namespace JPDB_Bot
                 {
                     Program.PrintError(ex.Message);
                 }
-                
+
                 Program.PrintCommandUse(e.Message.Author.Username, "Server Join");
             }
 
@@ -165,7 +166,7 @@ namespace JPDB_Bot
 
             if (e.Guild.GetMemberAsync(e.Author.Id).Result.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster") != true || e.Channel.Name == "bot")
             {
-                
+
                 if ((e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("request")) && e.Message.Content.ToLower().Contains("add") || (e.Message.Content.ToLower().Contains("request") && e.Message.Content.ToLower().Contains("added")) || (e.Message.Content.ToLower().Contains("novel") && e.Message.Content.ToLower().Contains("request")) || (e.Message.Content.ToLower().Contains("anime") && e.Message.Content.ToLower().Contains("request")) || (e.Message.Content.ToLower().Contains("novel") && e.Message.Content.ToLower().Contains("add")) || (e.Message.Content.ToLower().Contains("anime") && e.Message.Content.ToLower().Contains("add")) || (e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("add") && e.Message.Content.ToLower().Contains("database") || (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") && e.Message.Content.ToLower().Contains("requests") || (e.Message.Content.ToLower().Contains("can you add") && e.Message.Content.ToLower().Contains("to") && e.Message.Content.ToLower().Contains("database")) || (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") && e.Message.Content.ToLower().Contains("requests") || (e.Message.Content.ToLower().Contains("can you add") && e.Message.Content.ToLower().Contains("to") && e.Message.Content.ToLower().Contains("list"))))))
                 {
                     if (e.Message.Content.ToLower().Contains("feature") == true)
@@ -177,21 +178,15 @@ namespace JPDB_Bot
                     var Kou = await sender.GetUserAsync(118408957416046593);
                     if (Kou.Presence.Status != DSharpPlus.Entities.UserStatus.Offline)
                     {
-                        await e.Message
-                            .RespondAsync(
-                                "To request content you must DM -こう-.\nDo **not** post the script here (see rule 4).")
-                            .ConfigureAwait(false);
+                        await e.Message.RespondAsync("To request content you must DM -こう-.\nDo **not** post the script here (see rule 4).").ConfigureAwait(false);
                     }
                     else
                     {
-                        await e.Message
-                            .RespondAsync(
-                                "To request content you must DM -こう-. Currently, he's not online.\nDo **not** post the script here (see rule 4).")
-                            .ConfigureAwait(false);
+                        await e.Message.RespondAsync("To request content you must DM -こう-. Currently, he's not online.\nDo **not** post the script here (see rule 4).").ConfigureAwait(false);
                     }
                 }
             }
-            
+
 
             return;
         }
