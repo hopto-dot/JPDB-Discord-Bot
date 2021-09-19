@@ -112,14 +112,23 @@ namespace JPDB_Bot.FreqGame
                                 string jpdbUsername = parts.Length > 1 ? parts[1] : "";
 
                                 DiscordUser user = message.Author;
-                                if (GamePlayers.ContainsKey(user))
+                                bool alreadyJoined = GamePlayers.ContainsKey(user);
+
+                                AddPlayer(user, jpdbUsername);
+
+                                if (alreadyJoined)
                                 {
                                     await Ctx.Channel.SendMessageAsync(
                                         $"Username for {user.Username} updated to {jpdbUsername}"
                                     ).ConfigureAwait(false);
                                 }
+                                else
+                                {
+                                    await Ctx.Channel.SendMessageAsync(
+                                        $"{user.Username} ({jpdbUsername}) joined the game"
+                                    ).ConfigureAwait(false);
+                                }
 
-                                AddPlayer(user, jpdbUsername);
                                 break;
                             case "!start":
                                 return;
@@ -251,7 +260,8 @@ namespace JPDB_Bot.FreqGame
         {
             // pick_words?count=2&spread=100&users=user1,user2,user3
             string url = "https://jpdb.io/api/experimental/pick_words?count=2&spread=300";
-            string playerList = string.Join(",", GamePlayers.Select(pair => pair.Value.JpdbUsername));
+            string playerList = string.Join(",",
+                GamePlayers.Where(pair => pair.Value.JpdbUsername.Length > 0).Select(pair => pair.Value.JpdbUsername));
             if (playerList != "")
             {
                 url += "&users=" + playerList;
@@ -274,6 +284,7 @@ namespace JPDB_Bot.FreqGame
                         "API request failed, this is usually because of an incorrect jpdb username.\nThe game has been aborted.")
                     .ConfigureAwait(false);
                 Console.WriteLine(e.Message);
+                Console.WriteLine("url is " + url);
                 throw;
             }
 
@@ -442,7 +453,8 @@ namespace JPDB_Bot.FreqGame
             }
             else
             {
-                await Ctx.Channel.SendMessageAsync($"Only {string.Join(" and ", winners)} got it right!")
+                List<string> winnerNames = winners.Select(winner => winner.Username).ToList();
+                await Ctx.Channel.SendMessageAsync($"Only {string.Join(" and ", winnerNames)} got it right!")
                     .ConfigureAwait(false);
             }
         }
