@@ -21,6 +21,7 @@ namespace JPDB_Bot
         public DiscordClient Client { get; private set; }
         public CommandsNextExtension Commands { get; private set; }
 
+        // ReSharper disable once InconsistentNaming
         ConfigJson configJson;
         public async Task RunAsync()
         {
