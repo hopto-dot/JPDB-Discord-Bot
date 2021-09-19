@@ -20,6 +20,7 @@ namespace JPDB_Bot
         public DiscordClient Client { get; private set; }
         public CommandsNextExtension Commands { get; private set; }
 
+        ConfigJson configJson;
         public async Task RunAsync()
         {
             Console.WriteLine("Reading config file...");
@@ -41,7 +42,7 @@ namespace JPDB_Bot
                 return;
             }
 
-            ConfigJson configJson;
+
             try
             {
                 configJson = JsonConvert.DeserializeObject<ConfigJson>(json);
@@ -51,6 +52,15 @@ namespace JPDB_Bot
                 Program.PrintError("Couldn't deserialize config.json");
                 return;
             }
+
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("Settings:");
+            Console.WriteLine($"DiscordToken: Working");
+            Console.WriteLine($"Prefix: {configJson.Prefix}");
+            Console.WriteLine($"JPDBToken: Working");
+            Console.WriteLine($"LogLevel: {configJson.LogLevel}");
+            Console.WriteLine($"WelcomeMessages: {configJson.WelcomeMessages}");
+            Console.ForegroundColor = ConsoleColor.White;
 
             Microsoft.Extensions.Logging.LogLevel LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Warning;
             if (configJson.LogLevel.ToLower() == "debug")
@@ -120,34 +130,43 @@ namespace JPDB_Bot
                 //await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsdown:"));
             }
 
-            if (e.Guild.GetMemberAsync(e.Author.Id).Result.Roles.Any(r =>
-                    r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster") != true ||
-                e.Channel.Name == "bot")
+            if(e.Message.MessageType == MessageType.GuildMemberJoin && (configJson.WelcomeMessages.ToLower() == "enabled" || configJson.WelcomeMessages.ToLower() == "True"))
             {
-                if (
-                    (e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("do") &&
-                     e.Message.Content.ToLower().Contains("request")) && e.Message.Content.ToLower().Contains("add") ||
-                    (e.Message.Content.ToLower().Contains("request") &&
-                     e.Message.Content.ToLower().Contains("added")) ||
-                    (e.Message.Content.ToLower().Contains("novel") &&
-                     e.Message.Content.ToLower().Contains("request")) ||
-                    (e.Message.Content.ToLower().Contains("anime") &&
-                     e.Message.Content.ToLower().Contains("request")) ||
-                    (e.Message.Content.ToLower().Contains("novel") && e.Message.Content.ToLower().Contains("add")) ||
-                    (e.Message.Content.ToLower().Contains("anime") && e.Message.Content.ToLower().Contains("add")) ||
-                    (e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("add") &&
-                     e.Message.Content.ToLower().Contains("database") ||
-                     (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") &&
-                      e.Message.Content.ToLower().Contains("requests") ||
-                      (e.Message.Content.ToLower().Contains("can you add") &&
-                       e.Message.Content.ToLower().Contains("to") &&
-                       e.Message.Content.ToLower().Contains("database")) ||
-                      (e.Message.Content.ToLower().Contains("do") &&
-                       e.Message.Content.ToLower().Contains("take") &&
-                       e.Message.Content.ToLower().Contains("requests") ||
-                       (e.Message.Content.ToLower().Contains("can you add") &&
-                        e.Message.Content.ToLower().Contains("to") &&
-                        e.Message.Content.ToLower().Contains("list"))))))
+                Task.Delay(2000);
+                try
+                {
+                    string emoji = ":hello:";
+                    if (e.Author.Username.ToLower().Contains("boyin"))
+                    {
+                        emoji = ":eyes:";
+                    }
+                    await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, emoji));
+                } catch
+                {
+                    Program.PrintError("Failed to react to a user join message with :hello");
+                }
+                try
+                {
+                    await e.Message.RespondAsync($"{e.Message.Author.Mention} Welcome to the jpdb.io Discord server!\nCheck the pinned message in <#833939726078967808> for information on jpdb on how to get started if you're new to jpdb :)").ConfigureAwait(false);
+                } catch (Exception ex)
+                {
+                    Program.PrintError(ex.Message);
+                }
+                
+                Program.PrintCommandUse(e.Message.Author.Username, "Server Join");
+            }
+
+            if (e.Message.Content.ToLower().Contains("boku no pi"))
+            {
+                Task.Delay(1500);
+                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":eyes:"));
+                return;
+            }
+
+            if (e.Guild.GetMemberAsync(e.Author.Id).Result.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster") != true || e.Channel.Name == "bot")
+            {
+                
+                if ((e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("request")) && e.Message.Content.ToLower().Contains("add") || (e.Message.Content.ToLower().Contains("request") && e.Message.Content.ToLower().Contains("added")) || (e.Message.Content.ToLower().Contains("novel") && e.Message.Content.ToLower().Contains("request")) || (e.Message.Content.ToLower().Contains("anime") && e.Message.Content.ToLower().Contains("request")) || (e.Message.Content.ToLower().Contains("novel") && e.Message.Content.ToLower().Contains("add")) || (e.Message.Content.ToLower().Contains("anime") && e.Message.Content.ToLower().Contains("add")) || (e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("add") && e.Message.Content.ToLower().Contains("database") || (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") && e.Message.Content.ToLower().Contains("requests") || (e.Message.Content.ToLower().Contains("can you add") && e.Message.Content.ToLower().Contains("to") && e.Message.Content.ToLower().Contains("database")) || (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") && e.Message.Content.ToLower().Contains("requests") || (e.Message.Content.ToLower().Contains("can you add") && e.Message.Content.ToLower().Contains("to") && e.Message.Content.ToLower().Contains("list"))))))
                 {
                     if (e.Message.Content.ToLower().Contains("feature") == true)
                     {
@@ -172,6 +191,7 @@ namespace JPDB_Bot
                     }
                 }
             }
+            
 
             return;
         }
