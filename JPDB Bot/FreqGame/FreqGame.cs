@@ -119,13 +119,13 @@ namespace JPDB_Bot.FreqGame
                                 if (alreadyJoined)
                                 {
                                     await Ctx.Channel.SendMessageAsync(
-                                        $"Username for {user.Username} updated to {jpdbUsername}"
-                                    ).ConfigureAwait(false);
+                                        $"{user.Username} updated their jpdb username to {jpdbUsername}"
+                                        ).ConfigureAwait(false);
                                 }
                                 else
                                 {
                                     await Ctx.Channel.SendMessageAsync(
-                                        $"{user.Username} ({jpdbUsername}) joined the game"
+                                        ($"{user.Username} ({jpdbUsername}) joined the game!").Replace("() ", "")
                                     ).ConfigureAwait(false);
                                 }
 

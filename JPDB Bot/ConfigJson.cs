@@ -14,5 +14,7 @@ namespace JPDB_Bot
         public string LogLevel { get; private set; }
         [JsonProperty("WelcomeMessages")]
         public string WelcomeMessages { get; private set; }
+        [JsonProperty("MemeRatings")]
+        public string MemeRatings { get; private set; }
     }
 }
