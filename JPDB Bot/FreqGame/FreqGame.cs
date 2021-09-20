@@ -455,13 +455,13 @@ namespace JPDB_Bot.FreqGame
                     $"while {wrongWord.vocabKanji} has a frequency of {wrongWord.vocabFreq}!")
                 .ConfigureAwait(false);
 
-            if (winners.Count == GamePlayers.Count)
+            if (winners.Count == GamePlayers.Count && GamePlayers.Count > 2)
             {
                 await Ctx.Channel.SendMessageAsync("Everyone got it right!").ConfigureAwait(false);
             }
             else if (winners.Count == 0)
             {
-                if (GamePlayers.Count > 3)
+                if (GamePlayers.Count > 2)
                 {
                     await Ctx.Channel.SendMessageAsync("How did no one get that right!?").ConfigureAwait(false);
                 }
@@ -473,7 +473,7 @@ namespace JPDB_Bot.FreqGame
             else
             {
                 List<string> winnerNames = winners.Select(winner => winner.Username).ToList();
-                await Ctx.Channel.SendMessageAsync($"Only {string.Join(" and ", winnerNames)} got it right!")
+                await Ctx.Channel.SendMessageAsync($"{string.Join(" and ", winnerNames)} got it right!")
                     .ConfigureAwait(false);
             }
         }
