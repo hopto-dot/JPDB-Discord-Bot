@@ -125,7 +125,7 @@ namespace JPDB_Bot.FreqGame
                                 else
                                 {
                                     await Ctx.Channel.SendMessageAsync(
-                                        ($"{user.Username} ({jpdbUsername}) joined the game!").Replace("() ", "")
+                                        $"{user.Username} ({jpdbUsername}) joined the game!")
                                     ).ConfigureAwait(false);
                                 }
 
