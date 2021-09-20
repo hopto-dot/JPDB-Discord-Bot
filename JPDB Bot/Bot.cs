@@ -123,17 +123,21 @@ namespace JPDB_Bot
 
         private async Task Bot_MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
         {
+            //sending messages and replying templates:
             //await e.Message.RespondAsync("test").ConfigureAwait(false);
             //await e.Channel.SendMessageAsync("test").ConfigureAwait(false);
-            if (e.Channel.Name.Contains("meme") && e.Message.Attachments.Count > 0)
+
+            if (e.Channel.Name.Contains("meme") && e.Message.Attachments.Count > 0 && configJson.MemeRatings.ToLower() == "enabled")
             {
-                //await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsup:"));
-                //await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsdown:"));
+                //if in the #memes channel and there is an attachment, reacting with thumbsup and thumbsdown
+                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsup:"));
+                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsdown:"));
             }
 
             if(e.Message.MessageType == MessageType.GuildMemberJoin && (configJson.WelcomeMessages.ToLower() == "enabled" || configJson.WelcomeMessages.ToLower() == "True"))
             {
-                Task.Delay(2000);
+                //when a user joins:
+                await Task.Delay(1000).ConfigureAwait(false);
                 try
                 {
                     string emoji = ":hello:";
@@ -148,7 +152,7 @@ namespace JPDB_Bot
                 }
                 try
                 {
-                    await e.Message.RespondAsync($"{e.Message.Author.Mention} Welcome to the jpdb.io Discord server!\nCheck the pinned message in <#833939726078967808> for information on jpdb on how to get started if you're new to jpdb :)").ConfigureAwait(false);
+                    await e.Message.RespondAsync($"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\nCheck the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
                 } catch (Exception ex)
                 {
                     Program.PrintError(ex.Message);
@@ -158,7 +162,7 @@ namespace JPDB_Bot
 
             if (e.Message.Content.ToLower().Contains("boku no pi"))
             {
-                Task.Delay(1500);
+                await Task.Delay(1000).ConfigureAwait(false);
                 await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":eyes:"));
                 return;
             }
