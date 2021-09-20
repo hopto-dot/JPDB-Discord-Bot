@@ -109,25 +109,10 @@ namespace JPDB_Bot.FreqGame
                         switch (parts[0])
                         {
                             case "!me":
+                                DiscordUser user = message.Author;
                                 string jpdbUsername = parts.Length > 1 ? parts[1] : "";
 
-                                DiscordUser user = message.Author;
-                                bool alreadyJoined = GamePlayers.ContainsKey(user);
-
-                                AddPlayer(user, jpdbUsername);
-
-                                if (alreadyJoined)
-                                {
-                                    await Ctx.Channel.SendMessageAsync(
-                                        $"{user.Username} updated their jpdb username to {jpdbUsername}"
-                                        ).ConfigureAwait(false);
-                                }
-                                else
-                                {
-                                    await Ctx.Channel.SendMessageAsync(
-                                        $"{user.Username} ({jpdbUsername}) joined the game!")
-                                    ).ConfigureAwait(false);
-                                }
+                                await RunMeCommand(user, jpdbUsername);
 
                                 break;
                             case "!start":
@@ -139,6 +124,40 @@ namespace JPDB_Bot.FreqGame
             catch
             {
                 throw new TimeoutException();
+            }
+        }
+
+        private async Task RunMeCommand(DiscordUser user, string jpdbUsername)
+        {
+            bool alreadyJoined = GamePlayers.ContainsKey(user);
+
+            AddPlayer(user, jpdbUsername);
+
+            if (alreadyJoined)
+            {
+                if (jpdbUsername == "")
+                {
+                    await Ctx.Channel.SendMessageAsync($"Username for {user.Username} updated to (none)"
+                    ).ConfigureAwait(false);
+                }
+                else
+                {
+                    await Ctx.Channel.SendMessageAsync($"Username for {user.Username} updated to {jpdbUsername}"
+                    ).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                if (jpdbUsername == "")
+                {
+                    await Ctx.Channel.SendMessageAsync($"{user.Username} joined the game"
+                    ).ConfigureAwait(false);
+                }
+                else
+                {
+                    await Ctx.Channel.SendMessageAsync($"{user.Username} ({jpdbUsername}) joined the game"
+                    ).ConfigureAwait(false);
+                }
             }
         }
 
