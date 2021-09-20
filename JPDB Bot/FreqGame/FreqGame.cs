@@ -219,7 +219,7 @@ namespace JPDB_Bot.FreqGame
                     {
                         noResponseCount++;
                         if (noResponseCount < 2) break;
-                        await Ctx.Channel.SendMessageAsync("Game is inactive so the game has been stopped!")
+                        await Ctx.Channel.SendMessageAsync("Game is inactive so the game has been aborted!")
                             .ConfigureAwait(false);
                         return outcome;
                     }
@@ -249,12 +249,12 @@ namespace JPDB_Bot.FreqGame
 
             bool bonusRound = false;
             double answerTime = 6;
-            if (round != 1 && Rng.Next(1, 6) == 2)
+            if (round != 1 && Rng.Next(1, 7) == 20)
             {
                 bonusRound = true;
                 answerTime = 7;
                 await Ctx.Channel
-                    .SendMessageAsync("**BONUS POINTS ROUND!!!\nCorrectly answering scores you 3 points!**")
+                    .SendMessageAsync("**Bonus Points Round!\nCorrectly answering scores you 2 points!**")
                     .ConfigureAwait(false);
             }
 
@@ -266,7 +266,7 @@ namespace JPDB_Bot.FreqGame
 
             await CheckForNewlyJoinedPlayers(playerReactions);
 
-            int pointsAwarded = bonusRound ? 3 : 1;
+            int pointsAwarded = bonusRound ? 2 : 1;
 
             List<DiscordUser> winners = AwardPoints(question, playerReactions, pointsAwarded);
 
