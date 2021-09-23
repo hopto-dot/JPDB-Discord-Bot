@@ -11,9 +11,10 @@ namespace JPDB_Bot.Commands
     {
         [Command("content")]
         [Cooldown(3, 10, CooldownBucketType.User)]
+        
         [Description("Search for content in the JPDB database\nFor example: !content \"steins gate\"")]
         public async Task SearchContent(CommandContext ctx,
-            [DescriptionAttribute("Name of the content you are searching")]
+            [DescriptionAttribute("Name of the content you are searching")] [RemainingText]
             string searchString)
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);

@@ -118,6 +118,7 @@ namespace JPDB_Bot
             Commands.RegisterCommands<Content>();
             Commands.RegisterCommands<JapanTime>();
             await Client.ConnectAsync();
+
             await Task.Delay(-1);
         }
 
