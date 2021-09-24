@@ -170,9 +170,20 @@ namespace JPDB_Bot
 
             if (e.Guild.GetMemberAsync(e.Author.Id).Result.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster") != true || e.Channel.Name == "bot")
             {
-                if ((e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("request")) && e.Message.Content.ToLower().Contains("add") || (e.Message.Content.ToLower().Contains("request") && e.Message.Content.ToLower().Contains("added")) || (e.Message.Content.ToLower().Contains("novel") && e.Message.Content.ToLower().Contains("request")) || (e.Message.Content.ToLower().Contains("anime") && e.Message.Content.ToLower().Contains("request")) || (e.Message.Content.ToLower().Contains("novel") && e.Message.Content.ToLower().Contains("add")) || (e.Message.Content.ToLower().Contains("anime") && e.Message.Content.ToLower().Contains("add")) || (e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("add") && e.Message.Content.ToLower().Contains("database") || (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") && e.Message.Content.ToLower().Contains("requests") || (e.Message.Content.ToLower().Contains("can you add") && e.Message.Content.ToLower().Contains("to") && e.Message.Content.ToLower().Contains("database")) || (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") && e.Message.Content.ToLower().Contains("requests") || (e.Message.Content.ToLower().Contains("can you add") && e.Message.Content.ToLower().Contains("to") && e.Message.Content.ToLower().Contains("list"))))))
+                if ((
+                    e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("request")) && e.Message.Content.ToLower().Contains("add") ||
+                    (e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("request") && e.Message.Content.ToLower().Contains("added"))
+                    || (e.Message.Content.ToLower().Contains("i want") && e.Message.Content.ToLower().Contains("add") && e.Message.Content.ToLower().Contains("database"))
+                    || (e.Message.Content.ToLower().Contains("novel") && e.Message.Content.ToLower().Contains("add") && e.Message.Content.ToLower().Contains("to the"))
+                    || (e.Message.Content.ToLower().Contains("anime") && e.Message.Content.ToLower().Contains("add") && e.Message.Content.ToLower().Contains("to the"))
+                    || (e.Message.Content.ToLower().Contains("how") && e.Message.Content.ToLower().Contains("add") && e.Message.Content.ToLower().Contains("to the") && e.Message.Content.ToLower().Contains("database") 
+                    || (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") && e.Message.Content.ToLower().Contains("request") 
+                    || (e.Message.Content.ToLower().Contains("can you add") && e.Message.Content.ToLower().Contains("to") && e.Message.Content.ToLower().Contains("database")) 
+                    || (e.Message.Content.ToLower().Contains("do") && e.Message.Content.ToLower().Contains("take") && e.Message.Content.ToLower().Contains("request")
+                    || (e.Message.Content.ToLower().Contains("please") && e.Message.Content.ToLower().Contains("add") && e.Message.Content.ToLower().Contains("to the database"))
+                    || (e.Message.Content.ToLower().Contains("can you add") && e.Message.Content.ToLower().Contains("to") && e.Message.Content.ToLower().Contains("list"))))))
                 {
-                    if (e.Message.Content.ToLower().Contains("feature") == true)
+                    if (e.Message.Content.ToLower().Contains("feature") == true || e.Message.Content.ToLower().Contains("idea"))
                     {
                         return;
                     }
