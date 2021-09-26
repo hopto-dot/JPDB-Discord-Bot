@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.EventHandling;
 using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json.Linq;
 
@@ -16,6 +16,13 @@ namespace JPDB_Bot.FreqGame
 {
     public class FreqGame
     {
+        public const int MaxRounds = 20;
+        public const int DelayBetweenRoundsMillis = 4000;
+        public const int DelayBeforeFirstRoundMillis = 3000;
+        public const int DelayReactionsToAvoidRateLimitMillis = 350;
+        public const int AnswerTimeoutMillis = 6000;
+        public const int BonusRoundAnswerTimeoutMillis = 7000;
+
         // Dependencies
         private Random Rng;
         private ConfigJson BotConfig;
@@ -25,11 +32,14 @@ namespace JPDB_Bot.FreqGame
 
         // The state of the current game
         private int Rounds;
-        private readonly Dictionary<DiscordUser, Player> GamePlayers;
+        private Dictionary<DiscordUser, Player> GamePlayers;
 
         // Emoji
-        private readonly DiscordEmoji EMOJI_A;
-        private readonly DiscordEmoji EMOJI_B;
+        private DiscordEmoji EMOJI_A;
+        private DiscordEmoji EMOJI_B;
+
+        // Stop flag
+        public bool IsStopRequested { get; private set; }
 
         // Outcomes from running one round
         enum RoundOutcome
@@ -39,7 +49,102 @@ namespace JPDB_Bot.FreqGame
             ApiError
         }
 
-        public FreqGame(Random rng, ConfigJson botConfig, CommandContext ctx, string jpdbUser, int rounds)
+        public FreqGame()
+        {
+            // Note: This constructor will be called from inside a lock.
+            // Minimal initialization only!
+            IsStopRequested = false;
+        }
+
+        public void RequestStop()
+        {
+            IsStopRequested = true;
+        }
+
+        private void CheckForCancellation()
+        {
+            if (IsStopRequested)
+            {
+                throw new GameCancelledException();
+            }
+        }
+
+        private async Task DelayWithAbort(int millisecondsDelay)
+        {
+            CheckForCancellation();
+
+            // Wait for a stop message. The timeout is equal to the requested delay.
+            InteractivityResult<DiscordMessage> result = await Ctx.Channel.GetNextMessageAsync(
+                    message =>
+                    {
+                        string[] parts = message.Content.Split();
+                        return parts.Length > 0 && parts[0] == "!stop";
+                    }, TimeSpan.FromMilliseconds(millisecondsDelay))
+                .ConfigureAwait(false);
+
+            if (result.TimedOut)
+            {
+                return; // A stop was not requested during the delay
+            }
+
+            DiscordMessage message = result.Result;
+            string[] parts = message.Content.Split();
+            if (parts.Length > 0 && parts[0] == "!stop")
+            {
+                RequestStop();
+                CheckForCancellation();
+            }
+        }
+
+        public async Task RunGame(Random rng, ConfigJson botConfig, CommandContext ctx, string jpdbUser, int rounds)
+        {
+            InitializeGame(rng, botConfig, ctx, jpdbUser, rounds);
+
+            await CollectPlayers();
+
+            CheckForCancellation();
+
+            if (Rounds is < 1 or > MaxRounds)
+            {
+                await Ctx.Channel.SendMessageAsync($"Playing 5 rounds instead of {Rounds} rounds")
+                    .ConfigureAwait(false);
+                Rounds = 5;
+            }
+
+            (DiscordMessage playerListMessage, DiscordEmbedBuilder gameEmbed) = await ShowPlayerList();
+
+            try
+            {
+                await DelayWithAbort(DelayBeforeFirstRoundMillis);
+                CheckForCancellation();
+            }
+            catch (GameCancelledException)
+            {
+                // Update the embed
+                await playerListMessage.ModifyAsync(
+                    gameEmbed
+                        .WithColor(DiscordColor.Gray)
+                        .WithFooter("ABORTED!")
+                        .Build());
+
+                throw; // Re-throw the exception to actually stop the game
+            }
+
+            // Update the embed to gray instead of red.
+            // The latest embed will be red, and a new one will be posted at the beginning of the first round.
+            await playerListMessage.ModifyAsync(
+                gameEmbed
+                    .WithColor(DiscordColor.Gray)
+                    .Build());
+
+            RoundOutcome roundOutcome = await RunRounds();
+            if (roundOutcome != RoundOutcome.Success)
+                return;
+
+            await ShowFinalScores();
+        }
+
+        private void InitializeGame(Random rng, ConfigJson botConfig, CommandContext ctx, string jpdbUser, int rounds)
         {
             Rng = rng;
             BotConfig = botConfig;
@@ -54,81 +159,61 @@ namespace JPDB_Bot.FreqGame
             AddPlayer(ctx.Message.Author, jpdbUser);
         }
 
-        public async Task RunGame()
-        {
-            await CollectPlayers();
-
-            if (Rounds < 1 || Rounds > 20)
-            {
-                await Ctx.Channel.SendMessageAsync($"Playing 5 rounds instead of {Rounds} rounds")
-                    .ConfigureAwait(false);
-                Rounds = 5;
-            }
-
-            await ShowPlayerList();
-
-            await Task.Delay(3000);
-
-            var roundOutcome = await RunRounds();
-            if (roundOutcome != RoundOutcome.Success)
-                return;
-
-            await ShowFinalScores();
-        }
-
         private async Task CollectPlayers()
         {
+            CheckForCancellation();
             await Ctx.Channel.SendMessageAsync(
                 $"Type \"!me [jpdb username]\" to play with {Ctx.User.Username}, a jpdb username isn't required.\n" +
                 "Type \"!start\" once you're all ready.");
 
-            try
+            while (true)
             {
-                while (true)
-                {
-                    string[] commands = new[] { "!me", "!start" };
+                CheckForCancellation();
 
-                    InteractivityResult<DiscordMessage> result =
-                        await Ctx.Channel.GetNextMessageAsync(message =>
-                            {
-                                string[] parts = message.Content.Split();
-                                return parts.Length > 0 && commands.Contains(parts[0]);
-                            })
-                            .ConfigureAwait(false);
+                string[] commands = new[] { "!me", "!start", "!stop" };
 
-                    if (result.TimedOut)
-                    {
-                        throw new TimeoutException();
-                    }
-
-                    DiscordMessage message = result.Result;
-                    string[] parts = message.Content.Split();
-
-                    if (parts.Length > 0)
-                    {
-                        switch (parts[0])
+                InteractivityResult<DiscordMessage> result =
+                    await Ctx.Channel.GetNextMessageAsync(message =>
                         {
-                            case "!me":
-                                DiscordUser user = message.Author;
-                                string jpdbUsername = parts.Length > 1 ? parts[1] : "";
+                            string[] parts = message.Content.Split();
+                            return parts.Length > 0 && commands.Contains(parts[0]);
+                        })
+                        .ConfigureAwait(false);
 
-                                await RunMeCommand(user, jpdbUsername);
+                if (result.TimedOut)
+                {
+                    throw new TimeoutException();
+                }
 
-                                break;
-                            case "!start":
-                                return;
-                        }
+                DiscordMessage message = result.Result;
+                string[] parts = message.Content.Split();
+
+                if (parts.Length > 0)
+                {
+                    switch (parts[0])
+                    {
+                        case "!me":
+                            DiscordUser user = message.Author;
+                            string jpdbUsername = parts.Length > 1 ? parts[1] : "";
+
+                            await RunMeCommand(user, jpdbUsername);
+
+                            break;
+                        case "!start":
+                            return;
+                        case "!stop":
+                            RequestStop();
+                            CheckForCancellation();
+                            return;
                     }
                 }
-            }
-            catch
-            {
-                throw new TimeoutException();
             }
         }
 
         private async Task RunMeCommand(DiscordUser user, string jpdbUsername)
         {
+            CheckForCancellation();
+
             bool alreadyJoined = GamePlayers.ContainsKey(user);
 
             AddPlayer(user, jpdbUsername);
@@ -166,8 +251,10 @@ namespace JPDB_Bot.FreqGame
             GamePlayers[user] = new Player(user.Username, jpdbUsername);
         }
 
-        private async Task ShowPlayerList()
+        private async Task<(DiscordMessage playerListMessage, DiscordEmbedBuilder gameEmbed)> ShowPlayerList()
         {
+            CheckForCancellation();
+
             List<string> playerNames = GetPlayerListForDisplay();
 
             await Ctx.Channel.SendMessageAsync(string.Join(" 対 ", playerNames)).ConfigureAwait(false);
@@ -183,7 +270,8 @@ namespace JPDB_Bot.FreqGame
                     Text = "Currently, usernames don't do anything.",
                 }
             };
-            await Ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
+            var playerListMessage = await Ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
+            return (playerListMessage, gameEmbed);
         }
 
         private List<string> GetPlayerListForDisplay()
@@ -228,7 +316,12 @@ namespace JPDB_Bot.FreqGame
                         break;
                 }
 
-                if (round < Rounds) await Task.Delay(4000);
+                if (round < Rounds)
+                {
+                    await DelayWithAbort(DelayBetweenRoundsMillis);
+                }
+
+                CheckForCancellation();
             }
 
             return RoundOutcome.Success;
@@ -236,6 +329,8 @@ namespace JPDB_Bot.FreqGame
 
         private async Task<RoundOutcome> RunOneRound(int round)
         {
+            CheckForCancellation();
+
             string responseFromServer = await GetWordsFromServer();
             if (responseFromServer == "")
             {
@@ -248,18 +343,18 @@ namespace JPDB_Bot.FreqGame
             Question question = new(words[0], words[1], Rng);
 
             bool bonusRound = false;
-            double answerTime = 6;
-            if (round != 1 && Rng.Next(1, 7) == 20)
+            int answerTimeMillis = AnswerTimeoutMillis;
+            if (round != 1 && Rng.Next(1, 7) == 20) // Bonus rounds disabled
             {
                 bonusRound = true;
-                answerTime = 7;
+                answerTimeMillis = BonusRoundAnswerTimeoutMillis;
                 await Ctx.Channel
                     .SendMessageAsync("**Bonus Points Round!\nCorrectly answering scores you 2 points!**")
                     .ConfigureAwait(false);
             }
 
             Dictionary<DiscordUser, List<DiscordEmoji>> playerReactions =
-                await AskAndWaitForReactions(round, question.WordA, question.WordB, answerTime);
+                await AskAndWaitForReactions(round, question, answerTimeMillis);
 
             if (playerReactions.Count == 0)
                 return RoundOutcome.NoResponse;
@@ -277,6 +372,8 @@ namespace JPDB_Bot.FreqGame
 
         private async Task<string> GetWordsFromServer()
         {
+            CheckForCancellation();
+
             // pick_words?count=2&spread=100&users=user1,user2,user3
             string url = "https://jpdb.io/api/experimental/pick_words?count=2&spread=300";
             string playerList = string.Join(",",
@@ -354,12 +451,18 @@ namespace JPDB_Bot.FreqGame
         }
 
         private async Task<Dictionary<DiscordUser, List<DiscordEmoji>>> AskAndWaitForReactions(
-            int round, Vocabulary wordA, Vocabulary wordB, double answerTime)
+            int round, Question question, int answerTimeMillis)
         {
+            CheckForCancellation();
+
+            Vocabulary wordA = question.WordA;
+            Vocabulary wordB = question.WordB;
+
             List<string> playerPoints = GamePlayers.OrderByDescending(pair => pair.Value.Points).Select(
                 pair => $"{pair.Value.Username}: {pair.Value.Points}").ToList();
+            string playerPointsText = string.Join("\n", playerPoints);
 
-            DiscordEmbedBuilder gameEmbed = new DiscordEmbedBuilder
+            DiscordEmbedBuilder gameEmbed = new()
             {
                 Title = $"Round {round}: Which word is more frequent?",
                 Description =
@@ -367,49 +470,138 @@ namespace JPDB_Bot.FreqGame
                 Color = DiscordColor.Red,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
-                    Text = string.Join("\n", playerPoints)
+                    Text = playerPointsText
                 }
             };
 
-            var questionMessage = await Ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
-            await Task.Delay(350);
-            await questionMessage.CreateReactionAsync(EMOJI_A);
-            await Task.Delay(350);
-            await questionMessage.CreateReactionAsync(EMOJI_B);
+            // -------------------------------------------
+            // Reactions are recorded using event handlers
+            // -------------------------------------------
 
-            var interactivity = Ctx.Client.GetInteractivity();
-            var reactionResult = await interactivity.CollectReactionsAsync(
-                questionMessage, TimeSpan.FromSeconds(answerTime));
+            // Show the embed with the question
+            DiscordMessage questionMessage =
+                await Ctx.Channel.SendMessageAsync(embed: gameEmbed.Build()).ConfigureAwait(false);
 
-            Dictionary<DiscordUser, List<DiscordEmoji>> reactionsDict = GetValidReactionsByUser(reactionResult);
+            // This will store the reactions for each player
+            Dictionary<DiscordUser, List<DiscordEmoji>> reactionsDict = new();
+
+            // Local event handler to record when a reaction is added
+            Task ClientOnMessageReactionAdded(DiscordClient sender, MessageReactionAddEventArgs args)
+            {
+                return AddMessageReaction(questionMessage, reactionsDict, sender, args);
+            }
+
+            // Local event handler to record when a reaction is removed
+            Task ClientOnMessageReactionRemoved(DiscordClient sender, MessageReactionRemoveEventArgs args)
+            {
+                return RemoveMessageReaction(questionMessage, reactionsDict, sender, args);
+            }
+
+            // Register the event handlers
+            Ctx.Client.MessageReactionAdded += ClientOnMessageReactionAdded;
+            Ctx.Client.MessageReactionRemoved += ClientOnMessageReactionRemoved;
+
+            try
+            {
+                // Add the possible answers as reactions
+                await Task.Delay(DelayReactionsToAvoidRateLimitMillis);
+                await questionMessage.CreateReactionAsync(EMOJI_A);
+                await Task.Delay(DelayReactionsToAvoidRateLimitMillis);
+                await questionMessage.CreateReactionAsync(EMOJI_B);
+
+                // Give the players time to respond
+                await DelayWithAbort(answerTimeMillis);
+            }
+            catch (GameCancelledException)
+            {
+                // Update the embed
+                await questionMessage.ModifyAsync(
+                    gameEmbed
+                        .WithColor(DiscordColor.Gray)
+                        .WithFooter("ABORTED!")
+                        .Build());
+
+                throw; // Re-throw the exception to actually stop the game
+            }
+            finally // Make sure the event handlers are unregistered!
+            {
+                // Unregister the event handlers
+                Ctx.Client.MessageReactionAdded -= ClientOnMessageReactionAdded;
+                Ctx.Client.MessageReactionRemoved -= ClientOnMessageReactionRemoved;
+                Console.WriteLine("AskAndWaitForReactions - Event handlers unregistered");
+            }
+
+            List<string> emojisByUser = new();
+            foreach ((DiscordUser user, List<DiscordEmoji> discordEmojis) in reactionsDict)
+            {
+                List<string> emojiString = discordEmojis.Select(emoji => emoji.Name).ToList();
+                emojisByUser.Add(user.Username + " : " + string.Join(", ", emojiString));
+            }
+
+            await questionMessage.ModifyAsync(gameEmbed
+                .WithColor(DiscordColor.Gray)
+                .WithFooter("Responses: \n" + string.Join("\n", emojisByUser))
+                .Build());
+
+            // await Ctx.Channel.SendMessageAsync("Responses: \n" + string.Join("\n", emojisByUser))
+            //     .ConfigureAwait(false);
 
             return reactionsDict;
         }
 
-        private Dictionary<DiscordUser, List<DiscordEmoji>> GetValidReactionsByUser(
-            ReadOnlyCollection<Reaction> reactions)
+        private Task AddMessageReaction(
+            DiscordMessage questionMessage,
+            Dictionary<DiscordUser, List<DiscordEmoji>> reactionsDict,
+            DiscordClient sender,
+            MessageReactionAddEventArgs args)
         {
-            Dictionary<DiscordUser, List<DiscordEmoji>> reactionsDict = new();
-
-            foreach (var reaction in reactions)
+            if (args.Message == questionMessage)
             {
-                if (reaction.Emoji == EMOJI_A || reaction.Emoji == EMOJI_B)
+                DiscordUser user = args.User;
+                if (!user.IsBot)
                 {
-                    foreach (DiscordUser user in reaction.Users)
+                    DiscordEmoji emoji = args.Emoji;
+                    if (emoji == EMOJI_A || emoji == EMOJI_B)
                     {
-                        if (user.IsBot) continue; // skip reactions from bots
-                        if (!reactionsDict.ContainsKey(user))
-                            reactionsDict.Add(user, new List<DiscordEmoji>());
-                        reactionsDict[user].Add(reaction.Emoji);
+                        lock (reactionsDict)
+                        {
+                            if (!reactionsDict.ContainsKey(user))
+                                reactionsDict.Add(user, new List<DiscordEmoji>());
+                            reactionsDict[user].Add(emoji);
+                        }
                     }
                 }
             }
 
-            return reactionsDict;
+            return Task.CompletedTask;
+        }
+
+        private Task RemoveMessageReaction(
+            DiscordMessage questionMessage,
+            Dictionary<DiscordUser, List<DiscordEmoji>> reactionsDict,
+            DiscordClient sender,
+            MessageReactionRemoveEventArgs args)
+        {
+            if (args.Message == questionMessage)
+            {
+                DiscordUser user = args.User;
+                if (!user.IsBot)
+                {
+                    lock (reactionsDict)
+                    {
+                        if (reactionsDict.ContainsKey(user))
+                            reactionsDict[user].Remove(args.Emoji);
+                    }
+                }
+            }
+
+            return Task.CompletedTask;
         }
 
         private async Task CheckForNewlyJoinedPlayers(Dictionary<DiscordUser, List<DiscordEmoji>> reactionsDict)
         {
+            CheckForCancellation();
+
             foreach ((DiscordUser user, List<DiscordEmoji> emoji) in reactionsDict)
             {
                 if (!GamePlayers.ContainsKey(user))
@@ -448,6 +640,8 @@ namespace JPDB_Bot.FreqGame
 
         private async Task ReportRoundResults(Question question, List<DiscordUser> winners)
         {
+            CheckForCancellation();
+
             Vocabulary correctWord = question.CorrectWord;
             Vocabulary wrongWord = question.WrongWord;
             await Ctx.Channel.SendMessageAsync(
@@ -478,9 +672,10 @@ namespace JPDB_Bot.FreqGame
             }
         }
 
-
         private async Task ShowFinalScores()
         {
+            CheckForCancellation();
+
             List<string> playerPoints = GamePlayers.OrderByDescending(pair => pair.Value.Points).Select(
                 pair => $"{pair.Value.Username}: {pair.Value.Points}").ToList();
 

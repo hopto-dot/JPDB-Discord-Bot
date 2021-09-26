@@ -15,21 +15,6 @@ namespace JPDB_Bot.FreqGame
         }
     }
 
-    public class TimeoutException : Exception
-    {
-        public TimeoutException()
-        {
-        }
-
-        public TimeoutException(string message) : base(message)
-        {
-        }
-
-        public TimeoutException(string message, Exception inner) : base(message, inner)
-        {
-        }
-    }
-
     public class Vocabulary
     {
         public string vocabKanji = string.Empty;
@@ -54,5 +39,35 @@ namespace JPDB_Bot.FreqGame
         public Vocabulary WordB => Words[1];
         public Vocabulary CorrectWord => Words[CorrectIndex];
         public Vocabulary WrongWord => Words[1 - CorrectIndex];
+    }
+
+    public class TimeoutException : Exception
+    {
+        public TimeoutException()
+        {
+        }
+
+        public TimeoutException(string message) : base(message)
+        {
+        }
+
+        public TimeoutException(string message, Exception inner) : base(message, inner)
+        {
+        }
+    }
+
+    public class GameCancelledException : Exception
+    {
+        public GameCancelledException()
+        {
+        }
+
+        public GameCancelledException(string message) : base(message)
+        {
+        }
+
+        public GameCancelledException(string message, Exception inner) : base(message, inner)
+        {
+        }
     }
 }
