@@ -11,7 +11,6 @@ namespace JPDB_Bot.Commands
     {
         [Command("content")]
         [Cooldown(3, 10, CooldownBucketType.User)]
-        
         [Description("Search for content in the JPDB database\nFor example: !content \"steins gate\"")]
         public async Task SearchContent(CommandContext ctx,
             [DescriptionAttribute("Name of the content you are searching")] [RemainingText]
@@ -22,6 +21,12 @@ namespace JPDB_Bot.Commands
 
             WebClient client = new WebClient();
             client.Encoding = System.Text.Encoding.UTF8;
+
+            // Remove quotes if the search string is quoted ("stuff" -> stuff)
+            if (searchString is { Length: >= 2 } && searchString[0] == '"' && searchString[^1] == '"')
+            {
+                searchString = searchString.Substring(1, searchString.Length - 2);
+            }
 
             string url = "https://jpdb.io/prebuilt_decks?q=" + searchString;
             string html = "";
