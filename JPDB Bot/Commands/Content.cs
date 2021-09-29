@@ -10,6 +10,7 @@ namespace JPDB_Bot.Commands
     public class Content : BaseCommandModule
     {
         string statisticsPage = string.Empty;
+        int uniqueWords = -1;
 
         [Command("content")]
         [Cooldown(3, 10, CooldownBucketType.User)]
@@ -71,6 +72,13 @@ namespace JPDB_Bot.Commands
             snipIndex = wordTemp.IndexOf("\"");
             wordTemp = "https://jpdb.io/" + wordTemp.Substring(0, snipIndex);
 
+            string wordTemp3 = wordTemp2;
+            //getting unique word count:
+            snipIndex = wordTemp3.IndexOf("Unique words</th><td>") + 21;
+            wordTemp3 = wordTemp3.Substring(snipIndex);
+            snipIndex = wordTemp3.IndexOf("<");
+            uniqueWords = int.Parse(wordTemp3.Substring(0, snipIndex));
+
             //getting statistics page:
             snipIndex = wordTemp2.IndexOf("dropdown-content") + 17;
             wordTemp2 = wordTemp2.Substring(snipIndex);
@@ -79,7 +87,7 @@ namespace JPDB_Bot.Commands
             snipIndex = wordTemp2.IndexOf("\"");
             wordTemp2 = wordTemp2.Substring(0, snipIndex);
 
-            statisticsPage= "https://jpdb.io" + wordTemp2;
+            statisticsPage = "https://jpdb.io" + wordTemp2;
 
 
             await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
@@ -97,7 +105,7 @@ namespace JPDB_Bot.Commands
                 searchString = searchString.Substring(1, searchString.Length - 2);
             }
 
-            string url = "https://jpdb.io/prebuilt_decks?q=" + searchString;
+            string url = statisticsPage;
             string html = "";
             try
             {
@@ -109,8 +117,66 @@ namespace JPDB_Bot.Commands
                 return;
             }
 
+            int snipIndex = html.IndexOf("data:") + 7;
+
+            if (snipIndex == 7)
+            {
+                await ctx.RespondAsync("Couldn't load statistics UwU").ConfigureAwait(false);
+                return;
+            }
+
+            html = html.Substring(snipIndex);
+
+            snipIndex = html.IndexOf("]");
+            html = html.Substring(0, snipIndex);
+
+            string[] wordCoverageString = html.Split(",");
+            float[] wordCoverage = Array.ConvertAll<string, float>(wordCoverageString, float.Parse);
+
+            List<int> coverages = new List<int>();
+            int uniqueKnown = 0;
+            foreach (float Coverage in wordCoverage)
+            {
+                //80, 85, 90, 95, 97, 98
+                if (coverages.Count == 0 && Coverage > 80)
+                {
+                    coverages.Add(uniqueKnown);
+                }
+                else if (coverages.Count == 1 && Coverage > 85)
+                {
+                    coverages.Add(uniqueKnown);
+                }
+                else if (coverages.Count == 2 && Coverage > 90)
+                {
+                    coverages.Add(uniqueKnown);
+                }
+                else if (coverages.Count == 3 && Coverage > 95)
+                {
+                    coverages.Add(uniqueKnown);
+                }
+                else if (coverages.Count == 4 && Coverage > 97)
+                {
+                    coverages.Add(uniqueKnown);
+                }
+                else if (coverages.Count == 5 && Coverage > 98)
+                {
+                    coverages.Add(uniqueKnown);
+                }
+                uniqueKnown += 1;
+            }
+
+            //80, 85, 90, 95, 97, 98
+            string statsMessage = $"Coverage : Unique Words (/{uniqueWords})" +
+                $"\n80% : {coverages[0]}% ({Math.Round(uniqueWords * ((float)coverages[0] / 100))} words)" +
+                $"\n85% : {coverages[1]}% ({Math.Round(uniqueWords * ((float)coverages[1] / 100))} words)" +
+                $"\n90% : {coverages[2]}% ({Math.Round(uniqueWords * ((float)coverages[2] / 100))} words)" +
+                $"\n95% : {coverages[3]}% ({Math.Round(uniqueWords * ((float)coverages[3] / 100))} words)" +
+                $"\n97% : {coverages[4]}% ({Math.Round(uniqueWords * ((float)coverages[4] / 100))} words)" +
+                $"\n98% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)";
+            //float test = wordCoverage[coverages[0]];
 
 
+            await ctx.Channel.SendMessageAsync(statsMessage).ConfigureAwait(false);
         }
     }
 }
