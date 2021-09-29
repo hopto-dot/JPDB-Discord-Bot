@@ -9,6 +9,8 @@ namespace JPDB_Bot.Commands
 {
     public class Content : BaseCommandModule
     {
+        string statisticsPage = string.Empty;
+
         [Command("content")]
         [Cooldown(3, 10, CooldownBucketType.User)]
         [Description("Search for content in the JPDB database\nFor example: !content \"steins gate\"")]
@@ -18,7 +20,13 @@ namespace JPDB_Bot.Commands
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
+            await ContentDetails(ctx, searchString);
+            await ContentStats(ctx, searchString);
+        }
 
+        private async Task ContentDetails(CommandContext ctx,
+            string searchString)
+        {
             WebClient client = new WebClient();
             client.Encoding = System.Text.Encoding.UTF8;
 
@@ -49,6 +57,7 @@ namespace JPDB_Bot.Commands
             }
 
             string wordTemp = html.Substring(snipIndex);
+            string wordTemp2 = html;
             html = wordTemp;
 
             snipIndex = wordTemp.IndexOf("<");
@@ -62,26 +71,46 @@ namespace JPDB_Bot.Commands
             snipIndex = wordTemp.IndexOf("\"");
             wordTemp = "https://jpdb.io/" + wordTemp.Substring(0, snipIndex);
 
-            await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
+            //getting statistics page:
+            snipIndex = wordTemp2.IndexOf("dropdown-content") + 17;
+            wordTemp2 = wordTemp2.Substring(snipIndex);
+            snipIndex = wordTemp2.IndexOf("/");
+            wordTemp2 = wordTemp2.Substring(snipIndex);
+            snipIndex = wordTemp2.IndexOf("\"");
+            wordTemp2 = wordTemp2.Substring(0, snipIndex);
 
-            /*
-            int Frequency = 1;
-            List<string> wordIDs = new List<string>() { };
-            if (wordTemp.Contains(">") == false && wordTemp.Contains("<") == false & wordTemp.Contains("=") == false &
-                wordTemp.Contains("-") == false)
+            statisticsPage= "https://jpdb.io" + wordTemp2;
+
+
+            await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
+        }
+
+        private async Task ContentStats(CommandContext ctx,
+            string searchString)
+        {
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            // Remove quotes if the search string is quoted ("stuff" -> stuff)
+            if (searchString is { Length: >= 2 } && searchString[0] == '"' && searchString[^1] == '"')
             {
-                try
-                {
-                    for (var I = 1; I <= Frequency; I++)
-                        wordIDs.Add(wordTemp);
-                }
-                catch (Exception ex)
-                {
-                    Program.PrintError(ex.Message);
-                    return;
-                }
+                searchString = searchString.Substring(1, searchString.Length - 2);
             }
-            */
+
+            string url = "https://jpdb.io/prebuilt_decks?q=" + searchString;
+            string html = "";
+            try
+            {
+                html = client.DownloadString(new Uri(url));
+            }
+            catch (Exception ex)
+            {
+                Program.PrintError(ex.Message);
+                return;
+            }
+
+
+
         }
     }
 }
