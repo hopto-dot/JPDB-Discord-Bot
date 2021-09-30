@@ -173,7 +173,6 @@ namespace JPDB_Bot.Commands
                 $"\n95% : {coverages[3]}% ({Math.Round(uniqueWords * ((float)coverages[3] / 100))} words)" +
                 $"\n97% : {coverages[4]}% ({Math.Round(uniqueWords * ((float)coverages[4] / 100))} words)" +
                 $"\n98% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)";
-            //float test = wordCoverage[coverages[0]];
 
 
             await ctx.Channel.SendMessageAsync(statsMessage).ConfigureAwait(false);
