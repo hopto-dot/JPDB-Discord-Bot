@@ -167,7 +167,7 @@ namespace JPDB_Bot.Commands
                 }
 
                 if (uniqueKnown > 0 && uniqueKnown < 100) {
-                    giniValue += (Coverage - (uniqueKnown / 100.0) / 99.0);
+                    giniValue += ((Coverage - (uniqueKnown / 100.0)) / 99.0);
                 }
 
                 uniqueKnown += 1;
