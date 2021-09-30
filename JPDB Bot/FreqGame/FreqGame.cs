@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -528,13 +529,20 @@ namespace JPDB_Bot.FreqGame
                 // Unregister the event handlers
                 Ctx.Client.MessageReactionAdded -= ClientOnMessageReactionAdded;
                 Ctx.Client.MessageReactionRemoved -= ClientOnMessageReactionRemoved;
-                Console.WriteLine("AskAndWaitForReactions - Event handlers unregistered");
+                //Console.WriteLine("AskAndWaitForReactions - Event handlers unregistered");
             }
 
             List<string> emojisByUser = new();
             foreach ((DiscordUser user, List<DiscordEmoji> discordEmojis) in reactionsDict)
             {
-                List<string> emojiString = discordEmojis.Select(emoji => emoji.Name).ToList();
+                List<string> emojiString = discordEmojis.Select(emoji =>
+                {
+                    if (emoji == EMOJI_A)
+                        return "A";
+                    if (emoji == EMOJI_B)
+                        return "B";
+                    return "";
+                }).ToList();
                 emojisByUser.Add(user.Username + " : " + string.Join(", ", emojiString));
             }
 
