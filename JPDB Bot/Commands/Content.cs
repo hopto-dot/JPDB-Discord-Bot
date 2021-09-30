@@ -14,7 +14,7 @@ namespace JPDB_Bot.Commands
 
         [Command("content")]
         [Cooldown(3, 10, CooldownBucketType.User)]
-        [Description("Search for content in the JPDB database\nFor example: !content \"steins gate\"")]
+        [Description("Search for content in the JPDB database and get statistics.\nFor example: !content steins gate")]
         public async Task SearchContent(CommandContext ctx,
             [DescriptionAttribute("Name of the content you are searching")] [RemainingText]
             string searchString)
@@ -22,6 +22,11 @@ namespace JPDB_Bot.Commands
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
             await ContentDetails(ctx, searchString);
+            if (statisticsPage == string.Empty || uniqueWords == -1)
+            {
+                Program.PrintError("The program stopped before collecting content stats info.");
+                return;
+            }
             await ContentStats(ctx, searchString);
         }
 
@@ -45,7 +50,7 @@ namespace JPDB_Bot.Commands
             }
             catch (Exception ex)
             {
-                Program.PrintError(ex.Message);
+                Program.PrintError(ex.Message + $"\n(url)");
                 return;
             }
 
@@ -173,8 +178,12 @@ namespace JPDB_Bot.Commands
                 uniqueKnown += 1;
             }
 
-            giniValue *= 100;
+            //giniValue *= 100;
+            Console.WriteLine($"Coverage rating: {giniValue}");
 
+            giniValue = (giniValue - 60) * 3.0f;
+            if (giniValue > 100) { giniValue = 100; }
+            if (giniValue < 0) { giniValue = 0; }
 
             //80, 85, 90, 95, 97, 98
             string statsMessage = $"Coverage : Unique Words (/{uniqueWords})" +
@@ -184,8 +193,7 @@ namespace JPDB_Bot.Commands
                 $"\n95% : {coverages[3]}% ({Math.Round(uniqueWords * ((float)coverages[3] / 100))} words)" +
                 $"\n97% : {coverages[4]}% ({Math.Round(uniqueWords * ((float)coverages[4] / 100))} words)" +
                 $"\n98% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)" +
-                $"\n98% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)" +
-                $"\n\nGini : {Math.Round(giniValue * 100.0) / 100.0}%";
+                $"\nGini Coefficient: {Math.Round(giniValue * 100.0) / 100.0}%";
             //float test = wordCoverage[coverages[0]];
 
 
