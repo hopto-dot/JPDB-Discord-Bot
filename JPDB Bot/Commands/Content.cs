@@ -135,6 +135,9 @@ namespace JPDB_Bot.Commands
 
             List<int> coverages = new List<int>();
             int uniqueKnown = 0;
+
+            float giniValue = 0;
+
             foreach (float Coverage in wordCoverage)
             {
                 //80, 85, 90, 95, 97, 98
@@ -162,8 +165,16 @@ namespace JPDB_Bot.Commands
                 {
                     coverages.Add(uniqueKnown);
                 }
+
+                if (uniqueKnown > 0 && uniqueKnown < 100) {
+                    giniValue += ((Coverage - (uniqueKnown / 100.0)) / 99.0);
+                }
+
                 uniqueKnown += 1;
             }
+
+            giniValue *= 100;
+
 
             //80, 85, 90, 95, 97, 98
             string statsMessage = $"Coverage : Unique Words (/{uniqueWords})" +
@@ -172,6 +183,9 @@ namespace JPDB_Bot.Commands
                 $"\n90% : {coverages[2]}% ({Math.Round(uniqueWords * ((float)coverages[2] / 100))} words)" +
                 $"\n95% : {coverages[3]}% ({Math.Round(uniqueWords * ((float)coverages[3] / 100))} words)" +
                 $"\n97% : {coverages[4]}% ({Math.Round(uniqueWords * ((float)coverages[4] / 100))} words)" +
+                $"\n98% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)" +
+                $"\n\nGini : {Math.Round(giniValue * 100.0) / 100.0}%";
+            //float test = wordCoverage[coverages[0]];
                 $"\n98% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)";
 
 
