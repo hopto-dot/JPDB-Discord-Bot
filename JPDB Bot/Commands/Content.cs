@@ -20,6 +20,8 @@ namespace JPDB_Bot.Commands
             string searchString)
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+            statisticsPage = string.Empty;
+            uniqueWords = -1;
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
             await ContentDetails(ctx, searchString);
             if (statisticsPage == string.Empty || uniqueWords == -1)
@@ -42,7 +44,16 @@ namespace JPDB_Bot.Commands
                 searchString = searchString.Substring(1, searchString.Length - 2);
             }
 
-            string url = "https://jpdb.io/prebuilt_decks?q=" + searchString;
+            string contentType = string.Empty;
+            if (searchString.Contains(" anime")) { contentType = "anime"; searchString = searchString.Replace(" anime", ""); }
+            if (searchString.Contains(" ln")) { contentType = "novel"; searchString = searchString.Replace(" ln", ""); }
+            if (searchString.Contains(" novel")) { contentType = "novel"; searchString = searchString.Replace(" novel", ""); }
+            if (searchString.Contains(" vn")) { contentType = "visual_novel"; searchString = searchString.Replace(" vn", ""); }
+
+
+            if (contentType != string.Empty) { contentType = "&show_only=" + contentType; }
+
+            string url = "https://jpdb.io/prebuilt_decks?q=" + searchString + contentType;
             string html = "";
             try
             {
