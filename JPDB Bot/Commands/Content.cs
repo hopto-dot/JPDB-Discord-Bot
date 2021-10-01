@@ -179,7 +179,6 @@ namespace JPDB_Bot.Commands
             }
 
             //giniValue *= 100;
-            Console.WriteLine($"Coverage rating: {giniValue}");
 
             giniValue = (giniValue - 60) * 3.0f;
             if (giniValue > 100) { giniValue = 100; }
@@ -193,7 +192,7 @@ namespace JPDB_Bot.Commands
                 $"\n95% : {coverages[3]}% ({Math.Round(uniqueWords * ((float)coverages[3] / 100))} words)" +
                 $"\n97% : {coverages[4]}% ({Math.Round(uniqueWords * ((float)coverages[4] / 100))} words)" +
                 $"\n98% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)" +
-                $"\nGini Coefficient: {Math.Round(giniValue * 100.0) / 100.0}%";
+                $"\nCoverage Rating: {Math.Round(giniValue * 100.0) / 100.0}%";
             //float test = wordCoverage[coverages[0]];
 
 
