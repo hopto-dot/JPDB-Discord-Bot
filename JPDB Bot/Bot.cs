@@ -61,6 +61,7 @@ namespace JPDB_Bot
             Console.WriteLine($"JPDBToken: Working");
             Console.WriteLine($"LogLevel: {configJson.LogLevel}");
             Console.WriteLine($"WelcomeMessages: {configJson.WelcomeMessages}");
+            Console.WriteLine($"WelcomeChannelID: {configJson.WelcomeChannelID}");
             Console.ForegroundColor = ConsoleColor.White;
 
             Microsoft.Extensions.Logging.LogLevel LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Warning;
@@ -158,9 +159,10 @@ namespace JPDB_Bot
                     await e.Channel.SendMessageAsync($"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\nCheck the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
                 } catch (Exception ex)
                 {
-                    Program.PrintError(ex.Message + $"\nFailed to welcome user");
+                    Program.PrintError(ex.Message + $"\nFailed to welcome user {e.Author.Username}");
                 }
                 Program.PrintCommandUse(e.Message.Author.Username, "Server Join");
+                return;
             }
 
             if (e.Message.Content.ToLower().Contains("boku no pico"))
