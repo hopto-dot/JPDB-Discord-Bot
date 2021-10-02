@@ -153,17 +153,19 @@ namespace JPDB_Bot
                 }
                 try
                 {
-                    await e.Message.RespondAsync($"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\nCheck the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
+                    DSharpPlus.Entities.DiscordChannel welcomeChannel = e.Guild.GetChannel(configJson.WelcomeChannelID);
+                    await sender.SendMessageAsync(welcomeChannel, $"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\nCheck the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false); ;
+                    await e.Channel.SendMessageAsync($"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\nCheck the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
                 } catch (Exception ex)
                 {
-                    Program.PrintError(ex.Message);
+                    Program.PrintError(ex.Message + $"\nFailed to welcome user");
                 }
                 Program.PrintCommandUse(e.Message.Author.Username, "Server Join");
             }
 
-            if (e.Message.Content.ToLower().Contains("boku no pi"))
+            if (e.Message.Content.ToLower().Contains("boku no pico"))
             {
-                await Task.Delay(1000).ConfigureAwait(false);
+                await Task.Delay(5000).ConfigureAwait(false);
                 await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":eyes:"));
                 return;
             }
@@ -194,13 +196,14 @@ namespace JPDB_Bot
 
                     Program.PrintCommandUse(e.Author.Username, "(Content request) " + e.Message.Content);
                     var Kou = await sender.GetUserAsync(118408957416046593);
+                    Program.PrintError("A message would have triggered a content request reply message but was purposefully blocked");
                     if (Kou.Presence.Status != DSharpPlus.Entities.UserStatus.Offline)
                     {
-                        await e.Message.RespondAsync("To request content you must DM -こう-.\nDo **not** post the script here (see rule 4).").ConfigureAwait(false);
+                        //await e.Message.RespondAsync("To request content you must DM -こう-.\nDo **not** post the script here (see rule 4).").ConfigureAwait(false);
                     }
                     else
                     {
-                        await e.Message.RespondAsync("To request content you must DM -こう-. Currently, he's not online.\nDo **not** post the script here (see rule 4).").ConfigureAwait(false);
+                        //await e.Message.RespondAsync("To request content you must DM -こう-. Currently, he's not online.\nDo **not** post the script here (see rule 4).").ConfigureAwait(false);
                     }
                 }
             }

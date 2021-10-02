@@ -16,5 +16,8 @@ namespace JPDB_Bot
         public string WelcomeMessages { get; private set; }
         [JsonProperty("MemeRatings")]
         public string MemeRatings { get; private set; }
+
+        [JsonProperty("WelcomeChannelID")]
+        public ulong WelcomeChannelID { get; private set; }
     }
 }
