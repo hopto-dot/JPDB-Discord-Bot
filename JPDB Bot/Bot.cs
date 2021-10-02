@@ -93,6 +93,7 @@ namespace JPDB_Bot
             });
             Client.Ready += Client_Ready;
             Client.MessageCreated += Bot_MessageCreated;
+            Client.GuildMemberUpdated += Member_Updated;
 
             // Dependency injection for Commands
             ServiceProvider services = new ServiceCollection()
@@ -105,8 +106,8 @@ namespace JPDB_Bot
             {
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableMentionPrefix = true,
-                EnableDms = false,
-                DmHelp = false,
+                EnableDms = true,
+                DmHelp = true,
                 EnableDefaultHelp = true,
                 IgnoreExtraArguments = true,
                 Services = services,
@@ -123,18 +124,93 @@ namespace JPDB_Bot
             await Task.Delay(-1);
         }
 
+        private async Task Member_Updated(DiscordClient sender, GuildMemberUpdateEventArgs e)
+        {
+            DiscordRole[] rolesBefore = e.RolesBefore.ToArray();
+            bool supporterB = false;
+            bool sponsorB = false;
+            bool vipB = false;
+            bool legendB = false;
+            foreach (DiscordRole roleB in rolesBefore)
+            {
+                switch (roleB.Name.ToLower())
+                {
+                    case "supporter":
+                        supporterB = true;
+                        break;
+                    case "sponsor":
+                        sponsorB = true;
+                        break;
+                    case "vip":
+                        vipB = true;
+                        break;
+                    case "legend":
+
+                        break;
+                }
+            }
+
+            DiscordRole[] rolesAfter = e.RolesAfter.ToArray();
+            bool supporterA = false;
+            bool sponsorA = false;
+            bool vipA = false;
+            bool legendA = false;
+            foreach (DiscordRole roleA in rolesAfter)
+            {
+                switch (roleA.Name.ToLower())
+                {
+                    case "supporter":
+                        supporterA = true;
+                        break;
+                    case "sponsor":
+                        sponsorA = true;
+                        break;
+                    case "vip":
+                        vipA = true;
+                        break;
+                    case "legend":
+                        legendA = true;
+                        break;
+                }
+            }
+            string patreonChange = "none";
+            if (vipB == false && vipA == true) { patreonChange = "vip"; }
+            if (sponsorB == false && sponsorA == true) { patreonChange = "sponsor"; }
+            if (supporterB == false && supporterA == true) { patreonChange = "supporter"; }
+            if (legendA == false && legendB == true) { patreonChange = "legend"; }
+            if (patreonChange == "none") { return; }
+
+            try
+            {
+                DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
+                await Kou.SendMessageAsync($"<@{e.Member.Id}> is now a {patreonChange}.");
+                Program.PrintCommandUse(e.Member.Username, "Updated role");
+            } catch (Exception ex)
+            {
+                Program.PrintError($"Tried to send role-update message but couldn't\n{ex.Message}");
+                return;
+            }
+        }
+
         private async Task Bot_MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
         {
-            //sending messages and replying templates:
+            //sending messages and replying templates:\
             //await e.Message.RespondAsync("test").ConfigureAwait(false);
             //await e.Channel.SendMessageAsync("test").ConfigureAwait(false);
 
-            if (e.Channel.Name.Contains("meme") && e.Message.Attachments.Count > 0 && configJson.MemeRatings.ToLower() == "enabled")
+            try
             {
-                //if in the #memes channel and there is an attachment, reacting with thumbsup and thumbsdown
-                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsup:"));
-                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsdown:"));
+                if (e.Channel.Name.Contains("meme") && e.Message.Attachments.Count > 0 && configJson.MemeRatings.ToLower() == "enabled")
+                {
+                    //if in the #memes channel and there is an attachment, reacting with thumbsup and thumbsdown
+                    await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsup:"));
+                    await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsdown:"));
+                }
+            } catch
+            {
+                return;
             }
+            
 
             if(e.Message.MessageType == MessageType.GuildMemberJoin && (configJson.WelcomeMessages.ToLower() == "enabled" || configJson.WelcomeMessages.ToLower() == "True"))
             {
