@@ -155,8 +155,7 @@ namespace JPDB_Bot
                 try
                 {
                     DSharpPlus.Entities.DiscordChannel welcomeChannel = e.Guild.GetChannel(configJson.WelcomeChannelID);
-                    await sender.SendMessageAsync(welcomeChannel, $"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\nCheck the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false); ;
-                    await e.Channel.SendMessageAsync($"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\nCheck the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
+                    await sender.SendMessageAsync(welcomeChannel, $"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\n  in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
                 } catch (Exception ex)
                 {
                     Program.PrintError(ex.Message + $"\nFailed to welcome user {e.Author.Username}");
