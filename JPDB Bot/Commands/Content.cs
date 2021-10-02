@@ -1,5 +1,6 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -10,6 +11,10 @@ namespace JPDB_Bot.Commands
     public class Content : BaseCommandModule
     {
         string statisticsPage = string.Empty;
+        string contentName = string.Empty;
+        string statsMessage = string.Empty;
+        string imageURL = string.Empty;
+        string contentURL = string.Empty;
         int uniqueWords = -1;
 
         [Command("content")]
@@ -21,7 +26,12 @@ namespace JPDB_Bot.Commands
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             statisticsPage = string.Empty;
+            contentName = string.Empty;
+            statsMessage = string.Empty;
+            imageURL = string.Empty;
+            contentURL = string.Empty;
             uniqueWords = -1;
+
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
             await ContentDetails(ctx, searchString);
             if (statisticsPage == string.Empty || uniqueWords == -1)
@@ -29,7 +39,33 @@ namespace JPDB_Bot.Commands
                 Program.PrintError("The program stopped before collecting content stats info.");
                 return;
             }
-            await ContentStats(ctx, searchString);
+            await ContentStats(ctx, searchString).ConfigureAwait(false);
+
+            await SendContentEmbed(ctx).ConfigureAwait(false);
+        }
+
+
+        private async Task SendContentEmbed(CommandContext ctx)
+        {
+            //Program.PrintError($"Content Embed:\n{contentName}\n{imageURL}\n{contentURL}");
+
+            var embedThumbnail = new DiscordEmbedBuilder.EmbedThumbnail
+            {
+                Url = imageURL,
+            };
+            var gameEmbed = new DiscordEmbedBuilder
+            {
+                Title = contentName,
+                Description = statsMessage,
+                Color = DiscordColor.Red,
+                Thumbnail = embedThumbnail,
+                Url = contentURL,
+                //Footer = new DiscordEmbedBuilder.EmbedFooter
+                //{
+                //    Text = "Currently, usernames don't do anything.",
+                //}
+            };
+            var playerListMessage = await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
         }
 
         private async Task ContentDetails(CommandContext ctx,
@@ -64,6 +100,8 @@ namespace JPDB_Bot.Commands
                 Program.PrintError(ex.Message + $"\n(url)");
                 return;
             }
+            string originalHTML = html;
+
 
             int snipIndex = html.IndexOf("30rem;\">") + 8;
 
@@ -79,14 +117,14 @@ namespace JPDB_Bot.Commands
 
             snipIndex = wordTemp.IndexOf("<");
             html = wordTemp.Substring(snipIndex);
-            string contentName = wordTemp.Substring(0, snipIndex);
+            contentName = wordTemp.Substring(0, snipIndex);
 
             snipIndex = html.IndexOf("margin-top: 0.5rem;\">") + 22;
             wordTemp = html.Substring(snipIndex);
             snipIndex = wordTemp.IndexOf("/") + 1;
             wordTemp = wordTemp.Substring(snipIndex);
             snipIndex = wordTemp.IndexOf("\"");
-            wordTemp = "https://jpdb.io/" + wordTemp.Substring(0, snipIndex);
+            contentURL = "https://jpdb.io/" + wordTemp.Substring(0, snipIndex);
 
             string wordTemp3 = wordTemp2;
             //getting unique word count:
@@ -105,8 +143,18 @@ namespace JPDB_Bot.Commands
 
             statisticsPage = "https://jpdb.io" + wordTemp2;
 
+            wordTemp = originalHTML;
+            snipIndex = wordTemp.IndexOf("rc=\"/static/") + 4;
+            if (snipIndex != -1 && snipIndex < 9300)
+            {
+                wordTemp = wordTemp.Substring(snipIndex);
+                snipIndex = wordTemp.IndexOf(".jpg") + 4;
+                wordTemp = wordTemp.Substring(0, snipIndex);
+                imageURL = "https://jpdb.io" + wordTemp;
+                if (imageURL.Length > 42) { imageURL = ""; }
+            }
 
-            await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
+            //await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
         }
 
         private async Task ContentStats(CommandContext ctx,
@@ -196,7 +244,7 @@ namespace JPDB_Bot.Commands
             if (giniValue < 0) { giniValue = 0; }
 
             //80, 85, 90, 95, 97, 98
-            string statsMessage = $"Coverage : Unique Words (/{uniqueWords})" +
+            statsMessage = $"Coverage : Unique Words (/{uniqueWords})" +
                 $"\n80% : {coverages[0]}% ({Math.Round(uniqueWords * ((float)coverages[0] / 100))} words)" +
                 $"\n85% : {coverages[1]}% ({Math.Round(uniqueWords * ((float)coverages[1] / 100))} words)" +
                 $"\n90% : {coverages[2]}% ({Math.Round(uniqueWords * ((float)coverages[2] / 100))} words)" +
@@ -207,7 +255,7 @@ namespace JPDB_Bot.Commands
             //float test = wordCoverage[coverages[0]];
 
 
-            await ctx.Channel.SendMessageAsync(statsMessage).ConfigureAwait(false);
+            //await ctx.Channel.SendMessageAsync(statsMessage).ConfigureAwait(false);
         }
     }
 }

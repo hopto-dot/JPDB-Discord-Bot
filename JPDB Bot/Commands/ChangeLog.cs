@@ -17,22 +17,6 @@ namespace JPDB_Bot.Commands
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             string Date = String.Empty;
 
-            /*WebClient Client = new WebClient();
-            Client.Encoding = System.Text.Encoding.UTF8;
-            string HTML = "";
-            string sniptemp = string.Empty;
-            HTML = Client.DownloadString(new Uri("https://jpdb.io/changelog"));
-            int snipIndex = HTML.IndexOf("<h5 id=") + 8;
-            HTML = HTML.Substring(snipIndex);
-            snipIndex = HTML.IndexOf(">") + 1;
-            HTML = HTML.Substring(snipIndex);
-
-            sniptemp = HTML;
-            snipIndex = sniptemp.IndexOf("<");
-            sniptemp = sniptemp.Substring(0, snipIndex);
-
-            var changelogEmbed = new discordembed*/
-
             HtmlWeb web = new HtmlWeb();
             var htmlDoc = web.Load("https://jpdb.io/changelog");
             string ChangeDate = htmlDoc.DocumentNode.SelectNodes("/html/body/div[2]/h5[1]")
