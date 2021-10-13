@@ -119,6 +119,7 @@ namespace JPDB_Bot
             Commands.RegisterCommands<ChangeLog>();
             Commands.RegisterCommands<Content>();
             Commands.RegisterCommands<JapanTime>();
+            Commands.RegisterCommands<MemberCount>();
             await Client.ConnectAsync();
 
             await Task.Delay(-1);
@@ -174,10 +175,14 @@ namespace JPDB_Bot
                 }
             }
             string patreonChange = "none";
+            if (legendA == false && legendB == true) { patreonChange = "legend"; }
             if (vipB == false && vipA == true) { patreonChange = "vip"; }
             if (sponsorB == false && sponsorA == true) { patreonChange = "sponsor"; }
             if (supporterB == false && supporterA == true) { patreonChange = "supporter"; }
-            if (legendA == false && legendB == true) { patreonChange = "legend"; }
+            //Program.PrintError($"legend: {legendB} -> {legendA}\n" +
+            //    $"vip: {vipB} -> {vipA}\n" +
+            //    $"sponsor: {sponsorB} -> {sponsorA}\n" +
+            //    $"supporter: {supporterB} -> {supporterA}\n");
             if (patreonChange == "none") { return; }
 
             try
@@ -187,7 +192,7 @@ namespace JPDB_Bot
                 Program.PrintCommandUse(e.Member.Username, "Updated role");
             } catch (Exception ex)
             {
-                Program.PrintError($"Tried to send role-update message but couldn't\n{ex.Message}");
+                Program.PrintError($"{ex.Message}: Tried to send role-update message but couldn't");
                 return;
             }
         }
@@ -214,8 +219,31 @@ namespace JPDB_Bot
 
             if(e.Message.MessageType == MessageType.GuildMemberJoin && (configJson.WelcomeMessages.ToLower() == "enabled" || configJson.WelcomeMessages.ToLower() == "True"))
             {
+                int userCount = e.Guild.GetAllMembersAsync().Result.ToArray().Length;
+                string userCountS = string.Empty;
+                if (userCount == 1000) { userCountS = "1000"; }
+                if (userCount == 2000) { userCountS = "2000"; }
+                if (userCount == 3000) { userCountS = "3000"; }
+                if (userCount == 4000) { userCountS = "4000"; }
+                if (userCount == 5000) { userCountS = "5000"; }
+                if (userCount == 10000) { userCountS = "10000"; }
+                if (userCountS != string.Empty)
+                {
+                    try
+                    {
+                        DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
+                        await Kou.SendMessageAsync($"The server has now reached {userCountS} members!");
+                        Program.PrintCommandUse(e.Author.Username, "Member milestone message");
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.PrintError($"{ex.Message}: Tried to send role-update message but couldn't");
+                        return;
+                    }
+                }
+
+
                 //when a user joins:
-                await Task.Delay(1000).ConfigureAwait(false);
                 try
                 {
                     string emoji = ":hello:";
@@ -231,12 +259,13 @@ namespace JPDB_Bot
                 try
                 {
                     DSharpPlus.Entities.DiscordChannel welcomeChannel = e.Guild.GetChannel(configJson.WelcomeChannelID);
-                    await sender.SendMessageAsync(welcomeChannel, $"Welcome to the jpdb.io Discord server {e.Message.Author.Mention}!\nCheck the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
+                    //await sender.SendMessageAsync(welcomeChannel, $"Welcome to the official jpdb.io discord server, {e.Author.Username}, a website for learning words and kanji using difficulty lists - prebuilt decks containing all the words in your favourite pieces of content!\nMake sure you read the <#812300824088018945> and if you want to learn more, check the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
+                    await e.Message.RespondAsync($"Welcome to the official jpdb.io discord server, {e.Author.Username}, a website for learning words and kanji using difficulty lists - prebuilt decks containing all the words in your favourite pieces of content!\nMake sure you read the <#812300824088018945> and if you want to learn more, check the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
                 } catch (Exception ex)
                 {
                     Program.PrintError(ex.Message + $"\nFailed to welcome user {e.Author.Username}");
                 }
-                Program.PrintCommandUse(e.Message.Author.Username, "Server Join");
+                Program.PrintCommandUse(e.Message.Author.Username, $"Server Join ({userCount})");
                 return;
             }
 

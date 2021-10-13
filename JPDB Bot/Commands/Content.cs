@@ -36,6 +36,7 @@ namespace JPDB_Bot.Commands
             await ContentDetails(ctx, searchString);
             if (statisticsPage == string.Empty || uniqueWords == -1)
             {
+                await ctx.Channel.SendMessageAsync("Something went wrong, likely with collecting unique words information.").ConfigureAwait(false);
                 Program.PrintError("The program stopped before collecting content stats info.");
                 return;
             }
@@ -65,7 +66,14 @@ namespace JPDB_Bot.Commands
                 //    Text = "Currently, usernames don't do anything.",
                 //}
             };
-            var playerListMessage = await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
+            try
+            {
+                var contentEmbedMessage = await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
+            } catch
+            {
+                Program.PrintError("Failed to send content embed message.");
+                return;
+            }
         }
 
         private async Task ContentDetails(CommandContext ctx,
