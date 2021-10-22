@@ -10,8 +10,9 @@ _Note: the bot isn't online 24/7 as it is still in development._
 * !japantime - get the time in japan
 * !content - search for content in the jpdb database
 * !freqgame - play a frequency guess game that uses data from jpdb (Work in Progress)
+* !membercount - gets the number of members in a server
 * !hi - get a (usually) warm response from the bot
-
+* !changelog - [doesn't work yet]
 
 ---
 
