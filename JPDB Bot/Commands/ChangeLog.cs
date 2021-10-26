@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using System.Net;
 
 namespace JPDB_Bot.Commands
 {
@@ -27,5 +28,27 @@ namespace JPDB_Bot.Commands
 
             await ctx.RespondAsync(ChangeDate).ConfigureAwait(false);
         }
+
+
+        [Command("ping")]
+        [Cooldown(2, 5, CooldownBucketType.User)]
+        [Description("Pings a URL of your choice")]
+        [Hidden]
+        public async Task ping(CommandContext ctx, string URL, string showHTML = "false")
+        {
+            Program.PrintCommandUse(ctx.Message.Author.Username, ctx.Message.Content);
+            string html = string.Empty;
+            if (URL.Contains("https://") == false) { URL = "https://" + URL; }
+            try
+            {
+                html = new WebClient { }.DownloadString(new Uri(URL));
+                await ctx.RespondAsync($"Got a html response of length {html.Length}").ConfigureAwait(false);
+                if ((showHTML.ToLower() == "true" || showHTML.ToLower() == "yes") && ctx.Message.Author.Username == "JawGBoi") { Program.PrintAPIUse(html, URL); }
+            } catch
+            {
+                await ctx.RespondAsync($"Didn't get a response").ConfigureAwait(false);
+            }
+        }
     }
+
 }

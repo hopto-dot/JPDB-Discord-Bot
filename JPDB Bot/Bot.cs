@@ -107,7 +107,7 @@ namespace JPDB_Bot
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableMentionPrefix = true,
                 EnableDms = true,
-                DmHelp = true,
+                DmHelp = false,
                 EnableDefaultHelp = true,
                 IgnoreExtraArguments = true,
                 Services = services,

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.IO;
 
 namespace JPDB_Bot.Commands
 {
@@ -16,6 +18,24 @@ namespace JPDB_Bot.Commands
         string imageURL = string.Empty;
         string contentURL = string.Empty;
         int uniqueWords = -1;
+        public class TimedWebClient : WebClient
+        {
+            // Timeout in milliseconds, default = 600,000 msec
+            public int Timeout { get; set; }
+
+            public TimedWebClient()
+            {
+                this.Timeout = 600000;
+            }
+
+            protected override WebRequest GetWebRequest(Uri address)
+            {
+                var objWebRequest = base.GetWebRequest(address);
+                objWebRequest.Timeout = this.Timeout;
+                return objWebRequest;
+            }
+        }
+
 
         [Command("content")]
         [Cooldown(3, 10, CooldownBucketType.User)]
@@ -33,15 +53,17 @@ namespace JPDB_Bot.Commands
             uniqueWords = -1;
 
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
-            await ContentDetails(ctx, searchString);
+            await ContentDetails(ctx, searchString).ConfigureAwait(false);
+            Program.PrintCommandUse(ctx.User.Username, "Content Stats");
             if (statisticsPage == string.Empty || uniqueWords == -1)
             {
-                await ctx.Channel.SendMessageAsync("Something went wrong, likely with collecting unique words information.").ConfigureAwait(false);
                 Program.PrintError("The program stopped before collecting content stats info.");
+                await ctx.Channel.SendMessageAsync("Something went wrong, likely with collecting unique words information.").ConfigureAwait(false);
                 return;
             }
             await ContentStats(ctx, searchString).ConfigureAwait(false);
 
+            Program.PrintCommandUse(ctx.User.Username, "Content Embed");
             await SendContentEmbed(ctx).ConfigureAwait(false);
         }
 
@@ -79,7 +101,7 @@ namespace JPDB_Bot.Commands
         private async Task ContentDetails(CommandContext ctx,
             string searchString)
         {
-            WebClient client = new WebClient();
+            TimedWebClient client = new TimedWebClient();
             client.Encoding = System.Text.Encoding.UTF8;
 
             // Remove quotes if the search string is quoted ("stuff" -> stuff)
@@ -88,33 +110,53 @@ namespace JPDB_Bot.Commands
                 searchString = searchString.Substring(1, searchString.Length - 2);
             }
 
+            Program.PrintAPIUse("Checkpoint 1", "");
+
             string contentType = string.Empty;
             if (searchString.Contains(" anime")) { contentType = "anime"; searchString = searchString.Replace(" anime", ""); }
             if (searchString.Contains(" ln")) { contentType = "novel"; searchString = searchString.Replace(" ln", ""); }
             if (searchString.Contains(" novel")) { contentType = "novel"; searchString = searchString.Replace(" novel", ""); }
             if (searchString.Contains(" vn")) { contentType = "visual_novel"; searchString = searchString.Replace(" vn", ""); }
-
+            Program.PrintAPIUse("Checkpoint 1.1", "");
 
             if (contentType != string.Empty) { contentType = "&show_only=" + contentType; }
 
             string url = "https://jpdb.io/prebuilt_decks?q=" + searchString + contentType;
             string html = "";
+            Program.PrintAPIUse("Checkpoint 1.2", "test");
             try
             {
-                html = client.DownloadString(new Uri(url));
+                Program.PrintAPIUse("URL", url);
+                html = new TimedWebClient { Timeout = 500 }.DownloadString(new Uri(url));
+                Program.PrintAPIUse("Checkpoint 1.3", "");
             }
             catch (Exception ex)
             {
                 Program.PrintError(ex.Message + $"\n(url)");
                 return;
             }
-            string originalHTML = html;
 
+
+
+            //using (var httpClient = new HttpClient())
+            //{
+            //    using (var request = new HttpRequestMessage(new HttpMethod("GET"), "https://jpdb.io"))
+            //    {
+            //        var response = await httpClient.SendAsync(request);
+            //        html = response.Content.ReadAsStringAsync().Result;
+            //    }
+            //}
+
+
+            Program.PrintAPIUse($"Checkpoint 2 (html:{html.Length})", "");
+
+            string originalHTML = html;
 
             int snipIndex = html.IndexOf("30rem;\">") + 8;
 
             if (snipIndex == 7)
             {
+                Program.PrintError("No content found.");
                 await ctx.RespondAsync("No content found UwU").ConfigureAwait(false);
                 return;
             }
@@ -162,6 +204,7 @@ namespace JPDB_Bot.Commands
                 if (imageURL.Length > 42) { imageURL = ""; }
             }
 
+            Program.PrintAPIUse("Checkpoint 3", "");
             //await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
         }
 
@@ -193,6 +236,7 @@ namespace JPDB_Bot.Commands
 
             if (snipIndex == 7)
             {
+                Program.PrintError("Failed to send content embed message.");
                 await ctx.RespondAsync("Couldn't load statistics UwU").ConfigureAwait(false);
                 return;
             }
