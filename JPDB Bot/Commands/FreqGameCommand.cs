@@ -18,6 +18,7 @@ namespace JPDB_Bot.Commands
         private readonly Dictionary<DiscordChannel, FreqGame.FreqGame> GamesInProgress = new();
 
         [Command("stop")]
+        [Hidden]
         [Cooldown(1, 10, CooldownBucketType.User)]
         [Description("Stop a frequency game in progress")]
         public async Task StopFrequencyGame(CommandContext ctx)
