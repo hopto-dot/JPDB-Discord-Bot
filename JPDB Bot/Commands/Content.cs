@@ -58,7 +58,6 @@ namespace JPDB_Bot.Commands
             if (statisticsPage == string.Empty || uniqueWords == -1)
             {
                 Program.PrintError("The program stopped before collecting content stats info.");
-                await ctx.Channel.SendMessageAsync("Something went wrong, likely with collecting unique words information.").ConfigureAwait(false);
                 return;
             }
             await ContentStats(ctx, searchString).ConfigureAwait(false);

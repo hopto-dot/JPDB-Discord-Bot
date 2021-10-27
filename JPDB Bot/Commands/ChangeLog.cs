@@ -10,23 +10,30 @@ namespace JPDB_Bot.Commands
 {
     public class ChangeLog : BaseCommandModule
     {
-        [Command("changelog")]
+        [Command("lastupdate")]
         [Cooldown(1, 20, CooldownBucketType.User)]
-        [Description("Shows the latest addition to the changelog")]
-        public async Task changeLog(CommandContext ctx)
+        [Description("Gets the date of when jpdb was last updated")]
+        public async Task lastupdate(CommandContext ctx)
         {
             Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
             string Date = String.Empty;
 
             HtmlWeb web = new HtmlWeb();
             var htmlDoc = web.Load("https://jpdb.io/changelog");
-            string ChangeDate = htmlDoc.DocumentNode.SelectNodes("/html/body/div[2]/h5[1]")
+            try
+            {
+                string ChangeDate = htmlDoc.DocumentNode.SelectNodes("/html/body/div[2]/h5[1]")
                 .First()
                 .InnerHtml;
-            string Information = htmlDoc.DocumentNode.SelectNodes("/html/body/div[2]/h5[1]").First().NextSibling
-                .InnerHtml;
+                string Information = htmlDoc.DocumentNode.SelectNodes("/html/body/div[2]/h5[1]").First().NextSibling
+                    .InnerHtml;
 
-            await ctx.RespondAsync(ChangeDate).ConfigureAwait(false);
+                await ctx.RespondAsync(ChangeDate).ConfigureAwait(false);
+            } catch
+            {
+                Program.PrintError("Something went wrong");
+                await ctx.RespondAsync("Something went wrong").ConfigureAwait(false);
+            }
         }
 
 

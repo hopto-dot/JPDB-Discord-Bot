@@ -12,6 +12,7 @@ namespace JPDB_Bot.Commands
         [Description("Check the time in Japan")]
         public async Task Count(CommandContext ctx)
         {
+            Program.PrintCommandUse(ctx.Message.Author.Username, ctx.Message.Content);
             var userCount = ctx.Guild.GetAllMembersAsync().Result.Count; //ctx.Guild.GetAllMembersAsync().Result.ToArray().Length;
             await ctx.Message.RespondAsync($"There are {userCount} members :)").ConfigureAwait(false);
         }
