@@ -39,7 +39,7 @@ namespace JPDB_Bot
             }
             catch
             {
-                Program.PrintError("Couldn't read config.json");
+                Program.printError("Couldn't read config.json");
                 return;
             }
 
@@ -50,7 +50,7 @@ namespace JPDB_Bot
             }
             catch
             {
-                Program.PrintError("Couldn't deserialize config.json");
+                Program.printError("Couldn't deserialize config.json");
                 return;
             }
 
@@ -120,6 +120,8 @@ namespace JPDB_Bot
             Commands.RegisterCommands<Content>();
             Commands.RegisterCommands<JapanTime>();
             Commands.RegisterCommands<MemberCount>();
+            Commands.RegisterCommands<Rules>();
+            Commands.RegisterCommands<RoleCommand>();
             await Client.ConnectAsync();
 
             await Task.Delay(-1);
@@ -179,7 +181,7 @@ namespace JPDB_Bot
             if (vipB == false && vipA == true) { patreonChange = "vip"; }
             if (sponsorB == false && sponsorA == true) { patreonChange = "sponsor"; }
             if (supporterB == false && supporterA == true) { patreonChange = "supporter"; }
-            //Program.PrintError($"legend: {legendB} -> {legendA}\n" +
+            //Program.printError($"legend: {legendB} -> {legendA}\n" +
             //    $"vip: {vipB} -> {vipA}\n" +
             //    $"sponsor: {sponsorB} -> {sponsorA}\n" +
             //    $"supporter: {supporterB} -> {supporterA}\n");
@@ -189,10 +191,10 @@ namespace JPDB_Bot
             {
                 DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
                 await Kou.SendMessageAsync($"<@{e.Member.Id}> is now a {patreonChange}.");
-                Program.PrintCommandUse(e.Member.Username, "Updated role");
+                Program.printCommandUse(e.Member.Username, "Updated role");
             } catch (Exception ex)
             {
-                Program.PrintError($"{ex.Message}: Tried to send role-update message but couldn't");
+                Program.printError($"{ex.Message}: Tried to send role-update message but couldn't");
                 return;
             }
         }
@@ -202,6 +204,35 @@ namespace JPDB_Bot
             //sending messages and replying templates:\
             //await e.Message.RespondAsync("test").ConfigureAwait(false);
             //await e.Channel.SendMessageAsync("test").ConfigureAwait(false);
+
+            if (e.Message.Author.Id == 302050872383242240)
+            {
+                if (timerOn == true) { return; }
+                try
+                {
+                    DiscordEmbed disboardEmbed = e.Message.Embeds[0];
+                    if (disboardEmbed.Description.Contains("Bump done!") == true)
+                    {
+                        bumpTime = 7200;
+                        await bumperTimer(e).ConfigureAwait(false);
+                    }
+                    else if (disboardEmbed.Description.Contains("Please wait another") == true)
+                    {
+                        string minutesLeftMsg = disboardEmbed.Description;
+                        int snipIndex = minutesLeftMsg.IndexOf("Please");
+                        minutesLeftMsg = minutesLeftMsg.Substring(snipIndex);
+                        minutesLeftMsg = minutesLeftMsg.Replace("Please wait another ", "").Replace(" minutes until the server can be bumped", "");
+
+                        bumpTime = int.Parse(minutesLeftMsg) * 60;
+                        await bumperTimer(e);
+                    }
+                    Program.printMessage("Started bump timer");
+                } catch
+                {
+                }
+                return;
+            }
+
 
             try
             {
@@ -233,11 +264,11 @@ namespace JPDB_Bot
                     {
                         DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
                         await Kou.SendMessageAsync($"The server has now reached {userCountS} members!");
-                        Program.PrintCommandUse(e.Author.Username, "Member milestone message");
+                        Program.printCommandUse(e.Author.Username, "Member milestone message");
                     }
                     catch (Exception ex)
                     {
-                        Program.PrintError($"{ex.Message}: Tried to send role-update message but couldn't");
+                        Program.printError($"{ex.Message}: Tried to send role-update message but couldn't");
                         return;
                     }
                 }
@@ -254,7 +285,7 @@ namespace JPDB_Bot
                     await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, emoji));
                 } catch
                 {
-                    Program.PrintError("Failed to react to a user join message with :hello");
+                    Program.printError("Failed to react to a user join message with :hello");
                 }
                 try
                 {
@@ -263,9 +294,9 @@ namespace JPDB_Bot
                     await e.Message.RespondAsync($"Welcome to the official jpdb.io discord server, {e.Author.Username}, a website for learning words and kanji using difficulty lists - prebuilt decks containing all the words in your favourite pieces of content!\nMake sure you read the <#812300824088018945> and if you want to learn more, check the pinned message in <#833939726078967808> for a guide on how to get started with jpdb :)").ConfigureAwait(false);
                 } catch (Exception ex)
                 {
-                    Program.PrintError(ex.Message + $"\nFailed to welcome user {e.Author.Username}");
+                    Program.printError(ex.Message + $"\nFailed to welcome user {e.Author.Username}");
                 }
-                Program.PrintCommandUse(e.Message.Author.Username, $"Server Join ({userCount})");
+                Program.printCommandUse(e.Message.Author.Username, $"Server Join ({userCount})");
                 return;
             }
 
@@ -300,9 +331,9 @@ namespace JPDB_Bot
                         return;
                     }
 
-                    Program.PrintCommandUse(e.Author.Username, "(Content request) " + e.Message.Content);
+                    Program.printCommandUse(e.Author.Username, "(Content request) " + e.Message.Content);
                     var Kou = await sender.GetUserAsync(118408957416046593);
-                    Program.PrintError("A message would have triggered a content request reply message but was purposefully blocked");
+                    Program.printError("A message would have triggered a content request reply message but was purposefully blocked");
                     if (Kou.Presence.Status != DSharpPlus.Entities.UserStatus.Offline)
                     {
                         //await e.Message.RespondAsync("To request content you must DM -こう-.\nDo **not** post the script here (see rule 4).").ConfigureAwait(false);
@@ -315,6 +346,47 @@ namespace JPDB_Bot
             }
 
             return;
+        }
+
+        public static int bumpTime = 0;
+        public bool timerOn = false;
+        public async Task bumperTimer(MessageCreateEventArgs e)
+        {
+            timerOn = true;
+            while (bumpTime > 0)
+            {
+                System.Threading.Thread.Sleep(1000);
+                bumpTime -= 1;
+            }
+
+            timerOn = false;
+            var allMembers = e.Guild.GetAllMembersAsync().Result;
+
+            foreach (DiscordMember newMember in allMembers)
+            {
+                bool isBumper = false;
+                foreach (DiscordRole newRole in newMember.Roles)
+                {
+                    if (newRole.Name == "Bumper")
+                    {
+                        isBumper = true;
+                        goto skipRoleLoop;
+                    }
+                }
+                skipRoleLoop:
+                if (isBumper == true)
+                {
+                    Program.printMessage($"Sent bump message to {newMember.Username}");
+                    await newMember.SendMessageAsync("You may now use !d bump for jpdb! :)");
+                }
+            }
+
+            Program.printMessage("Done messages");
+
+            //DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
+            //await Kou.SendMessageAsync($"<@{e.Member.Id}> is now a {patreonChange}.");
+
+
         }
 
         private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)

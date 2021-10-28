@@ -17,7 +17,7 @@ namespace JPDB_Bot.Commands
         [Description("Get a nice (or bad) response")]
         public async Task SayHi(CommandContext ctx)
         {
-            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
 
             // Determine which set of greetings to use
             string category = "Default";
@@ -43,7 +43,7 @@ namespace JPDB_Bot.Commands
             else
             {
                 // Greeting of last resort
-                Program.PrintError("!hi: Using greeting of last resort");
+                Program.printError("!hi: Using greeting of last resort");
                 greeting = "Hello, " + username;
             }
 

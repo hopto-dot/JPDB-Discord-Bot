@@ -385,7 +385,7 @@ namespace JPDB_Bot.FreqGame
             }
 
             WebRequest request = WebRequest.Create(url);
-            Program.PrintAPIUse("Freqgame", url);
+            Program.printAPIUse("Freqgame", url);
 
             request.Method = "GET";
             request.Headers["Authorization"] = "Bearer " + BotConfig.JPDBToken;

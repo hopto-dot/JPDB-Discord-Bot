@@ -23,7 +23,7 @@ namespace JPDB_Bot.Commands
         [Description("Stop a frequency game in progress")]
         public async Task StopFrequencyGame(CommandContext ctx)
         {
-            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
 
             DiscordChannel discordChannel = ctx.Channel;
 
@@ -58,7 +58,7 @@ namespace JPDB_Bot.Commands
             //     return;
             // }
 
-            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
 
             DiscordChannel discordChannel = ctx.Channel;
 

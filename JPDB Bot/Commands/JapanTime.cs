@@ -7,12 +7,31 @@ namespace JPDB_Bot.Commands
 {
     public class JapanTime : BaseCommandModule
     {
+        //[Command("time")]
+        //[Cooldown(2, 6, CooldownBucketType.User)]
+        //[Description("Check the time in Japan")]
+        //[Hidden]
+        //[Aliases("koutime")]
+        //public async Task time(CommandContext ctx, string timeZone)
+        //{
+        //    switch (timeZone)
+        //    {
+        //        case "japantime":
+
+        //    }
+
+
+        //}
+
+
         [Command("japantime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in Japan")]
-        public async Task ShowJapanTime(CommandContext ctx)
+        [Hidden]
+        [Aliases("koutime")]
+        public async Task japantime(CommandContext ctx)
         {
-            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
             var info = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
             DateTimeOffset localServerTime = DateTimeOffset.Now;
             DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
@@ -36,6 +55,54 @@ namespace JPDB_Bot.Commands
             {
                 await ctx.RespondAsync("日本: " + timeInJapan).ConfigureAwait(false);
             }
+        }
+
+        [Command("flynttime")]
+        [Aliases("esttime", "utc-5time", "utc-5")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Hidden]
+        [Description("Check Flynt's time")]
+        public async Task flynttime(CommandContext ctx)
+        {
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
+            var info = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            DateTimeOffset localServerTime = DateTimeOffset.Now;
+            DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
+            String flyntTime = localTime.ToString("dd/MM/yyyy HH:mm:ss");
+            
+            await ctx.RespondAsync($"EST: {flyntTime}").ConfigureAwait(false);
+        }
+
+        [Command("alemaxtime")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Description("Check AleMax's time")]
+        [Hidden]
+        [Aliases("germanytime", "deutschtime", "germantime", "cesttime", "cettime", "schnitzeltime", "alextime")]
+        public async Task alemaxtime(CommandContext ctx)
+        {
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
+            var info = TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
+            DateTimeOffset localServerTime = DateTimeOffset.Now;
+            DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
+            String alemaxTime = localTime.ToString("dd/MM/yyyy HH:mm:ss");
+
+            await ctx.RespondAsync($"CET: {alemaxTime}").ConfigureAwait(false);
+        }
+
+        [Command("jawgboitime")]
+        [Hidden]
+        [Aliases("moekyunkyuntime" , "moekyuntime", "moetime", "uktime", "britishtime", "utc+1", "utc+1time")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Description("Check AleMax's time")]
+        public async Task jawgboitime(CommandContext ctx)
+        {
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
+            var info = TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time");
+            DateTimeOffset localServerTime = DateTimeOffset.Now;
+            DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
+            String jawgboiTime = localTime.ToString("dd/MM/yyyy HH:mm:ss");
+
+            await ctx.RespondAsync($"GMT: {jawgboiTime}").ConfigureAwait(false);
         }
     }
 }

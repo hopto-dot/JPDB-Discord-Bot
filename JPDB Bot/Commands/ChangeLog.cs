@@ -15,7 +15,7 @@ namespace JPDB_Bot.Commands
         [Description("Gets the date of when jpdb was last updated")]
         public async Task lastupdate(CommandContext ctx)
         {
-            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
             string Date = String.Empty;
 
             HtmlWeb web = new HtmlWeb();
@@ -31,7 +31,7 @@ namespace JPDB_Bot.Commands
                 await ctx.RespondAsync(ChangeDate).ConfigureAwait(false);
             } catch
             {
-                Program.PrintError("Something went wrong");
+                Program.printError("Something went wrong");
                 await ctx.RespondAsync("Something went wrong").ConfigureAwait(false);
             }
         }
@@ -43,14 +43,14 @@ namespace JPDB_Bot.Commands
         [Hidden]
         public async Task ping(CommandContext ctx, string URL, string showHTML = "false")
         {
-            Program.PrintCommandUse(ctx.Message.Author.Username, ctx.Message.Content);
+            Program.printCommandUse(ctx.Message.Author.Username, ctx.Message.Content);
             string html = string.Empty;
             if (URL.Contains("https://") == false) { URL = "https://" + URL; }
             try
             {
                 html = new WebClient { }.DownloadString(new Uri(URL));
                 await ctx.RespondAsync($"Got a html response of length {html.Length}").ConfigureAwait(false);
-                if ((showHTML.ToLower() == "true" || showHTML.ToLower() == "yes") && ctx.Message.Author.Username == "JawGBoi") { Program.PrintAPIUse(html, URL); }
+                if ((showHTML.ToLower() == "true" || showHTML.ToLower() == "yes") && ctx.Message.Author.Username == "JawGBoi") { Program.printAPIUse(html, URL); }
             } catch
             {
                 await ctx.RespondAsync($"Didn't get a response").ConfigureAwait(false);

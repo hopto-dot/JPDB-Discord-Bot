@@ -44,7 +44,7 @@ namespace JPDB_Bot.Commands
             [DescriptionAttribute("Name of the content you are searching")] [RemainingText]
             string searchString)
         {
-            Program.PrintCommandUse(ctx.User.Username, ctx.Message.Content);
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
             statisticsPage = string.Empty;
             contentName = string.Empty;
             statsMessage = string.Empty;
@@ -54,22 +54,22 @@ namespace JPDB_Bot.Commands
 
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
             await ContentDetails(ctx, searchString).ConfigureAwait(false);
-            Program.PrintCommandUse(ctx.User.Username, "Content Stats");
+            Program.printCommandUse(ctx.User.Username, "Content Stats");
             if (statisticsPage == string.Empty || uniqueWords == -1)
             {
-                Program.PrintError("The program stopped before collecting content stats info.");
+                Program.printError("The program stopped before collecting content stats info.");
                 return;
             }
             await ContentStats(ctx, searchString).ConfigureAwait(false);
 
-            Program.PrintCommandUse(ctx.User.Username, "Content Embed");
+            Program.printCommandUse(ctx.User.Username, "Content Embed");
             await SendContentEmbed(ctx).ConfigureAwait(false);
         }
 
 
         private async Task SendContentEmbed(CommandContext ctx)
         {
-            //Program.PrintError($"Content Embed:\n{contentName}\n{imageURL}\n{contentURL}");
+            //Program.printError($"Content Embed:\n{contentName}\n{imageURL}\n{contentURL}");
 
             var embedThumbnail = new DiscordEmbedBuilder.EmbedThumbnail
             {
@@ -92,7 +92,7 @@ namespace JPDB_Bot.Commands
                 var contentEmbedMessage = await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
             } catch
             {
-                Program.PrintError("Failed to send content embed message.");
+                Program.printError("Failed to send content embed message.");
                 return;
             }
         }
@@ -109,29 +109,26 @@ namespace JPDB_Bot.Commands
                 searchString = searchString.Substring(1, searchString.Length - 2);
             }
 
-            Program.PrintAPIUse("Checkpoint 1", "");
+            Program.printAPIUse("Checkpoint 1", "");
 
             string contentType = string.Empty;
             if (searchString.Contains(" anime")) { contentType = "anime"; searchString = searchString.Replace(" anime", ""); }
             if (searchString.Contains(" ln")) { contentType = "novel"; searchString = searchString.Replace(" ln", ""); }
             if (searchString.Contains(" novel")) { contentType = "novel"; searchString = searchString.Replace(" novel", ""); }
             if (searchString.Contains(" vn")) { contentType = "visual_novel"; searchString = searchString.Replace(" vn", ""); }
-            Program.PrintAPIUse("Checkpoint 1.1", "");
 
             if (contentType != string.Empty) { contentType = "&show_only=" + contentType; }
 
             string url = "https://jpdb.io/prebuilt_decks?q=" + searchString + contentType;
             string html = "";
-            Program.PrintAPIUse("Checkpoint 1.2", "test");
             try
             {
-                Program.PrintAPIUse("URL", url);
+                Program.printAPIUse("URL", url);
                 html = new TimedWebClient { Timeout = 500 }.DownloadString(new Uri(url));
-                Program.PrintAPIUse("Checkpoint 1.3", "");
             }
             catch (Exception ex)
             {
-                Program.PrintError(ex.Message + $"\n(url)");
+                Program.printError(ex.Message + $"\n(url)");
                 return;
             }
 
@@ -147,15 +144,13 @@ namespace JPDB_Bot.Commands
             //}
 
 
-            Program.PrintAPIUse($"Checkpoint 2 (html:{html.Length})", "");
-
             string originalHTML = html;
 
             int snipIndex = html.IndexOf("30rem;\">") + 8;
 
             if (snipIndex == 7)
             {
-                Program.PrintError("No content found.");
+                Program.printError("No content found.");
                 await ctx.RespondAsync("No content found UwU").ConfigureAwait(false);
                 return;
             }
@@ -203,7 +198,6 @@ namespace JPDB_Bot.Commands
                 if (imageURL.Length > 42) { imageURL = ""; }
             }
 
-            Program.PrintAPIUse("Checkpoint 3", "");
             //await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
         }
 
@@ -227,7 +221,7 @@ namespace JPDB_Bot.Commands
             }
             catch (Exception ex)
             {
-                Program.PrintError(ex.Message);
+                Program.printError(ex.Message);
                 return;
             }
 
@@ -235,7 +229,7 @@ namespace JPDB_Bot.Commands
 
             if (snipIndex == 7)
             {
-                Program.PrintError("Failed to send content embed message.");
+                Program.printError("Failed to send content embed message.");
                 await ctx.RespondAsync("Couldn't load statistics UwU").ConfigureAwait(false);
                 return;
             }
