@@ -57,18 +57,18 @@ namespace JPDB_Bot
                 WeightedString[] supporterGreetings =
                 {
                     new WeightedString { Value = "Hi %username%様, I can speak English too ya know >:)", Weight = 1 },
-                    new WeightedString { Value = "どうも、%username%様 :)", Weight = 5 },
+                    new WeightedString { Value = "どうも、%username%様 :)", Weight = 3 },
                     new WeightedString { Value = "よおおおおおおおぉ %username%様！ :)", Weight = 1 },
-                    new WeightedString { Value = "また会えて嬉しいね %username%様 :)", Weight = 3 },
+                    new WeightedString { Value = "また会えて嬉しいね %username%様 :)", Weight = 2 },
                     new WeightedString { Value = "やっほおおおおおお～ %username%様 :)", Weight = 1 },
-                    new WeightedString { Value = "おおおおっす! %username%様 :)", Weight = 1 },
-                    new WeightedString { Value = "ハロオオオ %username%様！ :)", Weight = 1 },
-                    new WeightedString { Value = "へっ！なんかあった？%username%様 :O", Weight = 2 },
+                    new WeightedString { Value = "おおおおっす! %username%様 :)", Weight = 2 },
+                    new WeightedString { Value = "ハロオオオ %username%様！ :)", Weight = 2 },
+                    new WeightedString { Value = "へっ！なんかあった？%username%様 :O", Weight = 1 },
                 };
 
                 WeightedString[] defaultGreetings =
                 {
-                    new WeightedString { Value = "どうも、%username%様 :)", Weight = 5 },
+                    new WeightedString { Value = "どうも、%username%様 :)", Weight = 2 },
                     new WeightedString { Value = "おいお前 JPDBの支援者になれ", Weight = 1 },
                     new WeightedString { Value = "元気はないんだなあ %username%さん。JPDBを支援したら？うwう", Weight = 5 },
                     new WeightedString { Value = "おっす! %username% :)", Weight = 1 },
