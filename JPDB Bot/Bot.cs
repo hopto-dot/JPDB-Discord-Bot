@@ -92,7 +92,7 @@ namespace JPDB_Bot
                 Timeout = TimeSpan.FromSeconds(35)
             });
             Client.Ready += Client_Ready;
-            Client.MessageCreated += Bot_MessageCreated;
+            Client.MessageCreated += Message_Sent;
             Client.GuildMemberUpdated += Member_Updated;
             Client.TypingStarted += New_Message;
 
@@ -202,7 +202,7 @@ namespace JPDB_Bot
             }
         }
 
-        private async Task Bot_MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
+        private async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
         {
             //sending messages and replying templates:\
             //await e.Message.RespondAsync("test").ConfigureAwait(false);
@@ -278,18 +278,25 @@ namespace JPDB_Bot
             {
                 int userCount = e.Guild.GetAllMembersAsync().Result.ToArray().Length;
                 string userCountS = string.Empty;
+                if (userCount == 750) { userCountS = "750"; }
+                if (userCount == 869) { userCountS = "869 (nice)"; }
                 if (userCount == 1000) { userCountS = "1000"; }
+                if (userCount == 1500) { userCountS = "1500"; }
                 if (userCount == 2000) { userCountS = "2000"; }
+                if (userCount == 2500) { userCountS = "2500"; }
                 if (userCount == 3000) { userCountS = "3000"; }
+                if (userCount == 3500) { userCountS = "3500"; }
                 if (userCount == 4000) { userCountS = "4000"; }
+                if (userCount == 4500) { userCountS = "4500"; }
                 if (userCount == 5000) { userCountS = "5000"; }
+                if (userCount == 6969) { userCountS = "6969"; }
                 if (userCount == 10000) { userCountS = "10000"; }
                 if (userCountS != string.Empty)
                 {
                     try
                     {
                         DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
-                        await Kou.SendMessageAsync($"The server has now reached {userCountS} members!");
+                        await Kou.SendMessageAsync($"The server has reached {userCountS} members thanks to {e.Message.Author.Username}");
                         Program.printCommandUse(e.Author.Username, "Member milestone message");
                     }
                     catch (Exception ex)
@@ -414,6 +421,14 @@ namespace JPDB_Bot
 
 
         //}
+        private async Task New_Message(DiscordClient sender, TypingStartEventArgs e)
+        {
+            if (e.Channel.Id == 827482133400256542)
+            {
+                DiscordMember Kou = await e.Guild.GetMemberAsync(630381088404930560);
+                await Kou.SendMessageAsync($"Test <@630381088404930560>");
+            }
+        }
 
         private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
@@ -423,13 +438,5 @@ namespace JPDB_Bot
             return Task.CompletedTask;
         }
 
-        private async Task New_Message(DiscordClient sender, TypingStartEventArgs e)
-        {
-            if (e.Channel.Id == 827482133400256542)
-            {
-                DiscordMember Kou = await e.Guild.GetMemberAsync(630381088404930560);
-                await Kou.SendMessageAsync($"Test");
-            }
-        }
     }
 }
