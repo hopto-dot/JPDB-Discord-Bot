@@ -94,7 +94,8 @@ namespace JPDB_Bot
             Client.Ready += Client_Ready;
             Client.MessageCreated += Bot_MessageCreated;
             Client.GuildMemberUpdated += Member_Updated;
-            Client.TypingStarted += User_Typing;
+            Client.TypingStarted += New_Message;
+
 
             // Dependency injection for Commands
             ServiceProvider services = new ServiceCollection()
@@ -244,7 +245,8 @@ namespace JPDB_Bot
                     System.Threading.Thread.Sleep(600);
                     await e.Channel.TriggerTypingAsync();
                     System.Threading.Thread.Sleep(2000);
-                    await e.Channel.SendMessageAsync("If all goes to plan it should be today! :O").ConfigureAwait(false);
+
+                    await e.Channel.SendMessageAsync("Why would I know??").ConfigureAwait(false);
                 }
             }
 
@@ -410,6 +412,15 @@ namespace JPDB_Bot
             Console.WriteLine("JPDB Bot is online.");
             Console.ForegroundColor = ConsoleColor.White;
             return Task.CompletedTask;
+        }
+
+        private async Task New_Message(DiscordClient sender, TypingStartEventArgs e)
+        {
+            if (e.Channel.Id == 827482133400256542)
+            {
+                DiscordMember Kou = await e.Guild.GetMemberAsync(630381088404930560);
+                await Kou.SendMessageAsync($"Test");
+            }
         }
     }
 }
