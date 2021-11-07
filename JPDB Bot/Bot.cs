@@ -246,7 +246,16 @@ namespace JPDB_Bot
                     await e.Channel.TriggerTypingAsync();
                     System.Threading.Thread.Sleep(2000);
 
-                    await e.Channel.SendMessageAsync("Why would I know??").ConfigureAwait(false);
+                    string responseString = "Why would I know??";
+                    if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        responseString = "If all goes to plan it should be today! :O";
+                    }
+                    else if (DateTime.Now.DayOfWeek == DayOfWeek.Saturday)
+                    {
+                        responseString = "Perhaps tomorrow, but who knows? :O";
+                    }
+                    await e.Channel.SendMessageAsync(responseString).ConfigureAwait(false);
                 }
             }
 
