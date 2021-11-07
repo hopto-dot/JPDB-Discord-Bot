@@ -336,7 +336,7 @@ namespace JPDB_Bot
             if (e.Message.Content.ToLower().Contains("boku no pico"))
             {
                 await Task.Delay(5000).ConfigureAwait(false);
-                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":eyes:"));
+                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":guilty:"));
                 return;
             }
 
