@@ -27,6 +27,9 @@ namespace JPDB_Bot.Commands
             string greeting = ChooseGreeting(category, ctx.User.Username);
 
             // Send the greeting
+            System.Threading.Thread.Sleep(700);
+            await ctx.Channel.TriggerTypingAsync();
+            System.Threading.Thread.Sleep(2000);
             await ctx.RespondAsync(greeting).ConfigureAwait(false);
         }
 

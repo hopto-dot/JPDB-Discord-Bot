@@ -94,6 +94,7 @@ namespace JPDB_Bot
             Client.Ready += Client_Ready;
             Client.MessageCreated += Bot_MessageCreated;
             Client.GuildMemberUpdated += Member_Updated;
+            Client.TypingStarted += User_Typing;
 
             // Dependency injection for Commands
             ServiceProvider services = new ServiceCollection()
@@ -122,6 +123,7 @@ namespace JPDB_Bot
             Commands.RegisterCommands<MemberCount>();
             Commands.RegisterCommands<Rules>();
             Commands.RegisterCommands<RoleCommand>();
+            //Commands.RegisterCommands<TextGame>();
             await Client.ConnectAsync();
 
             await Task.Delay(-1);
@@ -204,33 +206,46 @@ namespace JPDB_Bot
             //sending messages and replying templates:\
             //await e.Message.RespondAsync("test").ConfigureAwait(false);
             //await e.Channel.SendMessageAsync("test").ConfigureAwait(false);
+            //if (e.Message.Author.Id == 302050872383242240)
+            //{
+            //    if (timerOn == true) { return; }
+            //    try
+            //    {
+            //        return;
+            //        DiscordEmbed disboardEmbed = e.Message.Embeds[0];
+            //        if (disboardEmbed.Description.Contains("Bump done!") == true)
+            //        {
+            //            bumpTime = 7200;
+            //            await bumperTimer(e).ConfigureAwait(false);
+            //        }
+            //        else if (disboardEmbed.Description.Contains("Please wait another") == true)
+            //        {
+            //            string minutesLeftMsg = disboardEmbed.Description;
+            //            int snipIndex = minutesLeftMsg.IndexOf("Please");
+            //            minutesLeftMsg = minutesLeftMsg.Substring(snipIndex);
+            //            minutesLeftMsg = minutesLeftMsg.Replace("Please wait another ", "").Replace(" minutes until the server can be bumped", "");
 
-            if (e.Message.Author.Id == 302050872383242240)
+            //            bumpTime = int.Parse(minutesLeftMsg) * 60;
+            //            await bumperTimer(e);
+            //        }
+            //        Program.printMessage("Started bump timer");
+            //    } catch
+            //    {
+            //    }
+            //    return;
+            //}
+            if (e.Message.Content.ToLower().Contains("<@!874240645995331585> ") == true)
             {
-                if (timerOn == true) { return; }
-                try
+                if (e.Message.Content.ToLower().Contains("when is the next update") == true
+                    || e.Message.Content.ToLower().Contains("when will the next update") == true
+                    || e.Message.Content.ToLower().Contains("do you know when the next update") == true
+                    || (e.Message.Content.ToLower().Contains("when will kou") == true && (e.Message.Content.ToLower().Contains("update"))))
                 {
-                    DiscordEmbed disboardEmbed = e.Message.Embeds[0];
-                    if (disboardEmbed.Description.Contains("Bump done!") == true)
-                    {
-                        bumpTime = 7200;
-                        await bumperTimer(e).ConfigureAwait(false);
-                    }
-                    else if (disboardEmbed.Description.Contains("Please wait another") == true)
-                    {
-                        string minutesLeftMsg = disboardEmbed.Description;
-                        int snipIndex = minutesLeftMsg.IndexOf("Please");
-                        minutesLeftMsg = minutesLeftMsg.Substring(snipIndex);
-                        minutesLeftMsg = minutesLeftMsg.Replace("Please wait another ", "").Replace(" minutes until the server can be bumped", "");
-
-                        bumpTime = int.Parse(minutesLeftMsg) * 60;
-                        await bumperTimer(e);
-                    }
-                    Program.printMessage("Started bump timer");
-                } catch
-                {
+                    System.Threading.Thread.Sleep(600);
+                    await e.Channel.TriggerTypingAsync();
+                    System.Threading.Thread.Sleep(2000);
+                    await e.Channel.SendMessageAsync("If all goes to plan it should be today! :O").ConfigureAwait(false);
                 }
-                return;
             }
 
 
@@ -350,44 +365,44 @@ namespace JPDB_Bot
 
         public static int bumpTime = 0;
         public bool timerOn = false;
-        public async Task bumperTimer(MessageCreateEventArgs e)
-        {
-            timerOn = true;
-            while (bumpTime > 0)
-            {
-                System.Threading.Thread.Sleep(1000);
-                bumpTime -= 1;
-            }
+        //public async Task bumperTimer(MessageCreateEventArgs e)
+        //{
+        //    timerOn = true;
+        //    while (bumpTime > 0)
+        //    {
+        //        System.Threading.Thread.Sleep(1000);
+        //        bumpTime -= 1;
+        //    }
 
-            timerOn = false;
-            var allMembers = e.Guild.GetAllMembersAsync().Result;
+        //    timerOn = false;
+        //    var allMembers = e.Guild.GetAllMembersAsync().Result;
 
-            foreach (DiscordMember newMember in allMembers)
-            {
-                bool isBumper = false;
-                foreach (DiscordRole newRole in newMember.Roles)
-                {
-                    if (newRole.Name == "Bumper")
-                    {
-                        isBumper = true;
-                        goto skipRoleLoop;
-                    }
-                }
-                skipRoleLoop:
-                if (isBumper == true)
-                {
-                    Program.printMessage($"Sent bump message to {newMember.Username}");
-                    await newMember.SendMessageAsync("You may now use !d bump for jpdb! :)");
-                }
-            }
+        //    foreach (DiscordMember newMember in allMembers)
+        //    {
+        //        bool isBumper = false;
+        //        foreach (DiscordRole newRole in newMember.Roles)
+        //        {
+        //            if (newRole.Name == "Bumper")
+        //            {
+        //                isBumper = true;
+        //                goto skipRoleLoop;
+        //            }
+        //        }
+        //        skipRoleLoop:
+        //        if (isBumper == true)
+        //        {
+        //            Program.printMessage($"Sent bump message to {newMember.Username}");
+        //            await newMember.SendMessageAsync("You may now use !d bump for jpdb! :)");
+        //        }
+        //    }
 
-            Program.printMessage("Done messages");
+        //    Program.printMessage("Done messages");
 
-            //DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
-            //await Kou.SendMessageAsync($"<@{e.Member.Id}> is now a {patreonChange}.");
+        //    //DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
+        //    //await Kou.SendMessageAsync($"<@{e.Member.Id}> is now a {patreonChange}.");
 
 
-        }
+        //}
 
         private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {

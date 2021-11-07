@@ -42,6 +42,8 @@ namespace JPDB_Bot
     {
         public static GreetingsData LoadGreetings()
         {
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Loading greetings...");
             try
             {
                 using FileStream fs = File.OpenRead("greetings.json");

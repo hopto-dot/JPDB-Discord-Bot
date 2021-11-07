@@ -178,8 +178,8 @@ namespace JPDB_Bot.FreqGame
                         {
                             string[] parts = message.Content.Split();
                             return parts.Length > 0 && commands.Contains(parts[0]);
-                        })
-                        .ConfigureAwait(false);
+                        }
+                        ).ConfigureAwait(false);
 
                 if (result.TimedOut)
                 {
