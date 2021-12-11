@@ -1,4 +1,4 @@
-using DSharpPlus.CommandsNext;
+﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System;
@@ -7,6 +7,8 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.IO;
+using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus;
 
 namespace JPDB_Bot.Commands
 {
@@ -63,11 +65,11 @@ namespace JPDB_Bot.Commands
             await ContentStats(ctx, searchString).ConfigureAwait(false);
 
             Program.printCommandUse(ctx.User.Username, "Content Embed");
-            await SendContentEmbed(ctx).ConfigureAwait(false);
+            await SendContentEmbed(ctx, true).ConfigureAwait(false);
         }
 
 
-        private async Task SendContentEmbed(CommandContext ctx)
+        private async Task SendContentEmbed(CommandContext ctx, Boolean test = false)
         {
             //Program.printError($"Content Embed:\n{contentName}\n{imageURL}\n{contentURL}");
 
@@ -87,6 +89,7 @@ namespace JPDB_Bot.Commands
                 //    Text = "Currently, usernames don't do anything.",
                 //}
             };
+            
             try
             {
                 var contentEmbedMessage = await ctx.Channel.SendMessageAsync(embed: gameEmbed).ConfigureAwait(false);
@@ -161,7 +164,7 @@ namespace JPDB_Bot.Commands
 
             snipIndex = wordTemp.IndexOf("<");
             html = wordTemp.Substring(snipIndex);
-            contentName = wordTemp.Substring(0, snipIndex);
+            contentName = wordTemp.Substring(0, snipIndex).Replace("&#39;", "'");
 
             snipIndex = html.IndexOf("margin-top: 0.5rem;\">") + 22;
             wordTemp = html.Substring(snipIndex);
@@ -249,7 +252,7 @@ namespace JPDB_Bot.Commands
 
             foreach (float Coverage in wordCoverage)
             {
-                //80, 85, 90, 95, 97, 98
+                //80, 85, 90, 95, 96, 97, 98
                 if (coverages.Count == 0 && Coverage > 80)
                 {
                     coverages.Add(uniqueKnown);
@@ -266,11 +269,15 @@ namespace JPDB_Bot.Commands
                 {
                     coverages.Add(uniqueKnown);
                 }
-                else if (coverages.Count == 4 && Coverage > 97)
+                else if (coverages.Count == 4 && Coverage > 96)
                 {
                     coverages.Add(uniqueKnown);
                 }
-                else if (coverages.Count == 5 && Coverage > 98)
+                else if (coverages.Count == 5 && Coverage > 97)
+                {
+                    coverages.Add(uniqueKnown);
+                }
+                else if (coverages.Count == 6 && Coverage > 98)
                 {
                     coverages.Add(uniqueKnown);
                 }
@@ -284,19 +291,40 @@ namespace JPDB_Bot.Commands
 
             //giniValue *= 100;
 
-            giniValue = (giniValue - 60) * 3.0f;
+            float coverageRating = (giniValue - 55) * 3f;
+            coverageRating = (float)(Math.Round(coverageRating * 100.0) / 100.0);
+            decimal cmodifier = Math.Round((decimal)(wordCoverage[8] + 36) / 100, 2);
+            coverageRating = (float)((decimal)coverageRating * cmodifier);
+
+            string coverageStars = string.Empty;
+            int stars = (int)Math.Floor(coverageRating / 10);
+            
+            for (int star = 0; stars != star; star += 1)
+            {
+                if (star%2 == 1)
+                {
+                    coverageStars += "★";
+                }
+                else if (star % 2 == 0 && star == stars - 1)
+                {
+                    coverageStars += "⯨";
+                }
+            }
+
             if (giniValue > 100) { giniValue = 100; }
             if (giniValue < 0) { giniValue = 0; }
 
-            //80, 85, 90, 95, 97, 98
+            //80, 85, 90, 95, 96, 97, 98
             statsMessage = $"Coverage : Unique Words (/{uniqueWords})" +
                 $"\n80% : {coverages[0]}% ({Math.Round(uniqueWords * ((float)coverages[0] / 100))} words)" +
                 $"\n85% : {coverages[1]}% ({Math.Round(uniqueWords * ((float)coverages[1] / 100))} words)" +
                 $"\n90% : {coverages[2]}% ({Math.Round(uniqueWords * ((float)coverages[2] / 100))} words)" +
                 $"\n95% : {coverages[3]}% ({Math.Round(uniqueWords * ((float)coverages[3] / 100))} words)" +
-                $"\n97% : {coverages[4]}% ({Math.Round(uniqueWords * ((float)coverages[4] / 100))} words)" +
-                $"\n98% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)" +
-                $"\nCoverage Rating: {Math.Round(giniValue * 100.0) / 100.0}%";
+                $"\n96% : {coverages[4]}% ({Math.Round(uniqueWords * ((float)coverages[4] / 100))} words)" +
+                $"\n97% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)" +
+                $"\n98% : {coverages[6]}% ({Math.Round(uniqueWords * ((float)coverages[6] / 100))} words)" +
+                $"\nGini Value: {giniValue}%" +
+                $"\nCoverage Rating: {coverageStars}";
             //float test = wordCoverage[coverages[0]];
 
 
