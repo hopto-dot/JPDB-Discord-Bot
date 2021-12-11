@@ -289,12 +289,15 @@ namespace JPDB_Bot.Commands
                 uniqueKnown += 1;
             }
 
-            //giniValue *= 100;
+            giniValue = (giniValue - 50) * 2;
 
             float coverageRating = (giniValue - 55) * 3f;
             coverageRating = (float)(Math.Round(coverageRating * 100.0) / 100.0);
-            decimal cmodifier = Math.Round((decimal)(wordCoverage[8] + 36) / 100, 2);
+            decimal cmodifier = Math.Round((decimal)(wordCoverage[8] + 45) / 100, 2);
+            if (cmodifier < 0.7m) { cmodifier = 0.7m; }
+            
             coverageRating = (float)((decimal)coverageRating * cmodifier);
+            if (coverageRating < 10) { coverageRating = 10; }
 
             string coverageStars = string.Empty;
             int stars = (int)Math.Floor(coverageRating / 10);
@@ -324,7 +327,8 @@ namespace JPDB_Bot.Commands
                 $"\n97% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)" +
                 $"\n98% : {coverages[6]}% ({Math.Round(uniqueWords * ((float)coverages[6] / 100))} words)" +
                 $"\nGini Value: {giniValue}%" +
-                $"\nCoverage Rating: {coverageStars}";
+                $"\nCoverage Rating: {(stars + 1) / 2}/51★" +
+                $"\nJump offset: {cmodifier}";
             //float test = wordCoverage[coverages[0]];
 
 
