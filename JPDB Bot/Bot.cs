@@ -124,8 +124,10 @@ namespace JPDB_Bot
             Commands.RegisterCommands<MemberCount>();
             Commands.RegisterCommands<Rules>();
             Commands.RegisterCommands<RoleCommand>();
+            Commands.RegisterCommands<JPDB_Search>();
             //Commands.RegisterCommands<TextGame>();
             await Client.ConnectAsync();
+
 
             await Task.Delay(-1);
         }

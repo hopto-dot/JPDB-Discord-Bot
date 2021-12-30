@@ -73,11 +73,17 @@ namespace JPDB_Bot.Commands
         {
             //Program.printError($"Content Embed:\n{contentName}\n{imageURL}\n{contentURL}");
 
+            var myButton = new DiscordButtonComponent(ButtonStyle.Success, "my_custom_id", "Click for free vbucks");
+            var builder = new DiscordMessageBuilder()
+            .WithContent("This message isn't suspicious at all.")
+            .AddComponents(myButton);
+            var testMessage = await ctx.Channel.SendMessageAsync(builder).ConfigureAwait(false);
+
             var embedThumbnail = new DiscordEmbedBuilder.EmbedThumbnail
             {
                 Url = imageURL,
             };
-            var gameEmbed = new DiscordEmbedBuilder
+            var gameEmbed = new DiscordEmbedBuilder()
             {
                 Title = contentName,
                 Description = statsMessage,
@@ -291,7 +297,7 @@ namespace JPDB_Bot.Commands
 
             giniValue = (giniValue - 50) * 2;
 
-            float coverageRating = (giniValue - 55) * 3f;
+            float coverageRating = (giniValue - 50) * 3f;
             coverageRating = (float)(Math.Round(coverageRating * 100.0) / 100.0);
             decimal cmodifier = Math.Round((decimal)(wordCoverage[8] + 45) / 100, 2);
             if (cmodifier < 0.7m) { cmodifier = 0.7m; }
@@ -301,6 +307,7 @@ namespace JPDB_Bot.Commands
 
             string coverageStars = string.Empty;
             int stars = (int)Math.Floor(coverageRating / 10);
+            if (stars > 5) { stars = 5; }
             
             for (int star = 0; stars != star; star += 1)
             {
@@ -327,7 +334,7 @@ namespace JPDB_Bot.Commands
                 $"\n97% : {coverages[5]}% ({Math.Round(uniqueWords * ((float)coverages[5] / 100))} words)" +
                 $"\n98% : {coverages[6]}% ({Math.Round(uniqueWords * ((float)coverages[6] / 100))} words)" +
                 $"\nGini Value: {giniValue}%" +
-                $"\nCoverage Rating: {(stars + 1) / 2}/51★" +
+                $"\nCoverage Rating: {stars + 1}/10★" +
                 $"\nJump offset: {cmodifier}";
             //float test = wordCoverage[coverages[0]];
 
