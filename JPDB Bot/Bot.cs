@@ -96,7 +96,6 @@ namespace JPDB_Bot
             Client.GuildMemberUpdated += Member_Updated;
             Client.TypingStarted += New_Message;
 
-
             // Dependency injection for Commands
             ServiceProvider services = new ServiceCollection()
                 .AddSingleton<ConfigJson>(configJson)
@@ -128,9 +127,10 @@ namespace JPDB_Bot
             //Commands.RegisterCommands<TextGame>();
             await Client.ConnectAsync();
 
-
+            jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);
             await Task.Delay(-1);
         }
+        public static DiscordGuild jpdbGuild = null;
 
         private async Task Member_Updated(DiscordClient sender, GuildMemberUpdateEventArgs e)
         {
@@ -153,7 +153,7 @@ namespace JPDB_Bot
                         vipB = true;
                         break;
                     case "legend":
-
+                        legendB = true;
                         break;
                 }
             }
@@ -182,14 +182,15 @@ namespace JPDB_Bot
                 }
             }
             string patreonChange = "none";
-            if (legendA == false && legendB == true) { patreonChange = "legend"; }
-            if (vipB == false && vipA == true) { patreonChange = "vip"; }
-            if (sponsorB == false && sponsorA == true) { patreonChange = "sponsor"; }
-            if (supporterB == false && supporterA == true) { patreonChange = "supporter"; }
+            if (legendB == false && legendA == true) { patreonChange = "legend"; } //user now has legend role
+            else if (vipB == false && vipA == true) { patreonChange = "vip"; } //user now has vip role
+            else if (sponsorB == false && sponsorA == true) { patreonChange = "sponsor"; } //user now has sponsor role
+            else if (supporterB == false && supporterA == true) { patreonChange = "supporter"; } //user now has supporter role
             //Program.printError($"legend: {legendB} -> {legendA}\n" +
             //    $"vip: {vipB} -> {vipA}\n" +
             //    $"sponsor: {sponsorB} -> {sponsorA}\n" +
             //    $"supporter: {supporterB} -> {supporterA}\n");
+
             if (patreonChange == "none") { return; }
 
             try
@@ -205,7 +206,7 @@ namespace JPDB_Bot
         }
 
         private async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
-        {
+        {   
             //sending messages and replying templates:\
             //await e.Message.RespondAsync("test").ConfigureAwait(false);
             //await e.Channel.SendMessageAsync("test").ConfigureAwait(false);
@@ -434,6 +435,7 @@ namespace JPDB_Bot
 
         private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
+            Client.UpdateStatusAsync(new DiscordActivity() { Name = "In testing" }, UserStatus.Idle).ConfigureAwait(false);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("JPDB Bot is online.");
             Console.ForegroundColor = ConsoleColor.White;

@@ -18,6 +18,7 @@ namespace JPDB_Bot.Commands
         public async Task role(CommandContext ctx, string role, string add)
         {
             Program.printCommandUse(ctx.Message.Author.Username, ctx.Message.Content);
+            var jpdbRoles = Bot.jpdbGuild.Roles;
 
             ulong roleid = 0;
             if (role == "bumper" || role == "bump") { roleid = 903316747472474193; }
