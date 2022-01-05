@@ -132,77 +132,46 @@ namespace JPDB_Bot
         }
         public static DiscordGuild jpdbGuild = null;
 
+        enum roles
+        {
+            supporter = 0,
+            sponsor = 1,
+            vip = 2,
+            legend = 3,
+        }
         private async Task Member_Updated(DiscordClient sender, GuildMemberUpdateEventArgs e)
         {
-            DiscordRole[] rolesBefore = e.RolesBefore.ToArray();
-            bool supporterB = false;
-            bool sponsorB = false;
-            bool vipB = false;
-            bool legendB = false;
-            foreach (DiscordRole roleB in rolesBefore)
-            {
-                switch (roleB.Name.ToLower())
-                {
-                    case "supporter":
-                        supporterB = true;
-                        break;
-                    case "sponsor":
-                        sponsorB = true;
-                        break;
-                    case "vip":
-                        vipB = true;
-                        break;
-                    case "legend":
-                        legendB = true;
-                        break;
-                }
-            }
+            await roleUpdateAlert(getHighestRole(e.RolesBefore.ToArray()), getHighestRole(e.RolesAfter.ToArray()), e.Member.Id.ToString(), e);
+        }
 
-            DiscordRole[] rolesAfter = e.RolesAfter.ToArray();
-            bool supporterA = false;
-            bool sponsorA = false;
-            bool vipA = false;
-            bool legendA = false;
-            foreach (DiscordRole roleA in rolesAfter)
-            {
-                switch (roleA.Name.ToLower())
-                {
-                    case "supporter":
-                        supporterA = true;
-                        break;
-                    case "sponsor":
-                        sponsorA = true;
-                        break;
-                    case "vip":
-                        vipA = true;
-                        break;
-                    case "legend":
-                        legendA = true;
-                        break;
-                }
-            }
-            string patreonChange = "none";
-            if (legendB == false && legendA == true) { patreonChange = "legend"; } //user now has legend role
-            else if (vipB == false && vipA == true) { patreonChange = "vip"; } //user now has vip role
-            else if (sponsorB == false && sponsorA == true) { patreonChange = "sponsor"; } //user now has sponsor role
-            else if (supporterB == false && supporterA == true) { patreonChange = "supporter"; } //user now has supporter role
-            //Program.printError($"legend: {legendB} -> {legendA}\n" +
-            //    $"vip: {vipB} -> {vipA}\n" +
-            //    $"sponsor: {sponsorB} -> {sponsorA}\n" +
-            //    $"supporter: {supporterB} -> {supporterA}\n");
-
-            if (patreonChange == "none") { return; }
+        private async Task roleUpdateAlert(int highestBefore, int highestAfter, string usernameID, GuildMemberUpdateEventArgs e)
+        {
+            if (highestAfter <= highestBefore) { return; }
 
             try
             {
                 DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
-                await Kou.SendMessageAsync($"<@{e.Member.Id}> is now a {patreonChange}.");
-                Program.printCommandUse(e.Member.Username, "Updated role");
-            } catch (Exception ex)
+                await Kou.SendMessageAsync($"<@{usernameID}> is now a {(roles)highestAfter}.");
+                Program.printCommandUse($"<@{usernameID}> is now a {(roles)highestAfter}.", "Role update nofication");
+            }
+            catch (Exception ex)
             {
                 Program.printError($"{ex.Message}: Tried to send role-update message but couldn't");
                 return;
             }
+        }
+        private int getHighestRole(DiscordRole[] inputRoles)
+        {
+            int highestInt = -1;
+            foreach (DiscordRole role in inputRoles)
+            {
+                roles roleOutput;
+                Enum.TryParse(role.Name.ToLower(), out roleOutput);
+                int outputInt = (int)roleOutput;
+                if (outputInt > highestInt) { highestInt = outputInt; }
+            }
+
+            return highestInt;
         }
 
         private async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
@@ -435,7 +404,7 @@ namespace JPDB_Bot
 
         private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
-            Client.UpdateStatusAsync(new DiscordActivity() { Name = "In testing" }, UserStatus.Idle).ConfigureAwait(false);
+            Client.UpdateStatusAsync(new DiscordActivity() { Name = "jpdb.io" }, UserStatus.Idle).ConfigureAwait(false);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("JPDB Bot is online.");
             Console.ForegroundColor = ConsoleColor.White;
