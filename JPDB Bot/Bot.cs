@@ -13,6 +13,9 @@ using DSharpPlus.Interactivity.Extensions;
 using JPDB_Bot.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using DSharpPlus.VoiceNext;
+using DSharpPlus.VoiceNext.EventArgs;
+using Emzi0767.Utilities;
 
 namespace JPDB_Bot
 {
@@ -89,12 +92,17 @@ namespace JPDB_Bot
             Client.UseInteractivity(new InteractivityConfiguration()
             {
                 PollBehaviour = PollBehaviour.KeepEmojis,
-                Timeout = TimeSpan.FromSeconds(35)
+                Timeout = TimeSpan.FromSeconds(35),
             });
             Client.Ready += Client_Ready;
             Client.MessageCreated += Message_Sent;
             Client.GuildMemberUpdated += Member_Updated;
             Client.TypingStarted += New_Message;
+            
+
+
+            //DiscordChannel studyRoom = await Client.GetChannelAsync(929740974568136735);
+            //await Client.UseVoiceNext().ConnectAsync(studyRoom).ConfigureAwait(false);
 
             // Dependency injection for Commands
             ServiceProvider services = new ServiceCollection()
