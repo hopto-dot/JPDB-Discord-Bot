@@ -77,7 +77,7 @@ namespace JPDB_Bot.Commands
             var builder = new DiscordMessageBuilder()
             .WithContent("This message isn't suspicious at all.")
             .AddComponents(myButton);
-            var testMessage = await ctx.Channel.SendMessageAsync(builder).ConfigureAwait(false);
+            //var testMessage = await ctx.Channel.SendMessageAsync(builder).ConfigureAwait(false);
 
             var embedThumbnail = new DiscordEmbedBuilder.EmbedThumbnail
             {

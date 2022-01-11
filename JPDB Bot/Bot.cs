@@ -98,6 +98,7 @@ namespace JPDB_Bot
             Client.MessageCreated += Message_Sent;
             Client.GuildMemberUpdated += Member_Updated;
             Client.TypingStarted += New_Message;
+
             
 
 

@@ -35,7 +35,7 @@ namespace JPDB_Bot.Commands
             var info = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
             DateTimeOffset localServerTime = DateTimeOffset.Now;
             DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
-            String timeInJapan = localTime.ToString("dd/MM/yyyy HH:mm:ss");
+            String timeInJapan = localTime.ToString("yyyy/MM/dd HH:mm:ss");
             try
             {
                 var userKou = await ctx.Client.GetUserAsync(118408957416046593);
