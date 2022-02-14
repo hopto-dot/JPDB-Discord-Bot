@@ -19,6 +19,7 @@ namespace JPDB_Bot.Commands
         string statsMessage = string.Empty;
         string imageURL = string.Empty;
         string contentURL = string.Empty;
+        int page = -1;
         int uniqueWords = -1;
         public class TimedWebClient : WebClient
         {
@@ -54,6 +55,20 @@ namespace JPDB_Bot.Commands
             contentURL = string.Empty;
             uniqueWords = -1;
 
+            page = -1;
+
+            for (int ep = 1; ep <= 60;  ep += 1)
+            if (searchString.Contains("*" + ep) || searchString.Contains(ep + "*") || searchString.Contains("#" + ep))
+            {
+                searchString = searchString.Replace("*" + ep, "");
+                searchString = searchString.Replace("#" + ep, "");
+                searchString = searchString.Replace(ep + "*", "");
+                searchString = searchString.Replace("  ", "");
+                searchString = searchString.Trim();
+
+                page = ep * 10;
+            }
+
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
             await ContentDetails(ctx, searchString).ConfigureAwait(false);
             Program.printCommandUse(ctx.User.Username, "Content Stats");
@@ -83,9 +98,12 @@ namespace JPDB_Bot.Commands
             {
                 Url = imageURL,
             };
+
+            string embedTitle = page == -1 ? contentName : contentName + $" #{page / 10}";
+
             var gameEmbed = new DiscordEmbedBuilder()
             {
-                Title = contentName,
+                Title = embedTitle,
                 Description = statsMessage,
                 Color = DiscordColor.Red,
                 Thumbnail = embedThumbnail,
@@ -226,6 +244,7 @@ namespace JPDB_Bot.Commands
             string html = "";
             try
             {
+                if (page != -1) { url = url.Replace("/stats", "/" + page + "/stats"); }
                 html = client.DownloadString(new Uri(url));
             }
             catch (Exception ex)

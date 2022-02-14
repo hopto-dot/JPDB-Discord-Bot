@@ -28,7 +28,7 @@ namespace JPDB_Bot.Commands
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in Japan")]
         [Hidden]
-        [Aliases("koutime")]
+        [Aliases("koutime", "mootime", "cowtime", "nihontime", "nihonjikan")]
         public async Task japantime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
@@ -58,7 +58,7 @@ namespace JPDB_Bot.Commands
         }
 
         [Command("flynttime")]
-        [Aliases("esttime", "utc-5time", "utc-5")]
+        [Aliases("esttime", "utc-5time", "utc-5", "flunttime", "cattime", "500cardsadaytime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Hidden]
         [Description("Check Flynt's time")]
@@ -75,9 +75,9 @@ namespace JPDB_Bot.Commands
 
         [Command("alemaxtime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
-        [Description("Check AleMax's time")]
+        [Description("Check the time in Germany")]
         [Hidden]
-        [Aliases("germanytime", "deutschtime", "germantime", "cesttime", "cettime", "schnitzeltime", "alextime")]
+        [Aliases("germanytime", "deutschtime", "germantime", "cesttime", "cettime", "schnitzeltime", "alextime", "aletime", "n6time", "certifiedn6time")]
         public async Task alemaxtime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
@@ -91,9 +91,9 @@ namespace JPDB_Bot.Commands
 
         [Command("jawgboitime")]
         [Hidden]
-        [Aliases("moekyunkyuntime" , "moekyuntime", "moetime", "uktime", "britishtime", "utc+1", "utc+1time")]
+        [Aliases("moekyunkyuntime" , "moekyuntime", "moetime", "uktime", "britishtime", "utc+1", "utc+1time", "jawtime", "jawgtime", "rebekahtime", "kitsunetime", "foxtime", "queentime", "bri'ishtime", "briishtime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
-        [Description("Check AleMax's time")]
+        [Description("Check the time in the UK")]
         public async Task jawgboitime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DSharpPlus.Entities;
+using System;
 
 namespace JPDB_Bot
 {
@@ -11,7 +12,9 @@ namespace JPDB_Bot
             Bot bot = new Bot();
             bot.RunAsync().GetAwaiter().GetResult();
 
+            Console.ReadLine();
         }
+
         public static void printError(string error)
         {
             Console.ForegroundColor = ConsoleColor.Red;

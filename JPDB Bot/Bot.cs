@@ -14,8 +14,6 @@ using JPDB_Bot.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using DSharpPlus.VoiceNext;
-using DSharpPlus.VoiceNext.EventArgs;
-using Emzi0767.Utilities;
 
 namespace JPDB_Bot
 {
@@ -98,7 +96,9 @@ namespace JPDB_Bot
             Client.MessageCreated += Message_Sent;
             Client.GuildMemberUpdated += Member_Updated;
             Client.TypingStarted += New_Message;
-
+            Client.UseVoiceNext();
+            Client.VoiceStateUpdated += voiceStateUpdated;
+            //Client.UserJoined +=
             
 
 
@@ -133,12 +133,148 @@ namespace JPDB_Bot
             Commands.RegisterCommands<Rules>();
             Commands.RegisterCommands<RoleCommand>();
             Commands.RegisterCommands<JPDB_Search>();
+            Commands.RegisterCommands<Study>();
             //Commands.RegisterCommands<TextGame>();
             await Client.ConnectAsync();
 
             jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);
             await Task.Delay(-1);
         }
+
+        private async Task studyUserJoin(DiscordUser user)
+        {
+            string txtName = $"{user.Id}_study.txt";
+            string txtPath = $"User Data\\{txtName}";
+
+            if (Directory.Exists("User Data") == false) { Directory.CreateDirectory("User Data"); }
+
+            if (File.Exists($"User Data\\{txtName}") == false) { File.Create($"User Data\\{txtName}").Dispose(); }
+
+            await File.AppendAllTextAsync(txtPath, $"j|{DateTime.Now}\n");
+        }
+
+        private async Task studyUserLeave(DiscordUser user)
+        {
+            string txtName = $"{user.Id}_study.txt";
+            string txtPath = $"User Data\\{txtName}";
+
+            if (Directory.Exists("User Data") == false) { Directory.CreateDirectory("User Data"); }
+
+            if (File.Exists($"User Data\\{txtName}") == false) { File.Create($"User Data\\{txtName}").Dispose(); }
+
+            await File.AppendAllTextAsync(txtPath, $"l|{DateTime.Now}\n");
+        }
+
+        public static async Task studyUserLogRequest(DiscordUser user, CommandContext ctx)
+        {
+            string txtName = $"{user.Id}_study.txt";
+            string txtPath = $"User Data\\{txtName}";
+
+            if (Directory.Exists("User Data") == false) { Directory.CreateDirectory("User Data"); }
+
+            if (Directory.Exists($"User Data\\{txtName}") == false)
+            {
+                string logText;
+                logText = await File.ReadAllTextAsync(txtPath);
+                if (logText.Contains("System")) { Program.printError($"Failed to send user {user.Username} their log"); return; }
+
+                DiscordMember usermember;
+                try
+                {
+                    usermember = await ctx.Guild.GetMemberAsync(user.Id).ConfigureAwait(false);
+                    await usermember.SendMessageAsync($"```\n{logText}\n```");
+                }
+                catch { await ctx.RespondAsync("Failed to send you a log").ConfigureAwait(false); }
+            }
+        }
+
+        public static async Task studyUserLogDelete(DiscordUser user, CommandContext ctx)
+        {
+            string txtName = $"{user.Id}_study.txt";
+            string txtPath = $"User Data\\{txtName}";
+
+            File.Delete(txtPath);
+        }
+
+        private async Task voiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs channelChange)
+        {
+            DiscordChannel quietStudy = await client.GetChannelAsync(929740974568136735).ConfigureAwait(false); //study-hall: 929740974568136735 //test: 799891866924875791
+            DiscordChannel afterChannel;
+            try { afterChannel = channelChange.After.Channel; } catch { return; }
+
+            DiscordRole giveRole;
+            DiscordMember giveMember;
+            try
+            {
+                giveRole = channelChange.Guild.GetRole(929743168923136080); //929743168923136080
+                giveMember = await channelChange.Guild.GetMemberAsync(channelChange.User.Id).ConfigureAwait(false);
+            }
+            catch { return; }
+
+            DiscordChannel beforeChannel= null;
+            try { beforeChannel = channelChange.Before.Channel; }
+            catch
+            {
+                if (afterChannel == quietStudy)
+                {
+                    Program.printMessage($"User {channelChange.User.Username} joined study-hall");
+                    await studyUserJoin(channelChange.User);
+                    try
+                    {
+                        foreach (DiscordRole role in giveMember.Roles)
+                        {
+                            string roleName = role.Name.ToLower();
+                            if (roleName == "quiet study")
+                            {
+                                await giveMember.GrantRoleAsync(giveRole).ConfigureAwait(false);
+                            }
+                        }
+                        return;
+                    }
+                    catch { return; }
+                }
+            }
+            
+
+            try
+            {
+                if ((beforeChannel != afterChannel || (beforeChannel == null && afterChannel == null)) && channelChange.Channel == quietStudy)
+                {
+                    Program.printMessage($"User {channelChange.User.Username} joined study-hall");
+                    try
+                    {
+                        await studyUserJoin(channelChange.User);
+                    }
+                    catch { }
+                    try
+                    {
+                        foreach (DiscordRole role in giveMember.Roles)
+                        {
+                            string roleName = role.Name.ToLower();
+                            if (roleName == "quiet study")
+                            {
+                                await giveMember.GrantRoleAsync(giveRole).ConfigureAwait(false);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                else if (beforeChannel == quietStudy && afterChannel != beforeChannel)
+                {
+                    try
+                    {
+                        await studyUserLeave(channelChange.User);
+                    } catch { }
+                    Program.printMessage($"User {channelChange.User.Username} left study-hall");
+                    try
+                    {
+                        await giveMember.RevokeRoleAsync(giveRole).ConfigureAwait(false);
+                    } catch { }
+                }
+            }
+            catch { return; }
+        }
+
         public static DiscordGuild jpdbGuild = null;
 
         enum roles
@@ -159,7 +295,7 @@ namespace JPDB_Bot
 
             try
             {
-                DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
+                DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593); //kou: 118408957416046593  //jawgboi: 630381088404930560
                 await Kou.SendMessageAsync($"<@{usernameID}> is now a {(roles)highestAfter}.");
                 Program.printCommandUse($"<@{usernameID}> is now a {(roles)highestAfter}.", "Role update nofication");
             }
@@ -174,6 +310,8 @@ namespace JPDB_Bot
             int highestInt = -1;
             foreach (DiscordRole role in inputRoles)
             {
+                string roleName = role.Name.ToLower();
+                if (roleName != "supporter" && roleName != "sponsor" && roleName != "vip" && roleName != "legend") { continue; }
                 roles roleOutput;
                 Enum.TryParse(role.Name.ToLower(), out roleOutput);
                 int outputInt = (int)roleOutput;
@@ -185,37 +323,6 @@ namespace JPDB_Bot
 
         private async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
         {   
-            //sending messages and replying templates:\
-            //await e.Message.RespondAsync("test").ConfigureAwait(false);
-            //await e.Channel.SendMessageAsync("test").ConfigureAwait(false);
-            //if (e.Message.Author.Id == 302050872383242240)
-            //{
-            //    if (timerOn == true) { return; }
-            //    try
-            //    {
-            //        return;
-            //        DiscordEmbed disboardEmbed = e.Message.Embeds[0];
-            //        if (disboardEmbed.Description.Contains("Bump done!") == true)
-            //        {
-            //            bumpTime = 7200;
-            //            await bumperTimer(e).ConfigureAwait(false);
-            //        }
-            //        else if (disboardEmbed.Description.Contains("Please wait another") == true)
-            //        {
-            //            string minutesLeftMsg = disboardEmbed.Description;
-            //            int snipIndex = minutesLeftMsg.IndexOf("Please");
-            //            minutesLeftMsg = minutesLeftMsg.Substring(snipIndex);
-            //            minutesLeftMsg = minutesLeftMsg.Replace("Please wait another ", "").Replace(" minutes until the server can be bumped", "");
-
-            //            bumpTime = int.Parse(minutesLeftMsg) * 60;
-            //            await bumperTimer(e);
-            //        }
-            //        Program.printMessage("Started bump timer");
-            //    } catch
-            //    {
-            //    }
-            //    return;
-            //}
             if (e.Message.Content.ToLower().Contains("<@!874240645995331585> ") == true)
             {
                 if (e.Message.Content.ToLower().Contains("when is the next update") == true
@@ -362,46 +469,7 @@ namespace JPDB_Bot
             return;
         }
 
-        public static int bumpTime = 0;
-        public bool timerOn = false;
-        //public async Task bumperTimer(MessageCreateEventArgs e)
-        //{
-        //    timerOn = true;
-        //    while (bumpTime > 0)
-        //    {
-        //        System.Threading.Thread.Sleep(1000);
-        //        bumpTime -= 1;
-        //    }
-
-        //    timerOn = false;
-        //    var allMembers = e.Guild.GetAllMembersAsync().Result;
-
-        //    foreach (DiscordMember newMember in allMembers)
-        //    {
-        //        bool isBumper = false;
-        //        foreach (DiscordRole newRole in newMember.Roles)
-        //        {
-        //            if (newRole.Name == "Bumper")
-        //            {
-        //                isBumper = true;
-        //                goto skipRoleLoop;
-        //            }
-        //        }
-        //        skipRoleLoop:
-        //        if (isBumper == true)
-        //        {
-        //            Program.printMessage($"Sent bump message to {newMember.Username}");
-        //            await newMember.SendMessageAsync("You may now use !d bump for jpdb! :)");
-        //        }
-        //    }
-
-        //    Program.printMessage("Done messages");
-
-        //    //DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593);
-        //    //await Kou.SendMessageAsync($"<@{e.Member.Id}> is now a {patreonChange}.");
-
-
-        //}
+        
         private async Task New_Message(DiscordClient sender, TypingStartEventArgs e)
         {
             if (e.Channel.Id == 827482133400256542)
@@ -413,7 +481,7 @@ namespace JPDB_Bot
 
         private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
-            Client.UpdateStatusAsync(new DiscordActivity() { Name = "jpdb.io" }, UserStatus.Idle).ConfigureAwait(false);
+            Client.UpdateStatusAsync(new DiscordActivity() { Name = "jpdb.io" }, UserStatus.DoNotDisturb).ConfigureAwait(false);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("JPDB Bot is online.");
             Console.ForegroundColor = ConsoleColor.White;
