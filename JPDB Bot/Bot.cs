@@ -10,10 +10,11 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
-using JPDB_Bot.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using DSharpPlus.VoiceNext;
+using JPDB_Bot.Commands;
+using JPDB_Bot.StudyLog;
 
 namespace JPDB_Bot
 {
@@ -133,7 +134,7 @@ namespace JPDB_Bot
             Commands.RegisterCommands<Rules>();
             Commands.RegisterCommands<RoleCommand>();
             Commands.RegisterCommands<JPDB_Search>();
-            Commands.RegisterCommands<Study>();
+            Commands.RegisterCommands<Study_Command>();
             //Commands.RegisterCommands<TextGame>();
             await Client.ConnectAsync();
 
@@ -323,6 +324,12 @@ namespace JPDB_Bot
 
         private async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
         {   
+            if (e.Message.Content.ToLower().Contains("anything in japanese") == true && e.Message.Content.Length < 26)
+            {
+                await e.Channel.SendMessageAsync("nihongo jouzu");
+                return;
+            }
+            
             if (e.Message.Content.ToLower().Contains("<@!874240645995331585> ") == true)
             {
                 if (e.Message.Content.ToLower().Contains("when is the next update") == true
@@ -468,7 +475,6 @@ namespace JPDB_Bot
 
             return;
         }
-
         
         private async Task New_Message(DiscordClient sender, TypingStartEventArgs e)
         {
@@ -483,8 +489,9 @@ namespace JPDB_Bot
         {
             Client.UpdateStatusAsync(new DiscordActivity() { Name = "jpdb.io" }, UserStatus.DoNotDisturb).ConfigureAwait(false);
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("JPDB Bot is online.");
+            Console.WriteLine($"JPDB Bot is online in {sender.Guilds.Count()} servers");
             Console.ForegroundColor = ConsoleColor.White;
+
             return Task.CompletedTask;
         }
 
