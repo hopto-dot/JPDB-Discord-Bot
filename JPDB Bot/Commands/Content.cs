@@ -57,21 +57,24 @@ namespace JPDB_Bot.Commands
 
             page = -1;
 
-            for (int ep = 1; ep <= 60;  ep += 1)
-            if (searchString.Contains("*" + ep) || searchString.Contains(ep + "*") || searchString.Contains("#" + ep))
+            for (int ep = 13; ep > 0;  ep -= 1)
             {
-                searchString = searchString.Replace("*" + ep, "");
-                searchString = searchString.Replace("#" + ep, "");
-                searchString = searchString.Replace(ep + "*", "");
-                searchString = searchString.Replace("  ", "");
-                searchString = searchString.Trim();
+                if (searchString.Contains(" *" + ep) || searchString.Contains(" " + ep + "*") || searchString.Contains(" #" + ep))
+                {
+                    searchString = searchString.Replace(" *" + ep, "");
+                    searchString = searchString.Replace(" #" + ep, "");
+                    searchString = searchString.Replace(" " + ep + "*", "");
 
-                page = ep * 10;
+                    searchString = searchString.Trim();
+
+                    page = ep * 10;
+                }
             }
+                
 
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
             await ContentDetails(ctx, searchString).ConfigureAwait(false);
-            Program.printCommandUse(ctx.User.Username, "Content Stats");
+            //Program.printCommandUse(ctx.User.Username, "Content Stats");
             if (statisticsPage == string.Empty || uniqueWords == -1)
             {
                 Program.printError("The program stopped before collecting content stats info.");
@@ -79,7 +82,7 @@ namespace JPDB_Bot.Commands
             }
             await ContentStats(ctx, searchString).ConfigureAwait(false);
 
-            Program.printCommandUse(ctx.User.Username, "Content Embed");
+            //Program.printCommandUse(ctx.User.Username, "Content Embed");
             await SendContentEmbed(ctx, true).ConfigureAwait(false);
         }
 
@@ -136,13 +139,13 @@ namespace JPDB_Bot.Commands
                 searchString = searchString.Substring(1, searchString.Length - 2);
             }
 
-            Program.printAPIUse("Checkpoint 1", "");
-
             string contentType = string.Empty;
             if (searchString.Contains(" anime")) { contentType = "anime"; searchString = searchString.Replace(" anime", ""); }
             if (searchString.Contains(" ln")) { contentType = "novel"; searchString = searchString.Replace(" ln", ""); }
             if (searchString.Contains(" novel")) { contentType = "novel"; searchString = searchString.Replace(" novel", ""); }
             if (searchString.Contains(" vn")) { contentType = "visual_novel"; searchString = searchString.Replace(" vn", ""); }
+            if (searchString.Contains(" game")) { contentType = "video_game"; searchString = searchString.Replace(" game", ""); }
+            if (searchString.Contains(" wn")) { contentType = "web_novel"; searchString = searchString.Replace(" wn", ""); }
 
             if (contentType != string.Empty) { contentType = "&show_only=" + contentType; }
 
@@ -158,18 +161,6 @@ namespace JPDB_Bot.Commands
                 Program.printError(ex.Message + $"\n(url)");
                 return;
             }
-
-
-
-            //using (var httpClient = new HttpClient())
-            //{
-            //    using (var request = new HttpRequestMessage(new HttpMethod("GET"), "https://jpdb.io"))
-            //    {
-            //        var response = await httpClient.SendAsync(request);
-            //        html = response.Content.ReadAsStringAsync().Result;
-            //    }
-            //}
-
 
             string originalHTML = html;
 
@@ -215,6 +206,8 @@ namespace JPDB_Bot.Commands
             statisticsPage = "https://jpdb.io" + wordTemp2;
 
             wordTemp = originalHTML;
+            snipIndex = wordTemp.IndexOf("lazy") + 2;
+            wordTemp = wordTemp.Substring(snipIndex);
             snipIndex = wordTemp.IndexOf("rc=\"/static/") + 4;
             if (snipIndex != -1 && snipIndex < 9300)
             {
@@ -222,9 +215,44 @@ namespace JPDB_Bot.Commands
                 snipIndex = wordTemp.IndexOf(".jpg") + 4;
                 wordTemp = wordTemp.Substring(0, snipIndex);
                 imageURL = "https://jpdb.io" + wordTemp;
-                if (imageURL.Length > 42) { imageURL = ""; }
+                if (imageURL.Length > 42 || imageURL.Contains(".jpg") == false && imageURL.Contains("<") == false) { imageURL = ""; }
             }
 
+            if (page != -1)
+            {
+                string contentURL = statisticsPage.Substring(0, statisticsPage.Length - 6);
+                Program.printAPIUse("URL", contentURL);
+                html = new TimedWebClient { Timeout = 500 }.DownloadString(new Uri(contentURL));
+
+                snipIndex = html.IndexOf("display: flex; flex-wrap: wrap; margin-bottom: 1rem;");
+                html = html.Substring(snipIndex + 10);
+
+                bool done = false;
+                int wa = 10;
+                while (done == false)
+                {
+                    snipIndex = html.IndexOf("Unique words<");
+                    if (snipIndex == -1) { done = true; continue; }
+                    html = html.Substring(snipIndex + 21);
+
+                    if (wa == page) { done = true; }
+
+                    wa += 10;
+                }
+
+                try
+                {
+                    uniqueWords = int.Parse(html.Substring(0, html.IndexOf("<")));
+                }
+                catch { uniqueWords = -1; }
+                
+
+                Console.ResetColor();
+            }
+
+
+
+            
             //await ctx.RespondAsync("Found " + contentName + ":\n" + wordTemp).ConfigureAwait(false);
         }
 

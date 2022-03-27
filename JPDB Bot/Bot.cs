@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using DSharpPlus.VoiceNext;
 using JPDB_Bot.Commands;
 using JPDB_Bot.StudyLog;
+using JPDB_Bot.Guess_the_Kanji;
 
 namespace JPDB_Bot
 {
@@ -44,7 +45,6 @@ namespace JPDB_Bot
                 Program.printError("Couldn't read config.json");
                 return;
             }
-
 
             try
             {
@@ -99,12 +99,6 @@ namespace JPDB_Bot
             Client.TypingStarted += New_Message;
             Client.UseVoiceNext();
             Client.VoiceStateUpdated += voiceStateUpdated;
-            //Client.UserJoined +=
-            
-
-
-            //DiscordChannel studyRoom = await Client.GetChannelAsync(929740974568136735);
-            //await Client.UseVoiceNext().ConnectAsync(studyRoom).ConfigureAwait(false);
 
             // Dependency injection for Commands
             ServiceProvider services = new ServiceCollection()
@@ -135,6 +129,8 @@ namespace JPDB_Bot
             Commands.RegisterCommands<RoleCommand>();
             Commands.RegisterCommands<JPDB_Search>();
             Commands.RegisterCommands<Study_Command>();
+            Commands.RegisterCommands<guessTheKanji>();
+            Commands.RegisterCommands<JPConcept>();
             //Commands.RegisterCommands<TextGame>();
             await Client.ConnectAsync();
 
@@ -152,6 +148,18 @@ namespace JPDB_Bot
             if (File.Exists($"User Data\\{txtName}") == false) { File.Create($"User Data\\{txtName}").Dispose(); }
 
             await File.AppendAllTextAsync(txtPath, $"j|{DateTime.Now}\n");
+        }
+
+        public void writeStudyData(DiscordUser user, string textContent)
+        {
+            string txtName = $"{user.Id}_study.txt";
+            string txtPath = $"User Data\\{txtName}";
+
+            if (Directory.Exists("User Data") == false) { Directory.CreateDirectory("User Data"); }
+
+            if (File.Exists($"User Data\\{txtName}") == false) { File.Create($"User Data\\{txtName}").Dispose(); }
+
+            File.AppendAllTextAsync(txtPath, textContent);
         }
 
         private async Task studyUserLeave(DiscordUser user)
