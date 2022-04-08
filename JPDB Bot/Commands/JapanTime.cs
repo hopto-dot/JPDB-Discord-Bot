@@ -47,7 +47,7 @@ namespace JPDB_Bot.Commands
                                            $"\n{userKou.Username} is up late working on JPDB for us all <3")
                         .ConfigureAwait(false);
                 }
-                if ((localTime.Hour > 21 || localTime.Hour < 5) &&
+                else if ((localTime.Hour > 21 || localTime.Hour < 5) &&
                     userKou.Presence.Status != DSharpPlus.Entities.UserStatus.Offline)
                 {
                     await ctx.RespondAsync("日本: " + timeInJapan +

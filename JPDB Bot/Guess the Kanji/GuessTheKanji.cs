@@ -19,6 +19,7 @@ namespace JPDB_Bot.Guess_the_Kanji
         [Description("Generate an image of the provide text in a handwriting font")]
         public async Task genHandwriting(CommandContext ctx, [RemainingText] string text)
         {
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
             if (text.Contains("<") && text.Contains(">"))
             {
                 string fontString = snipBrackets(text);
@@ -35,6 +36,7 @@ namespace JPDB_Bot.Guess_the_Kanji
         [Description("Lists all installed fonts")]
         public async Task fonts(CommandContext ctx)
         {
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
             InstalledFontCollection fontCollection = new InstalledFontCollection();
             FontFamily[] fontFamilies = fontCollection.Families;
             

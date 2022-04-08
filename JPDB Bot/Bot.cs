@@ -300,6 +300,8 @@ namespace JPDB_Bot
 
         private async Task roleUpdateAlert(int highestBefore, int highestAfter, string usernameID, GuildMemberUpdateEventArgs e)
         {
+            if (true == true) { return; } //disabled role update alert
+            
             if (highestAfter <= highestBefore) { return; }
 
             try
@@ -307,6 +309,9 @@ namespace JPDB_Bot
                 DiscordMember Kou = await e.Guild.GetMemberAsync(118408957416046593); //kou: 118408957416046593  //jawgboi: 630381088404930560
                 await Kou.SendMessageAsync($"<@{usernameID}> is now a {(roles)highestAfter}.");
                 Program.printCommandUse($"<@{usernameID}> is now a {(roles)highestAfter}.", "Role update nofication");
+
+                DiscordMember Jaw = await e.Guild.GetMemberAsync(630381088404930560); //kou: 118408957416046593  //jawgboi: 630381088404930560
+                await Jaw.SendMessageAsync($"<@{usernameID}> is now a {(roles)highestAfter}.");
             }
             catch (Exception ex)
             {
@@ -362,20 +367,6 @@ namespace JPDB_Bot
                 }
             }
 
-
-            try
-            {
-                if (e.Channel.Name.Contains("meme") && e.Message.Attachments.Count > 0 && configJson.MemeRatings.ToLower() == "enabled")
-                {
-                    //if in the #memes channel and there is an attachment, reacting with thumbsup and thumbsdown
-                    await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsup:"));
-                    await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":thumbsdown:"));
-                }
-            } catch
-            {
-                return;
-            }
-            
 
             if(e.Message.MessageType == MessageType.GuildMemberJoin && (configJson.WelcomeMessages.ToLower() == "enabled" || configJson.WelcomeMessages.ToLower() == "True"))
             {
