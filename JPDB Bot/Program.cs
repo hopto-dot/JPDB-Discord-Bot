@@ -8,10 +8,28 @@ namespace JPDB_Bot
         static void Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Bot bot = null;
+            int restarts = 0;
+Restart:
             Console.ForegroundColor = ConsoleColor.White;
-            Bot bot = new Bot();
-            bot.RunAsync().GetAwaiter().GetResult();
-
+            if (restarts <= 3)
+            {
+                try
+                {
+                    bot = new Bot();
+                    bot.RunAsync().GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    Program.printError($"\nFatal error - {ex.Message}\n{ex.InnerException}\n{ex.StackTrace}");
+                    restarts += 1;
+                    Console.Beep();
+                    goto Restart;
+                }
+            }
+            
+            Console.Beep();
+            Program.printError("Program ended");
             Console.ReadLine();
         }
 

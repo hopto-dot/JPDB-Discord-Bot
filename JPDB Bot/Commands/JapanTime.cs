@@ -249,5 +249,20 @@ namespace JPDB_Bot.Commands
                 await ctx.RespondAsync($"God is everywhere... ||***M O R T A L*** {DiscordEmoji.FromName(ctx.Client, ":kuk:")}||").ConfigureAwait(false);
             }          
         }
+
+        [Command("tadokutime")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Description("Check the time that Tadoku uses for its leader")]
+        [Hidden]
+        public async Task tadokuTime(CommandContext ctx)
+        {
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
+            var info = TimeZoneInfo.FindSystemTimeZoneById("UTC");
+            DateTimeOffset localServerTime = DateTimeOffset.Now;
+            DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
+            String tadokuTime = localTime.ToString("yyyy/MM/dd HH:mm:ss");
+            await ctx.RespondAsync("Tadoku time: " + tadokuTime).ConfigureAwait(false);
+        }
+
     }
 }

@@ -25,7 +25,7 @@ namespace JPDB_Bot.Commands
             } catch (Exception ex)
             {
                 await ctx.RespondAsync("Something went wrong").ConfigureAwait(false);
-                Program.printError(ex.Message);
+                Program.printError("Tried to create a jpconcept but failed - " + ex.Message);
             }
         }
 
@@ -57,14 +57,17 @@ namespace JPDB_Bot.Commands
 
                 graphics.DrawString(yellow, new Font("MV Boli", descSize), Brushes.Black, new Rectangle(107, 210, 134, 160), stringFormat);
                 graphics.DrawString(blue, new Font("MV Boli", descSize), Brushes.Black, new Rectangle(346, 210, 124, 160), stringFormat);
-
             }
 
             try
             {
-
-            } catch { }
-            bitmap.Save("NewConcept.png");
+                bitmap.Save("NewConcept.png");
+            } catch (Exception ex)
+            {
+                Program.printError($"Something went wrong when saving a jpconcept - {ex.Message}");
+                await ctx.RespondAsync("Something went wrong").ConfigureAwait(false);
+                return;
+            }
 
             var fileStream = File.OpenRead("NewConcept.png");
 

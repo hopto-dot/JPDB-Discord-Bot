@@ -106,7 +106,7 @@ namespace JPDB_Bot.Commands
 
             var gameEmbed = new DiscordEmbedBuilder()
             {
-                Title = embedTitle,
+                Title = embedTitle.Replace("&quot;", ""),
                 Description = statsMessage,
                 Color = DiscordColor.Red,
                 Thumbnail = embedThumbnail,

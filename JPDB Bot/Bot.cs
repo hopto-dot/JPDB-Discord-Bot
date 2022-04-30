@@ -74,6 +74,11 @@ namespace JPDB_Bot
                 Console.ForegroundColor = ConsoleColor.White;
                 LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Debug;
             }
+            else
+            {
+                LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Information;
+            }
+            
 
             DiscordConfiguration config;
 
@@ -131,7 +136,6 @@ namespace JPDB_Bot
             Commands.RegisterCommands<Study_Command>();
             Commands.RegisterCommands<guessTheKanji>();
             Commands.RegisterCommands<JPConcept>();
-            //Commands.RegisterCommands<TextGame>();
             await Client.ConnectAsync();
 
             jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);
@@ -300,7 +304,7 @@ namespace JPDB_Bot
 
         private async Task roleUpdateAlert(int highestBefore, int highestAfter, string usernameID, GuildMemberUpdateEventArgs e)
         {
-            if (true == true) { return; } //disabled role update alert
+            //if (true == true) { return; } //disabled role update alert
             
             if (highestAfter <= highestBefore) { return; }
 

@@ -18,7 +18,7 @@ namespace JPDB_Bot.Commands
         public async Task SayHi(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
-
+            
             // Determine which set of greetings to use
             string category = "Default";
             if (ctx.Member.Roles.Any(r => r.Name is "Owner" or "Supporter" or "Server Booster"))
