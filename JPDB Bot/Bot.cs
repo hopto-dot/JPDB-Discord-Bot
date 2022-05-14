@@ -434,7 +434,19 @@ namespace JPDB_Bot
             if (e.Message.Content.ToLower().Contains("boku no pico"))
             {
                 await Task.Delay(5000).ConfigureAwait(false);
-                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":guilty:"));
+                try
+                {
+                    await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":flushed:"));
+                } catch
+                {
+
+                }
+                
+                return;
+            } else if (e.Message.Content.ToLower().Contains(" jaw") && e.Guild != null)
+            {
+                DiscordMember Jaw = await e.Guild.GetMemberAsync(630381088404930560); //kou: 118408957416046593  //jawgboi: 630381088404930560
+                await Jaw.SendMessageAsync($"You were mentioned by {e.Author.Username}\n> {e.Message.Content}");
                 return;
             }
 

@@ -15,12 +15,14 @@ namespace JPDB_Bot.Commands
     public class Content : BaseCommandModule
     {
         string statisticsPage = string.Empty;
+        string type = string.Empty;
         string contentName = string.Empty;
         string statsMessage = string.Empty;
         string imageURL = string.Empty;
         string contentURL = string.Empty;
         int page = -1;
         int uniqueWords = -1;
+
         public class TimedWebClient : WebClient
         {
             // Timeout in milliseconds, default = 600,000 msec
@@ -49,6 +51,7 @@ namespace JPDB_Bot.Commands
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
             statisticsPage = string.Empty;
+            type = string.Empty;
             contentName = string.Empty;
             statsMessage = string.Empty;
             imageURL = string.Empty;
@@ -57,7 +60,7 @@ namespace JPDB_Bot.Commands
 
             page = -1;
 
-            for (int ep = 13; ep > 0;  ep -= 1)
+            for (int ep = 1000; ep > 0;  ep -= 1)
             {
                 if (searchString.Contains(" *" + ep) || searchString.Contains(" " + ep + "*") || searchString.Contains(" #" + ep))
                 {
@@ -73,15 +76,29 @@ namespace JPDB_Bot.Commands
                 
 
             //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
-            await ContentDetails(ctx, searchString).ConfigureAwait(false);
+            try
+            {
+                await ContentDetails(ctx, searchString).ConfigureAwait(false);
+            } catch
+            {
+                await ctx.RespondAsync("Shit, I think Kou has messed with the HTML. <@630381088404930560> <@630381088404930560> <@630381088404930560> <@630381088404930560> help!").ConfigureAwait(false);
+                return;
+            }
+            
             //Program.printCommandUse(ctx.User.Username, "Content Stats");
             if (statisticsPage == string.Empty || uniqueWords == -1)
             {
                 Program.printError("The program stopped before collecting content stats info.");
                 return;
             }
-            await ContentStats(ctx, searchString).ConfigureAwait(false);
-
+            try
+            {
+                await ContentStats(ctx, searchString).ConfigureAwait(false);
+            } catch
+            {
+                return;
+            }
+            
             //Program.printCommandUse(ctx.User.Username, "Content Embed");
             await SendContentEmbed(ctx, true).ConfigureAwait(false);
         }
@@ -104,9 +121,11 @@ namespace JPDB_Bot.Commands
 
             string embedTitle = page == -1 ? contentName : contentName + $" #{page / 10}";
 
+            string title = embedTitle.Replace("&quot;", "");
+            if (type != string.Empty) { title += $" ({type})"; }
             var gameEmbed = new DiscordEmbedBuilder()
             {
-                Title = embedTitle.Replace("&quot;", ""),
+                Title =  title,
                 Description = statsMessage,
                 Color = DiscordColor.Red,
                 Thumbnail = embedThumbnail,
@@ -139,13 +158,14 @@ namespace JPDB_Bot.Commands
                 searchString = searchString.Substring(1, searchString.Length - 2);
             }
 
-            string contentType = string.Empty;
+            string contentType = string.Empty;///////////////////////////////////////
             if (searchString.Contains(" anime")) { contentType = "anime"; searchString = searchString.Replace(" anime", ""); }
             if (searchString.Contains(" ln")) { contentType = "novel"; searchString = searchString.Replace(" ln", ""); }
             if (searchString.Contains(" novel")) { contentType = "novel"; searchString = searchString.Replace(" novel", ""); }
             if (searchString.Contains(" vn")) { contentType = "visual_novel"; searchString = searchString.Replace(" vn", ""); }
             if (searchString.Contains(" game")) { contentType = "video_game"; searchString = searchString.Replace(" game", ""); }
             if (searchString.Contains(" wn")) { contentType = "web_novel"; searchString = searchString.Replace(" wn", ""); }
+            if (searchString.Contains(" live action")) { contentType = "live_action"; searchString = searchString.Replace(" live action", ""); }
 
             if (contentType != string.Empty) { contentType = "&show_only=" + contentType; }
 
@@ -158,22 +178,62 @@ namespace JPDB_Bot.Commands
             }
             catch (Exception ex)
             {
-                Program.printError(ex.Message + $"\n(url)");
+                Program.printError(ex.Message + $"\n({url})");
+                if (ex.Message.ToLower().Contains("timed out"))
+                {
+                    await ctx.RespondAsync("Request timed out. This is likely because the bot's host isn't functioning correctly.").ConfigureAwait(false);
+                } else
+                {
+                    await ctx.RespondAsync("Something went wrong.").ConfigureAwait(false);
+                }
                 return;
             }
 
             string originalHTML = html;
 
-            int snipIndex = html.IndexOf("30rem;\">") + 8;
+            int snipIndex = -1;
+            string wordTemp = "";
+
+            //getting statistics page:
+            snipIndex = html.IndexOf("dropdown-content") + 17;
+            wordTemp = html.Substring(snipIndex);
+            snipIndex = wordTemp.IndexOf("/");
+            wordTemp = wordTemp.Substring(snipIndex);
+            snipIndex = wordTemp.IndexOf("\"");
+            wordTemp = wordTemp.Substring(0, snipIndex);
+            statisticsPage = "https://jpdb.io" + wordTemp;
+
+
+            snipIndex = html.IndexOf("\"opacity: 0.5\"") + 15;
+            wordTemp = html.Substring(snipIndex);
+            html = wordTemp;
+            snipIndex = wordTemp.IndexOf("<");
+            if (snipIndex <= 15 && snipIndex != -1)
+            {
+                type = wordTemp.Substring(0, snipIndex);
+            }
+            wordTemp = wordTemp.Substring(0, snipIndex);
+
+            //snipping name
+            snipIndex = html.IndexOf("30rem;\">") + 8;
 
             if (snipIndex == 7)
             {
-                Program.printError("No content found.");
-                await ctx.RespondAsync("No content found UwU").ConfigureAwait(false);
+                Program.printError("No content found UwU");
+                string message = ""; 
+                if (page == -1)
+                {
+                    message = "No content found UwU \nMake sure everything is spelt correctly and the content exists in the database.";
+                } else
+                {
+                    message = "No content found. \nMake sure everything is spelt correctly, the content exists in the database and the specified subdeck exists.";
+                }
+                
+                await ctx.RespondAsync(message).ConfigureAwait(false);
                 return;
             }
 
-            string wordTemp = html.Substring(snipIndex);
+            wordTemp = html.Substring(snipIndex);
             string wordTemp2 = html;
             html = wordTemp;
 
@@ -194,16 +254,6 @@ namespace JPDB_Bot.Commands
             wordTemp3 = wordTemp3.Substring(snipIndex);
             snipIndex = wordTemp3.IndexOf("<");
             uniqueWords = int.Parse(wordTemp3.Substring(0, snipIndex));
-
-            //getting statistics page:
-            snipIndex = wordTemp2.IndexOf("dropdown-content") + 17;
-            wordTemp2 = wordTemp2.Substring(snipIndex);
-            snipIndex = wordTemp2.IndexOf("/");
-            wordTemp2 = wordTemp2.Substring(snipIndex);
-            snipIndex = wordTemp2.IndexOf("\"");
-            wordTemp2 = wordTemp2.Substring(0, snipIndex);
-
-            statisticsPage = "https://jpdb.io" + wordTemp2;
 
             wordTemp = originalHTML;
             snipIndex = wordTemp.IndexOf("lazy") + 2;
@@ -272,8 +322,17 @@ namespace JPDB_Bot.Commands
             string html = "";
             try
             {
+                string prevUrl = url;
                 if (page != -1) { url = url.Replace("/stats", "/" + page + "/stats"); }
-                html = client.DownloadString(new Uri(url));
+                try
+                {
+                    html = client.DownloadString(new Uri(url));
+                } catch
+                {
+                    await ctx.RespondAsync("Something went wrong. Ignoring subdeck parameter...").ConfigureAwait(false);
+                    page = -1;
+                    html = client.DownloadString(new Uri(prevUrl));
+                }
             }
             catch (Exception ex)
             {
