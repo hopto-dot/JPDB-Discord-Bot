@@ -136,6 +136,7 @@ namespace JPDB_Bot
             Commands.RegisterCommands<Study_Command>();
             Commands.RegisterCommands<guessTheKanji>();
             Commands.RegisterCommands<JPConcept>();
+            Commands.RegisterCommands<newContent>();
             await Client.ConnectAsync();
 
             jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);
