@@ -3,6 +3,9 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System;
 using System.Threading.Tasks;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Interactivity.Enums;
 
 namespace JPDB_Bot.Commands
 {
@@ -111,6 +114,16 @@ namespace JPDB_Bot.Commands
             String jawgboiTime = localTime.ToString("yyyy/MM/dd HH:mm:ss");
 
             await ctx.RespondAsync($"GMT: {jawgboiTime}").ConfigureAwait(false);
+
+
+
+            //var text = "Test 1\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n1.\n2." + "Test 2\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n2.\n3.";
+
+            //var interactivity = ctx.Client.GetInteractivity();
+            //var embedPages = interactivity.GeneratePagesInEmbed(text);
+            //var pages = interactivity.GeneratePagesInContent(text, SplitType.Character);
+
+            //await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, embedPages);
         }
 
 
