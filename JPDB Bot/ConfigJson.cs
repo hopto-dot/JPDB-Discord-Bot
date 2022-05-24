@@ -19,5 +19,8 @@ namespace JPDB_Bot
 
         [JsonProperty("WelcomeChannelID")]
         public ulong WelcomeChannelID { get; private set; }
+
+        [JsonProperty("ContributerSheetLink")]
+        public string ContributerSheetLink { get; private set; }
     }
 }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using JPDB_Bot;
 
 namespace JPDB_Bot.Commands
 {
@@ -19,7 +20,7 @@ namespace JPDB_Bot.Commands
         {
             var handler = new HttpClientHandler();
             var client = new HttpClient(handler);
-            var request = new HttpRequestMessage(new HttpMethod("GET"), "https://docs.google.com/spreadsheets/d/1XpwFYg9_EPVX8mMeTxWsqWCN_RQ_B7xuwyKrLKKnexE/edit");
+            var request = new HttpRequestMessage(new HttpMethod("GET"), Bot.configJson.ContributerSheetLink);
 
             var response = await client.SendAsync(request);
             var html = response.Content.ReadAsStringAsync().Result;
@@ -29,15 +30,17 @@ namespace JPDB_Bot.Commands
 
             //novels
             int novelsAdd = -1;
-            snipIndex = html.IndexOf("<td class=\"s9\">") + 15;
+            snipIndex = html.IndexOf("<td class=\"s16\">") + 16;
             html = html.Substring(snipIndex);
+            if (html.Substring(0, 20).ToLower().Contains("awaiting") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (novelsAdd)"); return; }
             snipIndex = html.IndexOf(" ");
             fail = int.TryParse(html.Substring(0, snipIndex), out novelsAdd);
             if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (novelsAdd)"); return; }
 
             int novelsPreparing = -1;
-            snipIndex = html.IndexOf("<td class=\"s10\">") + 16;
+            snipIndex = html.IndexOf("<td class=\"s17\">") + 16;
             html = html.Substring(snipIndex);
+            if (html.Substring(0, 20).ToLower().Contains("prepared") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (novelsPreparing)"); return; }
             snipIndex = html.IndexOf(" ");
             fail = int.TryParse(html.Substring(0, snipIndex), out novelsPreparing);
             if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (novelsPreparing)"); return; }
@@ -46,15 +49,17 @@ namespace JPDB_Bot.Commands
             /// dramas
 
             int dramasAdd = -1;
-            snipIndex = html.IndexOf("<td class=\"s9\">") + 15;
+            snipIndex = html.IndexOf("<td class=\"s16\">") + 16;
             html = html.Substring(snipIndex);
+            if (html.Substring(0, 20).ToLower().Contains("awaiting") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (dramasAdd)"); return; }
             snipIndex = html.IndexOf(" ");
             fail = int.TryParse(html.Substring(0, snipIndex), out dramasAdd);
             if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (dramasAdd)"); return; }
 
             int dramasPreparing = -1;
-            snipIndex = html.IndexOf("<td class=\"s10\">") + 16;
+            snipIndex = html.IndexOf("<td class=\"s17\">") + 16;
             html = html.Substring(snipIndex);
+            if (html.Substring(0, 20).ToLower().Contains("prepared") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (dramasPreparing)"); return; }
             snipIndex = html.IndexOf(" ");
             fail = int.TryParse(html.Substring(0, snipIndex), out dramasPreparing);
             if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (dramasPreparing)"); return; }
@@ -65,11 +70,11 @@ namespace JPDB_Bot.Commands
                 Description =
                 $"__Novels__\n" +
                 $"**Prepared:** {novelsAdd}\n" +
-                $"**Preparing:** {novelsPreparing}\n" +
+                $"**Not ready yet:** {novelsPreparing}\n" +
                 $"\n" +
                 $"__Dramas__\n" +
                 $"**Prepared:** {dramasAdd}\n" +
-                $"**Preparing:** {dramasPreparing}",
+                $"**Not ready yet:** {dramasPreparing}",
                 Color = DiscordColor.Blue,
                 Footer = new DiscordEmbedBuilder.EmbedFooter()
                 {
@@ -85,7 +90,7 @@ namespace JPDB_Bot.Commands
 
             try
             {
-                var contentEmbedMessage = await ctx.Channel.SendMessageAsync(embed: infoEmbed).ConfigureAwait(false);
+                var contentEmbedMessage = await ctx.RespondAsync(embed: infoEmbed).ConfigureAwait(false);
             }
             catch
             {

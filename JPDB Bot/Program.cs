@@ -8,7 +8,6 @@ namespace JPDB_Bot
         static void Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Bot bot = null;
             int restarts = 0;
 Restart:
             Console.ForegroundColor = ConsoleColor.White;
@@ -16,8 +15,7 @@ Restart:
             {
                 try
                 {
-                    bot = new Bot();
-                    bot.RunAsync().GetAwaiter().GetResult();
+                    Bot.RunAsync().GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {

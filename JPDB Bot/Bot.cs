@@ -19,17 +19,24 @@ using JPDB_Bot.Guess_the_Kanji;
 
 namespace JPDB_Bot
 {
-    public class Bot
+    public static class Bot
     {
-        public DiscordClient Client { get; private set; }
-        public CommandsNextExtension Commands { get; private set; }
+        public static DiscordClient Client { get; private set; }
 
-        ConfigJson configJson;
-        public async Task RunAsync()
+        class ConfigDiscordClient
+        {
+            public DiscordClient Client { get; private set; }
+
+        }
+        public static CommandsNextExtension Commands { get; private set; }
+
+        public static ConfigJson configJson { get; private set; }
+
+        public static async Task RunAsync()
         {
             Console.WriteLine("Reading config file...");
             string json;
-
+            
             try
             {
                 using (var fs = File.OpenRead("config.json"))
@@ -65,7 +72,7 @@ namespace JPDB_Bot
             Console.WriteLine($"WelcomeMessages: {configJson.WelcomeMessages}");
             Console.WriteLine($"WelcomeChannelID: {configJson.WelcomeChannelID}");
             Console.ForegroundColor = ConsoleColor.White;
-
+            
             Microsoft.Extensions.Logging.LogLevel LoggingLevel = Microsoft.Extensions.Logging.LogLevel.Warning;
             if (configJson.LogLevel.ToLower() == "debug")
             {
@@ -111,7 +118,7 @@ namespace JPDB_Bot
                 .AddSingleton<Random>(new Random())
                 .AddSingleton<GreetingsData>(GreetingsData.LoadGreetings())
                 .BuildServiceProvider();
-
+            
             var commandsConfig = new CommandsNextConfiguration
             {
                 StringPrefixes = new string[] { configJson.Prefix },
@@ -143,7 +150,7 @@ namespace JPDB_Bot
             await Task.Delay(-1);
         }
 
-        private async Task studyUserJoin(DiscordUser user)
+        private static async Task studyUserJoin(DiscordUser user)
         {
             string txtName = $"{user.Id}_study.txt";
             string txtPath = $"User Data\\{txtName}";
@@ -155,7 +162,7 @@ namespace JPDB_Bot
             await File.AppendAllTextAsync(txtPath, $"j|{DateTime.Now}\n");
         }
 
-        public void writeStudyData(DiscordUser user, string textContent)
+        public static void writeStudyData(DiscordUser user, string textContent)
         {
             string txtName = $"{user.Id}_study.txt";
             string txtPath = $"User Data\\{txtName}";
@@ -167,7 +174,7 @@ namespace JPDB_Bot
             File.AppendAllTextAsync(txtPath, textContent);
         }
 
-        private async Task studyUserLeave(DiscordUser user)
+        private static async Task studyUserLeave(DiscordUser user)
         {
             string txtName = $"{user.Id}_study.txt";
             string txtPath = $"User Data\\{txtName}";
@@ -210,7 +217,7 @@ namespace JPDB_Bot
             File.Delete(txtPath);
         }
 
-        private async Task voiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs channelChange)
+        private static async Task voiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs channelChange)
         {
             DiscordChannel quietStudy = await client.GetChannelAsync(929740974568136735).ConfigureAwait(false); //study-hall: 929740974568136735 //test: 799891866924875791
             DiscordChannel afterChannel;
@@ -298,12 +305,12 @@ namespace JPDB_Bot
             vip = 2,
             legend = 3,
         }
-        private async Task Member_Updated(DiscordClient sender, GuildMemberUpdateEventArgs e)
+        private static async Task Member_Updated(DiscordClient sender, GuildMemberUpdateEventArgs e)
         {
             await roleUpdateAlert(getHighestRole(e.RolesBefore.ToArray()), getHighestRole(e.RolesAfter.ToArray()), e.Member.Id.ToString(), e);
         }
 
-        private async Task roleUpdateAlert(int highestBefore, int highestAfter, string usernameID, GuildMemberUpdateEventArgs e)
+        private static async Task roleUpdateAlert(int highestBefore, int highestAfter, string usernameID, GuildMemberUpdateEventArgs e)
         {
             //if (true == true) { return; } //disabled role update alert
             
@@ -324,7 +331,7 @@ namespace JPDB_Bot
                 return;
             }
         }
-        private int getHighestRole(DiscordRole[] inputRoles)
+        private static int getHighestRole(DiscordRole[] inputRoles)
         {
             int highestInt = -1;
             foreach (DiscordRole role in inputRoles)
@@ -340,7 +347,7 @@ namespace JPDB_Bot
             return highestInt;
         }
 
-        private async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
+        private static async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
         {   
             if (e.Message.Content.ToLower().Contains("anything in japanese") == true && e.Message.Content.Length < 26)
             {
@@ -444,12 +451,14 @@ namespace JPDB_Bot
                 }
                 
                 return;
-            } else if (e.Message.Content.ToLower().Contains(" jaw") && e.Guild != null)
+            } else if ((e.Message.Content.ToLower().Contains(" jaw") || e.Message.Content.Contains("630381088404930560")) && e.Guild != null)
             {
                 DiscordMember Jaw = await e.Guild.GetMemberAsync(630381088404930560); //kou: 118408957416046593  //jawgboi: 630381088404930560
                 await Jaw.SendMessageAsync($"You were mentioned by {e.Author.Username}\n> {e.Message.Content}");
                 return;
             }
+
+            if (e.Guild == null) { return; }
 
             if (e.Guild.GetMemberAsync(e.Author.Id).Result.Roles.Any(r => r.Name == "Owner" || r.Name == "Supporter" || r.Name == "Server Booster") != true || e.Channel.Name == "bot")
             {
@@ -492,7 +501,7 @@ namespace JPDB_Bot
             return;
         }
         
-        private async Task New_Message(DiscordClient sender, TypingStartEventArgs e)
+        private static async Task New_Message(DiscordClient sender, TypingStartEventArgs e)
         {
             if (e.Channel.Id == 827482133400256542)
             {
@@ -501,7 +510,7 @@ namespace JPDB_Bot
             }
         }
 
-        private Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
+        private static Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
             Client.UpdateStatusAsync(new DiscordActivity() { Name = "jpdb.io" }, UserStatus.DoNotDisturb).ConfigureAwait(false);
             Console.ForegroundColor = ConsoleColor.Green;
