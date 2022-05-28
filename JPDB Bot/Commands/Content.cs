@@ -74,8 +74,6 @@ namespace JPDB_Bot.Commands
                 }
             }
                 
-
-            //await ctx.Channel.SendMessageAsync("Searching for " + searchString + "...").ConfigureAwait(false);
             try
             {
                 await ContentDetails(ctx, searchString).ConfigureAwait(false);
@@ -85,8 +83,7 @@ namespace JPDB_Bot.Commands
                 return;
             }
             
-            //Program.printCommandUse(ctx.User.Username, "Content Stats");
-            if (statisticsPage == string.Empty || uniqueWords == -1)
+            if (statisticsPage.Length < 25 || uniqueWords < 1)
             {
                 Program.printError("The program stopped before collecting content stats info.");
                 return;
@@ -99,7 +96,6 @@ namespace JPDB_Bot.Commands
                 return;
             }
             
-            //Program.printCommandUse(ctx.User.Username, "Content Embed");
             await SendContentEmbed(ctx, true).ConfigureAwait(false);
         }
 
@@ -158,7 +154,7 @@ namespace JPDB_Bot.Commands
                 searchString = searchString.Substring(1, searchString.Length - 2);
             }
 
-            string contentType = string.Empty;///////////////////////////////////////
+            string contentType = string.Empty;
             if (searchString.Contains(" anime")) { contentType = "anime"; searchString = searchString.Replace(" anime", ""); }
             if (searchString.Contains(" ln")) { contentType = "novel"; searchString = searchString.Replace(" ln", ""); }
             if (searchString.Contains(" novel")) { contentType = "novel"; searchString = searchString.Replace(" novel", ""); }
@@ -173,12 +169,12 @@ namespace JPDB_Bot.Commands
             string url = "https://jpdb.io/prebuilt_decks?q=" + searchString + contentType;
 
             searchString = searchString.Replace("www.jpdb", "jpdb").Replace("/vocabulary-list", "").Replace("/stats", "");
-            if (searchString.Contains("jpdb.io/") & !searchString.Contains(" "))
+            if (searchString.Replace("https://", "").Substring(0, 8) == "jpdb.io/" & !searchString.Contains(" "))
             {
                 url = "";
-                if (!searchString.Contains("https://jpdb.io/"))
+                if (searchString.Substring(0, 16) != "https://jpdb.io/") //grrrrrrrrr >:8 :dogegun:
                 {
-                    url += "https://";
+                    url = "https://";
                 }
                 url += searchString;
 
@@ -196,10 +192,28 @@ namespace JPDB_Bot.Commands
                 Program.printError(ex.Message + $"\n({url})");
                 if (ex.Message.ToLower().Contains("timed out"))
                 {
-                    await ctx.RespondAsync("Request timed out. This is likely because the bot's host isn't functioning correctly.").ConfigureAwait(false);
+                    if (ctx.User.Id == 118408957416046593)
+                    {
+                        await ctx.RespondAsync($"Request timed out. This is likely because Kou is trying to break me {DiscordEmoji.FromName(ctx.Client, ":dogestare:")}").ConfigureAwait(false);
+                    }
+                    else if (ctx.User.Id == 197026965838888978 || ctx.User.Id == 305627590364889098 || ctx.User.Id == 399993082806009856 || ctx.User.Id == 162762502336151554 || ctx.User.Id == 78844024974217216)
+                    {
+                        await ctx.RespondAsync($"Request timed out. This is likely because {ctx.User.Username} is trying to break me {DiscordEmoji.FromName(ctx.Client, ":dogegun:")}").ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await ctx.RespondAsync("Request timed out. This is likely because the bot's host isn't functioning correctly.").ConfigureAwait(false);
+                    }
+                    
+
                 } else
                 {
-                    await ctx.RespondAsync("Something went wrong.").ConfigureAwait(false);
+                    string errorMessage = "Something went wrong.";
+                    if (ctx.User.Id == 118408957416046593)
+                    {
+                        errorMessage += $" This was your doing, wasn't it Kou? {DiscordEmoji.FromName(ctx.Client, ":dogegun:")}";
+                    }
+                    await ctx.RespondAsync(errorMessage).ConfigureAwait(false);
                 }
                 return;
             }
