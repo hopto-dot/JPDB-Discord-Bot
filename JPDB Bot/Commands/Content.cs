@@ -166,10 +166,25 @@ namespace JPDB_Bot.Commands
             if (searchString.Contains(" game")) { contentType = "video_game"; searchString = searchString.Replace(" game", ""); }
             if (searchString.Contains(" wn")) { contentType = "web_novel"; searchString = searchString.Replace(" wn", ""); }
             if (searchString.Contains(" live action")) { contentType = "live_action"; searchString = searchString.Replace(" live action", ""); }
+            if (searchString.Contains(" audio work")) { contentType = "audio"; searchString = searchString.Replace(" audio work", ""); }
 
             if (contentType != string.Empty) { contentType = "&show_only=" + contentType; }
 
             string url = "https://jpdb.io/prebuilt_decks?q=" + searchString + contentType;
+
+            searchString = searchString.Replace("www.jpdb", "jpdb").Replace("/vocabulary-list", "").Replace("/stats", "");
+            if (searchString.Contains("jpdb.io/") & !searchString.Contains(" "))
+            {
+                url = "";
+                if (!searchString.Contains("https://jpdb.io/"))
+                {
+                    url += "https://";
+                }
+                url += searchString;
+
+                contentURL = url;
+            }
+
             string html = "";
             try
             {
@@ -241,12 +256,15 @@ namespace JPDB_Bot.Commands
             html = wordTemp.Substring(snipIndex);
             contentName = wordTemp.Substring(0, snipIndex).Replace("&#39;", "'");
 
-            snipIndex = html.IndexOf("margin-top: 0.5rem;\">") + 22;
-            wordTemp = html.Substring(snipIndex);
-            snipIndex = wordTemp.IndexOf("/") + 1;
-            wordTemp = wordTemp.Substring(snipIndex);
-            snipIndex = wordTemp.IndexOf("\"");
-            contentURL = "https://jpdb.io/" + wordTemp.Substring(0, snipIndex);
+            if (contentURL == "")
+            {
+                snipIndex = html.IndexOf("margin-top: 0.5rem;\">") + 22;
+                wordTemp = html.Substring(snipIndex);
+                snipIndex = wordTemp.IndexOf("/") + 1;
+                wordTemp = wordTemp.Substring(snipIndex);
+                snipIndex = wordTemp.IndexOf("\"");
+                contentURL = "https://jpdb.io/" + wordTemp.Substring(0, snipIndex);
+            }
 
             string wordTemp3 = wordTemp2;
             //getting unique word count:
