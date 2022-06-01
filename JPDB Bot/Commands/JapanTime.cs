@@ -11,23 +11,6 @@ namespace JPDB_Bot.Commands
 {
     public class JapanTime : BaseCommandModule
     {
-        //[Command("time")]
-        //[Cooldown(2, 6, CooldownBucketType.User)]
-        //[Description("Check the time in Japan")]
-        //[Hidden]
-        //[Aliases("koutime")]
-        //public async Task time(CommandContext ctx, string timeZone)
-        //{
-        //    switch (timeZone)
-        //    {
-        //        case "japantime":
-
-        //    }
-
-
-        //}
-
-
         [Command("japantime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in Japan")]
@@ -131,7 +114,7 @@ namespace JPDB_Bot.Commands
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in Japan")]
         [Hidden]
-        [Aliases("indiatime", "indiastandardtime", "indianstandardtime", "100cardsadaytime")]
+        [Aliases("indiatime", "indiantime", "indiastandardtime", "indianstandardtime", "100cardsadaytime")]
         public async Task kaztime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
@@ -144,6 +127,7 @@ namespace JPDB_Bot.Commands
 
         [Command("godtime")]
         [Cooldown(3, 20, CooldownBucketType.User)]
+        [Hidden]
         [Aliases("kamisamatime", "神様time", "神さまtime")]
         public async Task godTime(CommandContext ctx)
         {
@@ -266,7 +250,6 @@ namespace JPDB_Bot.Commands
         [Command("tadokutime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time that Tadoku uses for its leader")]
-        [Hidden]
         public async Task tadokuTime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);

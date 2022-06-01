@@ -79,7 +79,7 @@ namespace JPDB_Bot.Commands
                 await ContentDetails(ctx, searchString).ConfigureAwait(false);
             } catch
             {
-                await ctx.RespondAsync("Shit, I think Kou has messed with the HTML. <@630381088404930560> <@630381088404930560> <@630381088404930560> <@630381088404930560> help!").ConfigureAwait(false);
+                await ctx.RespondAsync("Something went wrong.").ConfigureAwait(false);
                 return;
             }
             
@@ -169,16 +169,19 @@ namespace JPDB_Bot.Commands
             string url = "https://jpdb.io/prebuilt_decks?q=" + searchString + contentType;
 
             searchString = searchString.Replace("www.jpdb", "jpdb").Replace("/vocabulary-list", "").Replace("/stats", "");
-            if (searchString.Replace("https://", "").Substring(0, 8) == "jpdb.io/" & !searchString.Contains(" "))
+            if (searchString.Length > 15)
             {
-                url = "";
-                if (searchString.Substring(0, 16) != "https://jpdb.io/") //grrrrrrrrr >:8 :dogegun:
+                if (searchString.Replace("https://", "").Substring(0, 8) == "jpdb.io/" & !searchString.Contains(" "))
                 {
-                    url = "https://";
-                }
-                url += searchString;
+                    url = "";
+                    if (searchString.Substring(0, 16) != "https://jpdb.io/") //grrrrrrrrr >:8 :dogegun:
+                    {
+                        url = "https://";
+                    }
+                    url += searchString;
 
-                contentURL = url;
+                    contentURL = url;
+                }
             }
 
             string html = "";
