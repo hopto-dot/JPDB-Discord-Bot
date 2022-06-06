@@ -24,13 +24,13 @@ namespace JPDB_Bot.Commands
 
             var response = await client.SendAsync(request);
             var html = response.Content.ReadAsStringAsync().Result;
-
+            string orightml = html;
             int snipIndex = -1;
             bool fail;
 
             //novels
             int novelsAdd = -1;
-            snipIndex = html.IndexOf("<td class=\"s16\">") + 16;
+            snipIndex = html.IndexOf("<td class=\"s18\">") + 16;
             html = html.Substring(snipIndex);
             if (html.Substring(0, 20).ToLower().Contains("awaiting") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (novelsAdd)"); return; }
             snipIndex = html.IndexOf(" ");
@@ -38,7 +38,7 @@ namespace JPDB_Bot.Commands
             if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (novelsAdd)"); return; }
 
             int novelsPreparing = -1;
-            snipIndex = html.IndexOf("<td class=\"s17\">") + 16;
+            snipIndex = html.IndexOf("<td class=\"s19\">") + 16;
             html = html.Substring(snipIndex);
             if (html.Substring(0, 20).ToLower().Contains("prepared") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (novelsPreparing)"); return; }
             snipIndex = html.IndexOf(" ");
@@ -49,7 +49,10 @@ namespace JPDB_Bot.Commands
             /// dramas
 
             int dramasAdd = -1;
-            snipIndex = html.IndexOf("<td class=\"s16\">") + 16;
+            html = orightml;
+            snipIndex = html.IndexOf("<td class=\"s18\">") + 16;
+            html = html.Substring(snipIndex);
+            snipIndex = html.IndexOf("<td class=\"s18\">") + 16;
             html = html.Substring(snipIndex);
             if (html.Substring(0, 20).ToLower().Contains("awaiting") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (dramasAdd)"); return; }
             snipIndex = html.IndexOf(" ");
@@ -57,12 +60,43 @@ namespace JPDB_Bot.Commands
             if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (dramasAdd)"); return; }
 
             int dramasPreparing = -1;
-            snipIndex = html.IndexOf("<td class=\"s17\">") + 16;
+            snipIndex = html.IndexOf("<td class=\"s19\">") + 16;
+            html = html.Substring(snipIndex);
+            snipIndex = html.IndexOf("<td class=\"s19\">") + 16;
             html = html.Substring(snipIndex);
             if (html.Substring(0, 20).ToLower().Contains("prepared") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (dramasPreparing)"); return; }
             snipIndex = html.IndexOf(" ");
             fail = int.TryParse(html.Substring(0, snipIndex), out dramasPreparing);
             if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (dramasPreparing)"); return; }
+
+
+
+
+            int animeAdd = -1;
+            html = orightml;
+            snipIndex = html.IndexOf("<td class=\"s18\">") + 16;
+            html = html.Substring(snipIndex);
+            snipIndex = html.IndexOf("<td class=\"s18\">") + 16;
+            html = html.Substring(snipIndex);
+            snipIndex = html.IndexOf("<td class=\"s18\">") + 16;
+            html = html.Substring(snipIndex);
+            if (html.Substring(0, 20).ToLower().Contains("awaiting") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (dramasAdd)"); return; }
+            snipIndex = html.IndexOf(" ");
+            fail = int.TryParse(html.Substring(0, snipIndex), out animeAdd);
+            if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (dramasAdd)"); return; }
+
+            int animePreparing = -1;
+            snipIndex = html.IndexOf("<td class=\"s19\">") + 16;
+            html = html.Substring(snipIndex);
+            snipIndex = html.IndexOf("<td class=\"s19\">") + 16;
+            html = html.Substring(snipIndex);
+            snipIndex = html.IndexOf("<td class=\"s19\">") + 16;
+            html = html.Substring(snipIndex);
+            if (html.Substring(0, 20).ToLower().Contains("prepared") == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure - html: '{html.Substring(0, 20)}' (dramasPreparing)"); return; }
+            snipIndex = html.IndexOf(" ");
+            fail = int.TryParse(html.Substring(0, snipIndex), out animePreparing);
+            if (fail == false) { await ctx.RespondAsync("Something went wrong with fetching the database information.").ConfigureAwait(false); Program.printError($"!newcontent failure: tried to parse '{html.Substring(0, snipIndex)}' (dramasPreparing)"); return; }
+
 
             var infoEmbed = new DiscordEmbedBuilder()
             {
@@ -74,7 +108,11 @@ namespace JPDB_Bot.Commands
                 $"\n" +
                 $"__Dramas__\n" +
                 $"**Prepared:** {dramasAdd}\n" +
-                $"**Not ready yet:** {dramasPreparing}",
+                $"**Not ready yet:** {dramasPreparing}\n" +
+                $"\n" +
+                $"__Anime__\n" +
+                $"**Prepared:** {animeAdd}\n" +
+                $"**Not ready yet:** {animePreparing}",
                 Color = DiscordColor.Blue,
                 Footer = new DiscordEmbedBuilder.EmbedFooter()
                 {

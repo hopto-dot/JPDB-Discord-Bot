@@ -71,7 +71,7 @@ namespace JPDB_Bot.Commands
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in Germany")]
         [Hidden]
-        [Aliases("germanytime", "deutschtime", "germantime", "cesttime", "cettime", "schnitzeltime", "alextime", "aletime", "n6time", "certifiedn6time")]
+        [Aliases("germanytime", "deutschtime", "germantime", "cesttime", "kaztime", "frenchtime", "françaistime", "francaistime", "francetime", "cettime", "schnitzeltime", "alextime", "aletime", "n6time", "certifiedn6time")]
         public async Task alemaxtime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
@@ -110,11 +110,11 @@ namespace JPDB_Bot.Commands
         }
 
 
-        [Command("kaztime")]
+        [Command("indiantime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in Japan")]
         [Hidden]
-        [Aliases("indiatime", "indiantime", "indiastandardtime", "indianstandardtime", "100cardsadaytime")]
+        [Aliases("indiatime", "indiastandardtime", "indianstandardtime", "100cardsadaytime")]
         public async Task kaztime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
