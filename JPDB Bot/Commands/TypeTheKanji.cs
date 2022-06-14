@@ -31,6 +31,7 @@ namespace JPDB_Bot.Commands
         [Description("Type the kanji game\n\n__Difficulties__:\n * **N5** - 0-100\n * **Easy** - 100-500\n * **Normal** - 500-1000\n * **Medium** - 1000-1500\n * **Hard** - 1500-2000\n * **Very Hard** - 2000-3000\n * **Kanji Deity** - 3000-4000")]
         public async Task typeTheKanji(CommandContext ctx, string difficulty)
         {
+            difficulty = difficulty.Trim();
             string jsonString = File.ReadAllText("kanjis.json");
             List<kanji> kanjis = new List<kanji>();
             try
@@ -123,9 +124,15 @@ namespace JPDB_Bot.Commands
                 }
             } else
             {
-                if (difficulty.Substring(difficulty.Length - 1, 1) == "-" || difficulty.Substring(1, 1) == "-") { return; }
+                if (difficulty.Substring(difficulty.Length - 1, 1) == "-" || difficulty.Substring(0, 1) == "-")
+                {
+                    await ctx.RespondAsync("You must a frequency range in the format `lower-upper`!").ConfigureAwait(false); return;
+                }
                 string[] difficultySplit = difficulty.Split("-");
-                if (difficulty.Length != 2) { return; }
+                if (difficultySplit.Length != 2)
+                {
+                    await ctx.RespondAsync("You must a frequency range in the format `lower-upper`!").ConfigureAwait(false); return;
+                }
                 try
                 {
                     bottomFreq = int.Parse(difficultySplit[0]);
