@@ -17,6 +17,7 @@ using JPDB_Bot.Commands;
 using JPDB_Bot.StudyLog;
 using JPDB_Bot.Guess_the_Kanji;
 
+
 namespace JPDB_Bot
 {
     public static class Bot
@@ -144,6 +145,7 @@ namespace JPDB_Bot
             Commands.RegisterCommands<guessTheKanji>();
             Commands.RegisterCommands<JPConcept>();
             Commands.RegisterCommands<newContent>();
+            Commands.RegisterCommands<TypeTheKanji>();
             await Client.ConnectAsync();
 
             jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);

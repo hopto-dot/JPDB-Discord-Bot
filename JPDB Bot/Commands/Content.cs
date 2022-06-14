@@ -128,7 +128,7 @@ namespace JPDB_Bot.Commands
                 Url = contentURL,
                 //Footer = new DiscordEmbedBuilder.EmbedFooter
                 //{
-                //    Text = "Currently, usernames don't do anything.",
+                //    Text = "",
                 //}
             };
             
