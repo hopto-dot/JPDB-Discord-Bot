@@ -38,7 +38,8 @@ namespace JPDB_Bot.Commands
 
             if (gameInProgress == null)
             {
-                await discordChannel.SendMessageAsync("There is not a game in progress!").ConfigureAwait(false);
+                //Below line needs to be removed because it collides with !typethekanji
+                //await discordChannel.SendMessageAsync("There is not a game in progress!").ConfigureAwait(false);
                 return;
             }
 
