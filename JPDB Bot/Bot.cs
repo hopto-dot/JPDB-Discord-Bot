@@ -16,7 +16,7 @@ using DSharpPlus.VoiceNext;
 using JPDB_Bot.Commands;
 using JPDB_Bot.StudyLog;
 using JPDB_Bot.Guess_the_Kanji;
-
+using JPDB_Bot.ContentRequests;
 
 namespace JPDB_Bot
 {
@@ -124,7 +124,7 @@ namespace JPDB_Bot
             {
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableMentionPrefix = true,
-                EnableDms = true,
+                EnableDms = false,
                 DmHelp = false,
                 EnableDefaultHelp = true,
                 IgnoreExtraArguments = true,
@@ -146,6 +146,7 @@ namespace JPDB_Bot
             Commands.RegisterCommands<JPConcept>();
             Commands.RegisterCommands<newContent>();
             Commands.RegisterCommands<TypeTheKanji>();
+            Commands.RegisterCommands<contentRequests>();
             await Client.ConnectAsync();
 
             jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);
@@ -351,6 +352,8 @@ namespace JPDB_Bot
 
         private static async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
         {   
+            if (e.Channel.Id == 980505150676418660) { contentRequests.crMessageSent(sender, e); return; }
+            
             if (e.Message.Content.ToLower().Contains("anything in japanese") == true && e.Message.Content.Length < 26)
             {
                 await e.Channel.SendMessageAsync("nihongo jouzu");

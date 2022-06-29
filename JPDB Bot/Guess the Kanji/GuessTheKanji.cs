@@ -60,7 +60,7 @@ namespace JPDB_Bot.Guess_the_Kanji
 
         private async Task runGenHandwriting(string fontName, CommandContext ctx, [RemainingText] string text)
         {
-            FontFamily fontFamily; //"みつフォント", "青柳疎石フォント2 OTF", "HG行書体", "UD Digi Kyokasho N-R"
+            FontFamily fontFamily; //"みつフォント", "青柳疎石フォント2 OTF", "HG行書体", "UD Digi Kyokasho N-R", "FUTENE"
             try
             {
                 fontFamily = new FontFamily(fontName); //

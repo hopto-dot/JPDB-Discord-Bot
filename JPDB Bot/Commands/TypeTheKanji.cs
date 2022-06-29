@@ -29,13 +29,13 @@ namespace JPDB_Bot.Commands
         [Command("typethekanji")]
         [Aliases("ttk")]
         [Description("Type the kanji game. Type the kanji shown in the image\n\n__Difficulties__:\n * **N5** - 0-100\n * **Easy** - 100-500\n * **Normal** - 500-1000\n * **Medium** - 1000-1500\n * **Hard** - 1500-2000\n * **Very Hard** - 2000-3000\n * **Kanji Deity** - 3000-4000\n\n * **Jouyou Kanji**")]
-        public async Task typeTheKanji(CommandContext ctx, string difficulty)
+        public async Task typeTheKanji(CommandContext ctx, string difficulty = "hard")
         {
             difficulty = difficulty.Trim();
 
             int bottomFreq = 0;
             int topFreq = -1;
-            int answerTime = 12000;
+            int answerTime = 15000;
             string kanjiFile = "kanjis.json";
             if (!difficulty.Contains("-"))
             {
@@ -43,6 +43,7 @@ namespace JPDB_Bot.Commands
                 {
                     case "n5":
                         topFreq = 100;
+                        answerTime = 14000;
                         difficulty = $"N5 ({bottomFreq}-{topFreq})";
                         break;
                     case "n4":
@@ -60,7 +61,7 @@ namespace JPDB_Bot.Commands
                     case "n3":
                         bottomFreq = 200;
                         topFreq = 650;
-                        answerTime = 14000;
+                        answerTime = 15000;
                         difficulty = $"N3 ({bottomFreq}-{topFreq})";
                         break;
                     case "normal":
@@ -79,13 +80,13 @@ namespace JPDB_Bot.Commands
                     case "hard":
                         bottomFreq = 1500;
                         topFreq = 2000;
-                        answerTime = 20000;
+                        answerTime = 18000;
                         difficulty = $"Hard ({bottomFreq}-{topFreq})";
                         break;
                     case "n1":
                         bottomFreq = 1500;
                         topFreq = 2000;
-                        answerTime = 20000;
+                        answerTime = 19000;
                         difficulty = $"N1 ({bottomFreq}-{topFreq})";
                         break;
                     case "very hard":
@@ -93,7 +94,7 @@ namespace JPDB_Bot.Commands
                     case "very":
                         bottomFreq = 2000;
                         topFreq = 3000;
-                        answerTime = 25000;
+                        answerTime = 20000;
                         difficulty = $"Very Hard ({bottomFreq}-{topFreq})";
                         break;
                     case "kanjideity":
@@ -105,15 +106,15 @@ namespace JPDB_Bot.Commands
                     case "god":
                         bottomFreq = 3000;
                         topFreq = 4000;
-                        answerTime = 25000;
+                        answerTime = 23000;
                         difficulty = $"Kanji Deity ({bottomFreq}-{topFreq})";
                         break;
                     case "jouyou":
                     case "常用漢字":
                     case "常用":
-                        bottomFreq = 0;
+                        bottomFreq = 1000;
                         topFreq = 4000;
-                        answerTime = 15000;
+                        answerTime = 17000;
                         difficulty = $"Jouyou Kanji";
                         kanjiFile = $"jouyoukanjis.json";
                         break;
@@ -180,8 +181,6 @@ namespace JPDB_Bot.Commands
                 }
             }
 
-
-
             var infoEmbed = new DiscordEmbedBuilder()
             {
                 Title = $"Type The Kanji - Difficulty {difficulty}",
@@ -203,7 +202,7 @@ namespace JPDB_Bot.Commands
                 Program.printError("Failed to send start game embed.");
                 return;
             }
-            System.Threading.Thread.Sleep(0);
+            System.Threading.Thread.Sleep(3000);
 
             await startGame(bottomFreq, topFreq, kanjis, fontFamily, ctx, answerTime);
 
@@ -213,19 +212,29 @@ namespace JPDB_Bot.Commands
 
         private async Task startGame(int bottomFreq, int topFreq, List<kanji> kanjis, FontFamily fontFamily, CommandContext ctx, int answerTime = 10000) 
         {
-            int streak = 0;
+            Font newFont = new Font(
+                fontFamily,
+                80,
+                FontStyle.Regular,
+                GraphicsUnit.Pixel);
+
             List<int> pickedFreqs = new List<int>();
             if (topFreq > kanjis.Count - 1) { topFreq = kanjis.Count - 1; }
+            int points = 0;
+            int consecutiveFails = 0;
             var random = new Random((int)DateTime.UtcNow.Ticks);
-            while (streak != -2)
+
+            for (int i = 1; i <= 10; i++)
             {
-                pickFreq:
+pickFreq:
+                if (consecutiveFails == 3) { goto endGame; }
                 int pickedFreq = -1;
                 try
                 {
                     pickedFreq = random.Next(bottomFreq, topFreq + 1);
-                } catch { goto pickFreq; }
-                
+                }
+                catch { goto pickFreq; }
+
                 foreach (int freq in pickedFreqs)
                 {
                     if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
@@ -235,12 +244,6 @@ namespace JPDB_Bot.Commands
 
                 pickedFreqs.Add(pickedFreq);
                 string kanji = kanjis[pickedFreq].name;
-
-                Font newFont = new Font(
-                fontFamily,
-                80,
-                FontStyle.Regular,
-                GraphicsUnit.Pixel);
 
                 Image generatedImage = drawText(kanji, newFont, Color.Black, Color.White);
                 try
@@ -258,7 +261,6 @@ namespace JPDB_Bot.Commands
                 DiscordMessageBuilder discordMessageBuilder = new DiscordMessageBuilder();
                 discordMessageBuilder.WithFile(fileStream);
                 await discordMessageBuilder.SendAsync(ctx.Channel);
-
                 fileStream.Dispose();
 
                 InteractivityResult<DiscordMessage> result = await ctx.Channel.GetNextMessageAsync(
@@ -267,29 +269,26 @@ namespace JPDB_Bot.Commands
 
                 if (result.Result != null)
                 {
-                    if (result.Result.Content == "!stop") 
-                    { streak = -1; return; }
-                    if (result.Result.Content == "!skip") 
+                    if (result.Result.Content == "!stop")
+                    { return; }
+                    if (result.Result.Content == "!skip")
                     {
                         if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
-                        { 
+                        {
                             await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame;
                         }
                         else
                         {
-                            streak = -1; continue;
+                            await ctx.Channel.SendMessageAsync($"No one got it right, the answer was {kanji} which has a frequency of {kanjis[pickedFreq].frequency}.\nScore is {(points == 0 ? "" : "still")} {points}!").ConfigureAwait(false);
+                            consecutiveFails++;
+                            System.Threading.Thread.Sleep(2000);
+                            continue;
                         }
                     }
-                    
-                    if (streak >= 0)
-                    {
-                        streak++;
-                    }
-                    else
-                    {
-                        streak = 1;
-                    }
-                    await ctx.Channel.SendMessageAsync($"**{result.Result.Author.Username}** got it right, streak is now {streak}!\n{kanji} has a frequency of {kanjis[pickedFreq].frequency}").ConfigureAwait(false);
+
+                    points += 1;
+                    await ctx.Channel.SendMessageAsync($"**{result.Result.Author.Username}** got it right, score is now {points}!\n{kanji} has a frequency of {kanjis[pickedFreq].frequency}").ConfigureAwait(false);
+                    consecutiveFails = 0;
                 }
                 else
                 {
@@ -297,30 +296,23 @@ namespace JPDB_Bot.Commands
                     System.Threading.Thread.Sleep(1000);
                     if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
                     { await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame; }
-                    if (streak > 1)
-                    {
-                        streak = -1;
-                    }
-                    else
-                    {
-                        streak -= 1;
-                    }
+                    
+                    consecutiveFails ++;
                 }
 
                 if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
                 { await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame; }
-                if (streak != -2)
+                if (i != 10)
                 {
-                    System.Threading.Thread.Sleep(3000);
+                    System.Threading.Thread.Sleep(3500);
                 }
             }
 
         endGame:
-            if (streak == -1) { streak = 0; }
             var gameEmbed = new DiscordEmbedBuilder()
             {
                 Title = "Game finished",
-                Description = streak == -2 ? "Streak: no streak" : $"Streak: {streak}",
+                Description = $"Score: {points}/10",
                 Color = DiscordColor.Red
             };
 
