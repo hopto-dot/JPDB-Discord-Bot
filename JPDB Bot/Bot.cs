@@ -353,7 +353,8 @@ namespace JPDB_Bot
         private static async Task Message_Sent(DiscordClient sender, MessageCreateEventArgs e)
         {   
             if (e.Channel.Id == 980505150676418660) { contentRequests.crMessageSent(sender, e); return; }
-            
+            if (e.Channel.Id == 850630303403343883) { contentRequests.fbMessageSent(sender, e); return; }
+
             if (e.Message.Content.ToLower().Contains("anything in japanese") == true && e.Message.Content.Length < 26)
             {
                 await e.Channel.SendMessageAsync("nihongo jouzu");

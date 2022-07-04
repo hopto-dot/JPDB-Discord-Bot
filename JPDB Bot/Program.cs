@@ -11,7 +11,7 @@ namespace JPDB_Bot
             int restarts = 0;
 Restart:
             Console.ForegroundColor = ConsoleColor.White;
-            if (restarts <= 3)
+            if (restarts <= 2)
             {
                 try
                 {
