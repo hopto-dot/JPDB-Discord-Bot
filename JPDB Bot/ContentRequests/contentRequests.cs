@@ -5,6 +5,9 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using System;
 using System.Threading.Tasks;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Interactivity.Enums;
 
 namespace JPDB_Bot.ContentRequests
 {
@@ -17,8 +20,10 @@ namespace JPDB_Bot.ContentRequests
         public static DateTime LastFbMessage = new DateTime();
 
         [Command("pin")]
-        [Hidden]
-        public async Task crCommand(CommandContext ctx, string parameters)
+        [Aliases("pins", "cr")]
+        [Description("Start pinning messages")]
+        [Cooldown(3, 10, CooldownBucketType.User)]
+        public async Task pinCommand(CommandContext ctx, string parameters = "")
         {
             var senderID = ctx.Message.Author.Id;
             if (senderID != 630381088404930560 && senderID != 245371520174522368 && senderID != 399993082806009856 && senderID != 118408957416046593)
@@ -40,18 +45,21 @@ namespace JPDB_Bot.ContentRequests
                 {
                     return;
                 }
-                crMessage = await crChannel.SendMessageAsync("**Pinned message:\n\nPlease make sure to read the pinned messages before requesting content.**\nhttps://discord.com/channels/799891866924875786/980505150676418660/980508358303948891");
-                fbMessage = await fbChannel.SendMessageAsync("**Pinned message:**\n\nPlease post __misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ issues on our GitHub issue tracker available here:\nhttps://github.com/jpdb-io/issue-tracker/issues/new/choose");
+                crMessage = await crChannel.SendMessageAsync("**Pinned message:\n\nPlease make sure to read the pinned messages before requesting content.**\n<https://discord.com/channels/799891866924875786/980505150676418660/980508358303948891>");
+                fbMessage = await fbChannel.SendMessageAsync("**Pinned message:**\n\nPlease post __misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ issues on our GitHub issue tracker available here:\n<https://github.com/jpdb-io/issue-tracker/issues/new/choose>");
+
+                await crMessage.ModifyEmbedSuppressionAsync(true);
+                await fbMessage.ModifyEmbedSuppressionAsync(true);
                 try
                 {
                     lastCrMessage = DateTime.Now;
                     LastFbMessage = DateTime.Now;
 
-                    Program.printMessage("cr started succesfully");
+                    Program.printMessage("pins started succesfully");
                 } catch (Exception ex)
                 {
                     Program.printError(ex.Message);
-                    Program.printMessage("cr start: couldn't set lastCrMessage time to now");
+                    Program.printMessage("pins start: couldn't set LastMessage time to DateTime.Now");
                 }
             }
             else if (parameters == "stop")
@@ -82,7 +90,8 @@ namespace JPDB_Bot.ContentRequests
                     crMessage = null;
                     System.Threading.Thread.Sleep(50);
 
-                    crMessage = crChannel.SendMessageAsync("**Pinned message:\n\nPlease make sure to read the pinned messages before requesting content.**\nhttps://discord.com/channels/799891866924875786/980505150676418660/980508358303948891").Result;
+                    crMessage = crChannel.SendMessageAsync("**Pinned message:\n\nPlease make sure to read the pinned messages before requesting content.**\n<https://discord.com/channels/799891866924875786/980505150676418660/980508358303948891>").Result;
+                    crMessage.ModifyEmbedSuppressionAsync(true);
 
                     lastCrMessage = DateTime.Now;
                     Program.printMessage("cr message successfully triggered");
@@ -115,7 +124,8 @@ namespace JPDB_Bot.ContentRequests
                     fbMessage = null;
                     System.Threading.Thread.Sleep(50);
 
-                    fbMessage = fbChannel.SendMessageAsync("**Pinned message:**\n\nFrom now on please post __misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ issues on our GitHub issue tracker available here:\nhttps://github.com/jpdb-io/issue-tracker/issues/new/choose").Result;
+                    fbMessage = fbChannel.SendMessageAsync("**Pinned message:**\n\nFrom now on please post __misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ issues on our GitHub issue tracker available here:\n<https://github.com/jpdb-io/issue-tracker/issues/new/choose>").Result;
+                    fbMessage.ModifyEmbedSuppressionAsync(true);
 
                     LastFbMessage = DateTime.Now;
                     Program.printMessage("cr message successfully triggered");

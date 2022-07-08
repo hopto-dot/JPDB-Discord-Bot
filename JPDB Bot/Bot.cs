@@ -104,7 +104,7 @@ namespace JPDB_Bot
             Client.UseInteractivity(new InteractivityConfiguration()
             {
                 PollBehaviour = PollBehaviour.KeepEmojis,
-                Timeout = TimeSpan.FromSeconds(35),
+                Timeout = TimeSpan.FromSeconds(30),
             });
             Client.Ready += Client_Ready;
             Client.MessageCreated += Message_Sent;
