@@ -25,6 +25,13 @@ namespace JPDB_Bot.Commands
             public string name = "";
             public int frequency = -1;
         }
+
+        public class player
+        {
+            public DiscordMember member;
+            public int points = 0;
+        }
+
         
         [Command("typethekanji")]
         [Aliases("ttk")]
@@ -123,7 +130,8 @@ namespace JPDB_Bot.Commands
                         difficulty = $"N5 ({bottomFreq}-{topFreq})";
                         break;
                 }
-            } else
+            }
+            else
             {
                 if (difficulty.Substring(difficulty.Length - 1, 1) == "-" || difficulty.Substring(0, 1) == "-")
                 {
@@ -156,6 +164,7 @@ namespace JPDB_Bot.Commands
                 return;
             }
 
+            #region use font
             FontFamily fontFamily; //"みつフォント", "青柳疎石フォント2 OTF", "HG行書体", "UD Digi Kyokasho N-R"
             try
             {
@@ -180,7 +189,9 @@ namespace JPDB_Bot.Commands
                     }
                 }
             }
+            #endregion
 
+            #region send start game embed
             var infoEmbed = new DiscordEmbedBuilder()
             {
                 Title = $"Type The Kanji - Difficulty {difficulty}",
@@ -202,21 +213,18 @@ namespace JPDB_Bot.Commands
                 Program.printError("Failed to send start game embed.");
                 return;
             }
-            System.Threading.Thread.Sleep(3000);
+            #endregion
+            System.Threading.Thread.Sleep(5000);
 
             await startGame(bottomFreq, topFreq, kanjis, fontFamily, ctx, answerTime);
 
             await ctx.Channel.SendMessageAsync($"Game finished!").ConfigureAwait(false);
         }
 
-
+        List<player> players = new List<player>();
         private async Task startGame(int bottomFreq, int topFreq, List<kanji> kanjis, FontFamily fontFamily, CommandContext ctx, int answerTime = 10000) 
         {
-            Font newFont = new Font(
-                fontFamily,
-                80,
-                FontStyle.Regular,
-                GraphicsUnit.Pixel);
+            Font newFont = new Font(fontFamily, 80, FontStyle.Regular, GraphicsUnit.Pixel);
 
             List<int> pickedFreqs = new List<int>();
             if (topFreq > kanjis.Count - 1) { topFreq = kanjis.Count - 1; }
@@ -238,30 +246,29 @@ pickFreq:
                 foreach (int freq in pickedFreqs)
                 {
                     if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
-                    { await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame; }
+                    { await ctx.Channel.SendMessageAsync("You have gone through all the kanji in the provided range!").ConfigureAwait(false); goto endGame; }
                     else if (freq == pickedFreq) { goto pickFreq; }
                 }
-
                 pickedFreqs.Add(pickedFreq);
                 string kanji = kanjis[pickedFreq].name;
 
+                #region Generate image and send
                 Image generatedImage = drawText(kanji, newFont, Color.Black, Color.White);
-                try
-                {
-                    generatedImage.Save("KanjiImage.jpg");
-                }
+                try { generatedImage.Save("KanjiImage.jpg"); }
                 catch
                 {
                     await ctx.RespondAsync("Something went wrong with generating the image");
                     return;
                 }
-
+                
+                
                 var fileStream = File.OpenRead("KanjiImage.jpg");
 
                 DiscordMessageBuilder discordMessageBuilder = new DiscordMessageBuilder();
                 discordMessageBuilder.WithFile(fileStream);
                 await discordMessageBuilder.SendAsync(ctx.Channel);
                 fileStream.Dispose();
+                #endregion
 
                 InteractivityResult<DiscordMessage> result = await ctx.Channel.GetNextMessageAsync(
                     message => message.Content.Contains(kanji) == true || message.Content == "!stop" || message.Content == "!skip", TimeSpan.FromMilliseconds(answerTime))
@@ -279,21 +286,24 @@ pickFreq:
                         }
                         else
                         {
-                            await ctx.Channel.SendMessageAsync($"No one got it right, the answer was {kanji} which has a frequency of {kanjis[pickedFreq].frequency}.\nScore is {(points == 0 ? "" : "still")} {points}!").ConfigureAwait(false);
+                            kanjiInfoEmbed(ctx, false, kanji, kanjis[pickedFreq].frequency, "No one");
+                            //await ctx.Channel.SendMessageAsync($"No one got it right, the answer was {kanji} which has a frequency of {kanjis[pickedFreq].frequency}.\nScore is {(points == 0 ? "" : "still")} {points}!").ConfigureAwait(false);
                             consecutiveFails++;
-                            System.Threading.Thread.Sleep(2000);
+                            System.Threading.Thread.Sleep(5000);
                             continue;
                         }
                     }
 
                     points += 1;
-                    await ctx.Channel.SendMessageAsync($"**{result.Result.Author.Username}** got it right, score is now {points}!\n{kanji} has a frequency of {kanjis[pickedFreq].frequency}").ConfigureAwait(false);
+                    kanjiInfoEmbed(ctx, true, kanji, kanjis[pickedFreq].frequency, result.Result.Author.Username);
+                    //await ctx.Channel.SendMessageAsync($"**{result.Result.Author.Username}** got it right, score is now {points}!\n{kanji} has a frequency of {kanjis[pickedFreq].frequency}").ConfigureAwait(false);
                     consecutiveFails = 0;
                 }
                 else
                 {
-                    await ctx.Channel.SendMessageAsync($"No one got it right, the answer was {kanji} which has a frequency of {kanjis[pickedFreq].frequency}").ConfigureAwait(false);
-                    System.Threading.Thread.Sleep(1000);
+                    kanjiInfoEmbed(ctx, false, kanji, kanjis[pickedFreq].frequency, "No one");
+                    //await ctx.Channel.SendMessageAsync($"No one got it right, the answer was {kanji} which has a frequency of {kanjis[pickedFreq].frequency}").ConfigureAwait(false);
+                    System.Threading.Thread.Sleep(1500);
                     if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
                     { await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame; }
                     
@@ -304,7 +314,7 @@ pickFreq:
                 { await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame; }
                 if (i != 10)
                 {
-                    System.Threading.Thread.Sleep(3500);
+                    System.Threading.Thread.Sleep(4000);
                 }
             }
 
@@ -327,6 +337,40 @@ pickFreq:
             }
         }
 
+        private void kanjiInfoEmbed(CommandContext ctx, bool correct, string kanji, int frequency, string correctUser = "%username%", string meanings = "...")
+        {
+            string scoreString = "";
+            foreach (player player in players)
+            {
+                scoreString += $"\n{player.member.Username}: {player.points}";
+            }
+
+            string embedTitle = correctUser == "%username%" || correctUser.ToLower() == "no one" ? embedTitle = $"No one got it right\nThe answer was {kanji}!" : $"{correctUser} got it right!\nThe answer was {kanji}";
+            DiscordColor embedColour = correct ? DiscordColor.Green : DiscordColor.Red;
+            var infoEmbed = new DiscordEmbedBuilder()
+            {
+                Title = embedTitle,
+                Description = "Meanings: ...\n" +
+                $"Frequency: {frequency}",
+                Color = embedColour,
+                Footer = new DiscordEmbedBuilder.EmbedFooter()
+                {
+                    Text = scoreString
+                },
+                Url = "https://jpdb.io/kanji-by-frequency",
+            };
+
+            try
+            {
+                var contentEmbedMessage = ctx.RespondAsync(embed: infoEmbed).ConfigureAwait(false);
+            }
+            catch
+            {
+                Program.printError("Failed to send start game embed.");
+                ctx.Channel.SendMessageAsync("Something went wrong.").ConfigureAwait(false);
+                return;
+            }
+        }
 
         [Command("grabkanji")]
         [Hidden]

@@ -17,6 +17,7 @@ using JPDB_Bot.Commands;
 using JPDB_Bot.StudyLog;
 using JPDB_Bot.Guess_the_Kanji;
 using JPDB_Bot.ContentRequests;
+using DSharpPlus.CommandsNext.Attributes;
 
 namespace JPDB_Bot
 {
@@ -147,6 +148,7 @@ namespace JPDB_Bot
             Commands.RegisterCommands<newContent>();
             Commands.RegisterCommands<TypeTheKanji>();
             Commands.RegisterCommands<contentRequests>();
+            Commands.RegisterCommands<amazonJapan>();
             await Client.ConnectAsync();
 
             jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);
@@ -235,9 +237,8 @@ namespace JPDB_Bot
             }
             catch { return; }
 
-            DiscordChannel beforeChannel= null;
-            try { beforeChannel = channelChange.Before.Channel; }
-            catch
+            DiscordChannel beforeChannel = null;
+            if (channelChange.Before == null)
             {
                 if (afterChannel == quietStudy)
                 {
@@ -258,6 +259,12 @@ namespace JPDB_Bot
                     catch { return; }
                 }
             }
+
+            //try { beforeChannel = channelChange.Before.Channel; }
+            //catch
+            //{
+                
+            //}
             
 
             try
@@ -283,7 +290,7 @@ namespace JPDB_Bot
                     }
                     catch { }
                 }
-                else if (beforeChannel == quietStudy && afterChannel != beforeChannel)
+                else if ( (beforeChannel == quietStudy && afterChannel != beforeChannel) || (afterChannel == null && beforeChannel == null) )
                 {
                     try
                     {
@@ -457,7 +464,7 @@ namespace JPDB_Bot
                 }
                 
                 return;
-            } else if ((e.Message.Content.ToLower().Contains(" jaw") || e.Message.Content.Contains("630381088404930560")) && e.Guild != null)
+            } else if ((e.Message.Content.ToLower().Contains(" jaw") || e.Message.Content.Contains("630381088404930560")) && e.Guild != null && e.Message.Author.IsBot == false)
             {
                 DiscordMember Jaw = await e.Guild.GetMemberAsync(630381088404930560); //kou: 118408957416046593  //jawgboi: 630381088404930560
                 await Jaw.SendMessageAsync($"You were mentioned by {e.Author.Username}\n> {e.Message.Content}");
@@ -506,7 +513,7 @@ namespace JPDB_Bot
 
             return;
         }
-        
+
         private static async Task New_Message(DiscordClient sender, TypingStartEventArgs e)
         {
             if (e.Channel.Id == 827482133400256542)

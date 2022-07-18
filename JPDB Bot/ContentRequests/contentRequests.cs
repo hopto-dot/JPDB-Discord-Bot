@@ -80,7 +80,7 @@ namespace JPDB_Bot.ContentRequests
             } catch { Program.printMessage("cr message - time span calculation failed"); return; }
             Program.printMessage($"cr time difference: {minutesPast.Minutes}");
 
-            if (crMessage != null && !e.Author.IsBot & minutesPast.Minutes >= 2)
+            if (crMessage != null && !e.Author.IsBot)// && minutesPast.Minutes >= 2)
             {
                 Program.printMessage("cr message about to trigger");
                 var crChannel = e.Guild.GetChannel(980505150676418660);
@@ -114,7 +114,7 @@ namespace JPDB_Bot.ContentRequests
             catch { Program.printMessage("fb message - time span calculation failed"); return; }
             Program.printMessage($"fb time difference: {minutesPast.Minutes}");
 
-            if (fbMessage != null && !e.Author.IsBot & minutesPast.Minutes >= 2)
+            if (fbMessage != null && !e.Author.IsBot)// && minutesPast.Minutes >= 2)
             {
                 Program.printMessage("fb message about to trigger");
                 var fbChannel = e.Guild.GetChannel(850630303403343883);
@@ -124,7 +124,7 @@ namespace JPDB_Bot.ContentRequests
                     fbMessage = null;
                     System.Threading.Thread.Sleep(50);
 
-                    fbMessage = fbChannel.SendMessageAsync("**Pinned message:**\n\nFrom now on please post __misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ issues on our GitHub issue tracker available here:\n<https://github.com/jpdb-io/issue-tracker/issues/new/choose>").Result;
+                    fbMessage = fbChannel.SendMessageAsync("**Pinned message:**\n\nFrom now on please post __misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ or deck issues such as __duplicate entries in the database / wrong covers / wrong MAL links etc__ on our GitHub issue tracker available here:\n<https://github.com/jpdb-io/issue-tracker/issues/new/choose>").Result;
                     fbMessage.ModifyEmbedSuppressionAsync(true);
 
                     LastFbMessage = DateTime.Now;
@@ -136,8 +136,28 @@ namespace JPDB_Bot.ContentRequests
                 }
             }
 
+            string msgContent = e.Message.Content.ToLower().Trim();
+            if (msgContent.Contains("https://jpdb.io/") && e.Author.IsBot == false && e.Author.Id != 118408957416046593 && !msgContent.Contains("label") && !msgContent.Contains("git") && !msgContent.Contains("category") && !msgContent.Contains("kanji") && !msgContent.Contains("stroke"))
+            {
+                string[] disallowedWords = { "misparse", "sentence", "cover", "audio", "duplicate", "wrong", "same", "bad translation", "bad sentence", "bad bilingual", "identical" };
+                bool triggered = false;
+                string triggerWord = "";
+                foreach (string word in disallowedWords)
+                {
+                    if (msgContent.Contains(word))
+                    {
+                        triggerWord = word;
+                        triggered = true;
+                    }
+                }
+
+                if (triggered == true)
+                {
+                    Program.printMessage($"{e.Author.Username} triggered a issue redirect with the word {triggerWord}.");
+                    e.Guild.GetMemberAsync(e.Author.Id).Result.SendMessageAsync("Hello,\n\nYou triggered this message because it seems you reported an issue that should be reported at the link below:\n<https://github.com/jpdb-io/issue-tracker/issues/new/choose>\n\nAs a reminder, the following should be reported on GitHub: misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ or deck issues such as __duplicate entries in the database, wrong covers or wrong MAL links__");
+                }
+            }
 
         }
     }
-
 }
