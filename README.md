@@ -16,6 +16,11 @@ _Note: the bot isn't online 24/7 as it is still in development._
 
 ---
 
+## To Do
+- [ ] adding meanings to kanji quiz
+- [ ] jpdb subreddit scanner
+- [ ] migrate commands to slashcommand
+- [ ] fix !newcontent
 
 ## MIT License
 
