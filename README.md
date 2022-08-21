@@ -5,7 +5,7 @@ Invite the bot **[here](https://discord.com/api/oauth2/authorize?client_id=87424
 
 _Note: the bot isn't online 24/7 as it is still in development._
 
-## Commands:
+## Main commands:
 * !help - get help on commands
 * !japantime - get the time in japan
 * !content - search for content in the jpdb database
@@ -13,6 +13,8 @@ _Note: the bot isn't online 24/7 as it is still in development._
 * !membercount - gets the number of members in a server
 * !hi - get a (usually) warm response from the bot
 * !changelog - [doesn't work yet]
+
+(Not updated)
 
 ---
 
