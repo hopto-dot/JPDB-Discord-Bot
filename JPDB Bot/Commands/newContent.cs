@@ -14,34 +14,56 @@ namespace JPDB_Bot.Commands
 {
     public class newContent : BaseCommandModule
     {
+        int uses = 0;
         [Command("newcontent")]
         [Aliases("nc")]
-        [Cooldown(1, 10, CooldownBucketType.User)]
+        //[Cooldown(1, 10, CooldownBucketType.User)]
         [Description("See how much content is getting added in the next update")]
         public async Task newContentCommand(CommandContext ctx)
         {
-            try
+            if (uses == 0)
             {
-                await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":dogegun:"));
-            } catch
-            {
-                await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":unamused:"));
+                await ctx.RespondAsync("To stop further cyberbullying I will put this command on hold until JawGBoi fixes it").ConfigureAwait(false);
             }
-            
-            ctx.Channel.TriggerTypingAsync();
-            System.Threading.Thread.Sleep(2500);
-            var responseMessage = await ctx.RespondAsync("I'm sorry but I'm going to have to delete that, we don't want to hurt JawGBoi's feelings, do we?").ConfigureAwait(false);
-            System.Threading.Thread.Sleep(5500);
-            await responseMessage.DeleteAsync();
-            System.Threading.Thread.Sleep(700);
-            try
+            else if (uses == 1)
             {
-                await ctx.Message.DeleteAsync();
-            } catch
-            {
-                System.Threading.Thread.Sleep(1500);
-                await ctx.RespondAsync($"You think you're funny don't you, <@{ctx.Message.Author.Id}> {DiscordEmoji.FromName(ctx.Client, ":dogegun:")}").ConfigureAwait(false);
+                await ctx.RespondAsync("**To stop further cyberbullying I will put this command on hold until JawGBoi fixes it**").ConfigureAwait(false);
             }
+            else if (uses == 2)
+            {
+                await ctx.RespondAsync("Please stop :)").ConfigureAwait(false);
+            }
+            else if (uses == 3)
+            {
+                await ctx.RespondAsync("I said stop :)").ConfigureAwait(false);
+            }
+            else if (uses == 4)
+            {
+                await ctx.RespondAsync("Stop it.").ConfigureAwait(false);
+            }
+            else if (uses == 5)
+            {
+                await ctx.RespondAsync("Stop it..").ConfigureAwait(false);
+            }
+            else if (uses >= 6 && uses <= 8)
+            {
+                await ctx.RespondAsync("Stop it...").ConfigureAwait(false);
+            }
+            else if (uses == 9)
+            {
+                await ctx.RespondAsync("I'm not your friend anymore.").ConfigureAwait(false);
+            }
+            else if (uses == 10)
+            {
+                var msg = await ctx.Guild.GetMemberAsync(ctx.Message.Author.Id).Result.SendMessageAsync("I hate you -.-");
+                Program.printMessage($"DM'ed @{ctx.Message.Author.Username} 'I hate you -.-' with msg id {msg.Id}");
+            }
+            else
+            {
+                
+            }
+            uses++;
+            return;
 
             //////
             var handler = new HttpClientHandler();

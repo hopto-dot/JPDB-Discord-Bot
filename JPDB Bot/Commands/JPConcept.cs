@@ -8,29 +8,32 @@ using System.Net;
 using System.Drawing;
 using System.IO;
 using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
 
 namespace JPDB_Bot.Commands
 {
-    public class JPConcept : BaseCommandModule
+    public class JPConcept : ApplicationCommandModule
     {
-        [Command("jpconcept")]
+        [SlashCommand("jpconcept", "Generate a meme using a set venn diagram template")]
         [Cooldown(1, 2, CooldownBucketType.User)]
         [Description("Creates a Japanese concept meme")]
-        public async Task jpConcept(CommandContext ctx, [Description("Word in Japanese")] string japanese = "êHï®", [Description("Romanised Word")] string romanised = "Tabemono", [Description("Meaning in English")] string meaning = "food", [Description("Yellow circle description")] string yellow = "Things that give you nutrition", [Description("Blue circle description")] string blue = "Things you put in your mouth")
+        public async Task jpConcept(InteractionContext ctx, [Option("Japanese", "The word in Japanese")] string japanese, [Option("Romanised", "The word romanised")] string romanised, [Option("English", "An English translation of the word")] string meaning, [Option("Yellow", "The word to appear in the yellow circle")] string yellow, [Option("Blue", "The word to appear in the blue circle")] string blue)
         {
-            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
+            Program.printCommandUse(ctx.User.Username, ctx.ToString());
+            await ctx.CreateResponseAsync("Generating meme...").ConfigureAwait(false);
             try
             {
                 await generateImage(ctx, japanese, romanised, meaning, yellow, blue);
             } catch (Exception ex)
             {
-                await ctx.RespondAsync("Something went wrong").ConfigureAwait(false);
                 Program.printError("Tried to create a jpconcept but failed - " + ex.Message);
             }
         }
 
-        private async Task generateImage(CommandContext ctx, string japanese, string romanised, string meaning, string yellow, string blue)
+        private async Task generateImage(InteractionContext ctx, string japanese, string romanised, string meaning, string yellow, string blue)
         {
+            var webHook = new DiscordWebhookBuilder();
+
             string imageFilePath = "jpconcept.png";
             Bitmap bitmap = (Bitmap)Image.FromFile(imageFilePath); //load the image file
 
@@ -65,7 +68,9 @@ namespace JPDB_Bot.Commands
             } catch (Exception ex)
             {
                 Program.printError($"Something went wrong when saving a jpconcept - {ex.Message}");
-                await ctx.RespondAsync("Something went wrong").ConfigureAwait(false);
+                webHook = new DiscordWebhookBuilder();
+                webHook.WithContent("Something went wrong.");
+                await ctx.EditResponseAsync(webHook);
                 return;
             }
 
@@ -73,9 +78,21 @@ namespace JPDB_Bot.Commands
 
             DiscordMessageBuilder discordMessageBuilder = new DiscordMessageBuilder();
             discordMessageBuilder.WithFile(fileStream);
-            await discordMessageBuilder.SendAsync(ctx.Channel);
 
-            fileStream.Dispose();
+            try
+            {
+                await discordMessageBuilder.SendAsync(ctx.Channel);
+                await ctx.DeleteResponseAsync();
+            } catch
+            {
+                webHook = new DiscordWebhookBuilder();
+                webHook.WithContent("Couldn't send the image.");
+                await ctx.EditResponseAsync(webHook);
+            } finally
+            {
+                fileStream.Dispose();
+            }
+            
         }
     }
 

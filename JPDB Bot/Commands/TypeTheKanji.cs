@@ -35,9 +35,11 @@ namespace JPDB_Bot.Commands
         
         [Command("typethekanji")]
         [Aliases("ttk")]
+        [Cooldown(1, 5, CooldownBucketType.Channel)]
         [Description("Type the kanji game. Type the kanji shown in the image\n\n__Difficulties__:\n * **N5** - 0-100\n * **Easy** - 100-500\n * **Normal** - 500-1000\n * **Medium** - 1000-1500\n * **Hard** - 1500-2000\n * **Very Hard** - 2000-3000\n * **Kanji Deity** - 3000-4000\n\n * **Jouyou Kanji**")]
         public async Task typeTheKanji(CommandContext ctx, string difficulty = "hard")
         {
+            if (difficulty == "skip" || difficulty == "stop") { return; }
             difficulty = difficulty.Trim();
 
             int bottomFreq = 0;
@@ -135,12 +137,12 @@ namespace JPDB_Bot.Commands
             {
                 if (difficulty.Substring(difficulty.Length - 1, 1) == "-" || difficulty.Substring(0, 1) == "-")
                 {
-                    await ctx.RespondAsync("You must a frequency range in the format `lower-upper`!").ConfigureAwait(false); return;
+                    await ctx.RespondAsync("You must provide a frequency range in the format `lower-upper`!").ConfigureAwait(false); return;
                 }
                 string[] difficultySplit = difficulty.Split("-");
                 if (difficultySplit.Length != 2)
                 {
-                    await ctx.RespondAsync("You must a frequency range in the format `lower-upper`!").ConfigureAwait(false); return;
+                    await ctx.RespondAsync("You must provide a frequency range in the format `lower-upper`!").ConfigureAwait(false); return;
                 }
                 try
                 {
@@ -214,10 +216,15 @@ namespace JPDB_Bot.Commands
                 return;
             }
             #endregion
-            System.Threading.Thread.Sleep(5000);
+            //System.Threading.Thread.Sleep(5000);
+            if (waitFor(ctx, "", 5000) == "stop")
+            {
+                goto endGame;
+            }
 
             await startGame(bottomFreq, topFreq, kanjis, fontFamily, ctx, answerTime);
 
+endGame:
             await ctx.Channel.SendMessageAsync($"Game finished!").ConfigureAwait(false);
         }
 
@@ -270,51 +277,53 @@ pickFreq:
                 fileStream.Dispose();
                 #endregion
 
-                InteractivityResult<DiscordMessage> result = await ctx.Channel.GetNextMessageAsync(
-                    message => message.Content.Contains(kanji) == true || message.Content == "!stop" || message.Content == "!skip", TimeSpan.FromMilliseconds(answerTime))
-                .ConfigureAwait(false);
-
-                if (result.Result != null)
+                string response = waitFor(ctx, kanji, answerTime);
+                //possible responses:
+                //stop, skip, correct, "" (correct kanji not given)
+                if (response == "stop")
+                { return; }
+                else if (response == "skip")
                 {
-                    if (result.Result.Content == "!stop")
-                    { return; }
-                    if (result.Result.Content == "!skip")
+                    if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
                     {
-                        if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
-                        {
-                            await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame;
-                        }
-                        else
-                        {
-                            kanjiInfoEmbed(ctx, false, kanji, kanjis[pickedFreq].frequency, "No one");
-                            //await ctx.Channel.SendMessageAsync($"No one got it right, the answer was {kanji} which has a frequency of {kanjis[pickedFreq].frequency}.\nScore is {(points == 0 ? "" : "still")} {points}!").ConfigureAwait(false);
-                            consecutiveFails++;
-                            System.Threading.Thread.Sleep(5000);
-                            continue;
-                        }
+                        await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame;
                     }
+                    else
+                    {
+                        kanjiInfoEmbed(ctx, false, kanji, kanjis[pickedFreq].frequency, "No one");
+                        //await ctx.Channel.SendMessageAsync($"No one got it right, the answer was {kanji} which has a frequency of {kanjis[pickedFreq].frequency}.\nScore is {(points == 0 ? "" : "still")} {points}!").ConfigureAwait(false);
+                        consecutiveFails++;
+                        //System.Threading.Thread.Sleep(5000);
+                        if (waitFor(ctx, "", 5000) == "stop") { return; }
 
+                        continue;
+                    }
+                }
+                else if (response != "") //if someone got the kanji right (response should be set to their username)
+                {
                     points += 1;
-                    kanjiInfoEmbed(ctx, true, kanji, kanjis[pickedFreq].frequency, result.Result.Author.Username);
+                    kanjiInfoEmbed(ctx, true, kanji, kanjis[pickedFreq].frequency, response);
                     //await ctx.Channel.SendMessageAsync($"**{result.Result.Author.Username}** got it right, score is now {points}!\n{kanji} has a frequency of {kanjis[pickedFreq].frequency}").ConfigureAwait(false);
                     consecutiveFails = 0;
                 }
-                else
+                else //
                 {
                     kanjiInfoEmbed(ctx, false, kanji, kanjis[pickedFreq].frequency, "No one");
                     //await ctx.Channel.SendMessageAsync($"No one got it right, the answer was {kanji} which has a frequency of {kanjis[pickedFreq].frequency}").ConfigureAwait(false);
-                    System.Threading.Thread.Sleep(1500);
+                    //System.Threading.Thread.Sleep(1500);
+                    if (waitFor(ctx, "", 1500) == "stop") { return; }
                     if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
                     { await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame; }
-                    
-                    consecutiveFails ++;
+
+                    consecutiveFails++;
                 }
 
                 if (pickedFreqs.Count >= topFreq - bottomFreq + 1)
                 { await ctx.Channel.SendMessageAsync("You have gone through all the kanji!").ConfigureAwait(false); goto endGame; }
                 if (i != 10)
                 {
-                    System.Threading.Thread.Sleep(4000);
+                    //System.Threading.Thread.Sleep(4000);
+                    if (waitFor(ctx, "", 4000) == "stop") { return; }
                 }
             }
 
@@ -376,6 +385,7 @@ pickFreq:
         [Hidden]
         public async Task grabKanji(CommandContext ctx)
         {
+            if (ctx.Message.Author.Id != 630381088404930560) { return; }
             WebClient client = new WebClient();
             string html = client.DownloadString("https://jpdb.io/kanji-by-frequency?show_only=jouyou");
             HtmlDocument document = new HtmlDocument();
@@ -408,8 +418,45 @@ pickFreq:
             File.WriteAllText("jouyoukanjis.json", jsonString);
         }
 
+        public string waitFor(CommandContext ctx, string kanji, int waitTime)
+        {
+            InteractivityResult<DiscordMessage> result = new InteractivityResult<DiscordMessage>();
+            if (kanji == "") //if the function has been called for waiting (excluding kanji)
+            {
+                result = ctx.Channel.GetNextMessageAsync(
+                    message =>
+                       message.Content == "!stop"
+                    || message.Content == "!ttk stop"
+                    , TimeSpan.FromMilliseconds(waitTime)).Result;
+            }
+            else //if the function has been called for waiting (including kanji)
+            {
+                result = ctx.Channel.GetNextMessageAsync(
+                    message =>
+                       message.Content.Contains(kanji) == true
+                    ||message.Content == "!stop"
+                    || message.Content == "!ttk stop"
 
+                    || message.Content == "!skip"
+                    || message.Content == "!ttk skip"
+                    , TimeSpan.FromMilliseconds(waitTime)).Result;
+            }
 
+            if (result.Result != null)
+            {
+                if (result.Result.Content == "!stop" || result.Result.Content == "!ttk stop")
+                { return "stop"; }
+                if (result.Result.Content == "!skip" || result.Result.Content == "!ttk skip")
+                { return "skip"; }
+                if (kanji != "" && result.Result.Content.Contains(kanji))
+                {
+                    return result.Result.Author.Username;
+                }
+            }
+            
+            
+            return "";
+        }
 
         public static Image drawText(String text, Font font, Color textColor, Color backColor)
         {

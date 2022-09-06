@@ -18,19 +18,21 @@ using JPDB_Bot.StudyLog;
 using JPDB_Bot.Guess_the_Kanji;
 using JPDB_Bot.ContentRequests;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.SlashCommands;
 
 namespace JPDB_Bot
 {
     public static class Bot
     {
         public static DiscordClient Client { get; private set; }
+        
+        //class ConfigDiscordClient
+        //{
+        //    public DiscordClient Client { get; private set; }
 
-        class ConfigDiscordClient
-        {
-            public DiscordClient Client { get; private set; }
-
-        }
+        //}
         public static CommandsNextExtension Commands { get; private set; }
+        public static SlashCommandsExtension slashCommands { get; private set; }
 
         public static ConfigJson configJson { get; private set; }
 
@@ -132,7 +134,6 @@ namespace JPDB_Bot
                 Services = services,
             };
             Commands = Client.UseCommandsNext(commandsConfig);
-
             Commands.RegisterCommands<Greeter>();
             Commands.RegisterCommands<FreqGameCommand>();
             Commands.RegisterCommands<ChangeLog>();
@@ -144,11 +145,19 @@ namespace JPDB_Bot
             Commands.RegisterCommands<JPDB_Search>();
             Commands.RegisterCommands<Study_Command>();
             Commands.RegisterCommands<guessTheKanji>();
-            Commands.RegisterCommands<JPConcept>();
+            //Commands.RegisterCommands<JPConcept>();
             Commands.RegisterCommands<newContent>();
             Commands.RegisterCommands<TypeTheKanji>();
             Commands.RegisterCommands<contentRequests>();
             Commands.RegisterCommands<amazonJapan>();
+
+            var slashCommandsConfig = new SlashCommandsConfiguration
+            {
+                Services = services,
+            };
+            slashCommands = Client.UseSlashCommands(slashCommandsConfig);
+            slashCommands.RegisterCommands<JPConcept>();
+            
             await Client.ConnectAsync();
 
             jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);
@@ -525,7 +534,7 @@ namespace JPDB_Bot
 
         private static Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
-            Client.UpdateStatusAsync(new DiscordActivity() { Name = "jpdb.io" }, UserStatus.DoNotDisturb).ConfigureAwait(false);
+            Client.UpdateStatusAsync(new DiscordActivity() { Name = "Maintenance" }, UserStatus.Online).ConfigureAwait(false);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"JPDB Bot is online in {sender.Guilds.Count()} servers");
             Console.ForegroundColor = ConsoleColor.White;

@@ -49,7 +49,7 @@ namespace JPDB_Bot.Commands
 
         [Command("message")]
         [Hidden]
-        public async Task message(CommandContext ctx, string channelID, string message)
+        public async Task message(CommandContext ctx, string channelID, [RemainingText] string message)
         {
             if (ctx.Message.Author.Id != 630381088404930560) { return; }
             try
@@ -82,7 +82,7 @@ namespace JPDB_Bot.Commands
 
         [Command("reply")]
         [Hidden]
-        public async Task reply(CommandContext ctx, string channelID, string messageID, string message)
+        public async Task reply(CommandContext ctx, string channelID, string messageID, [RemainingText] string message)
         {
             if (ctx.Message.Author.Id != 630381088404930560) { return; }
             try
@@ -101,7 +101,7 @@ namespace JPDB_Bot.Commands
 
         [Command("image")]
         [Hidden]
-        public async Task image(CommandContext ctx, string channelID, string message = "")
+        public async Task image(CommandContext ctx, string channelID, [RemainingText] string message = "")
         {
             if (ctx.Message.Author.Id != 630381088404930560) { return; }
             try
@@ -132,7 +132,5 @@ namespace JPDB_Bot.Commands
                 Program.printMessage($"Failed to image message in channel '{channelID}'");
             }
         }
-
-
     }
 }
