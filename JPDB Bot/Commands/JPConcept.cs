@@ -17,7 +17,7 @@ namespace JPDB_Bot.Commands
         [SlashCommand("jpconcept", "Generate a meme using a set venn diagram template")]
         [Cooldown(1, 2, CooldownBucketType.User)]
         [Description("Creates a Japanese concept meme")]
-        public async Task jpConcept(InteractionContext ctx, [Option("Japanese", "The word in Japanese")] string japanese, [Option("Romanised", "The word romanised")] string romanised, [Option("English", "An English translation of the word")] string meaning, [Option("Yellow", "The word to appear in the yellow circle")] string yellow, [Option("Blue", "The word to appear in the blue circle")] string blue)
+        public async Task jpConcept(InteractionContext ctx, [Option("Title", "The word romanised")] string romanised, [Option("English", "An English translation of the word")] string meaning, [Option("Yellow", "The word to appear in the yellow circle")] string yellow, [Option("Blue", "The word to appear in the blue circle")] string blue, [Option("Green", "The word in Japanese")] string japanese)
         {
             Program.printCommandUse(ctx.User.Username, ctx.ToString());
             await ctx.CreateResponseAsync("Generating meme...").ConfigureAwait(false);

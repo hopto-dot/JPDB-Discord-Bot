@@ -21,51 +21,7 @@ namespace JPDB_Bot.Commands
         [Description("See how much content is getting added in the next update")]
         public async Task newContentCommand(CommandContext ctx)
         {
-            if (uses == 0)
-            {
-                await ctx.RespondAsync("To stop further cyberbullying I will put this command on hold until JawGBoi fixes it").ConfigureAwait(false);
-            }
-            else if (uses == 1)
-            {
-                await ctx.RespondAsync("**To stop further cyberbullying I will put this command on hold until JawGBoi fixes it**").ConfigureAwait(false);
-            }
-            else if (uses == 2)
-            {
-                await ctx.RespondAsync("Please stop :)").ConfigureAwait(false);
-            }
-            else if (uses == 3)
-            {
-                await ctx.RespondAsync("I said stop :)").ConfigureAwait(false);
-            }
-            else if (uses == 4)
-            {
-                await ctx.RespondAsync("Stop it.").ConfigureAwait(false);
-            }
-            else if (uses == 5)
-            {
-                await ctx.RespondAsync("Stop it..").ConfigureAwait(false);
-            }
-            else if (uses >= 6 && uses <= 8)
-            {
-                await ctx.RespondAsync("Stop it...").ConfigureAwait(false);
-            }
-            else if (uses == 9)
-            {
-                await ctx.RespondAsync("I'm not your friend anymore.").ConfigureAwait(false);
-            }
-            else if (uses == 10)
-            {
-                var msg = await ctx.Guild.GetMemberAsync(ctx.Message.Author.Id).Result.SendMessageAsync("I hate you -.-");
-                Program.printMessage($"DM'ed @{ctx.Message.Author.Username} 'I hate you -.-' with msg id {msg.Id}");
-            }
-            else
-            {
-                
-            }
-            uses++;
             return;
-
-            //////
             var handler = new HttpClientHandler();
             var client = new HttpClient(handler);
             var request = new HttpRequestMessage(new HttpMethod("GET"), Bot.configJson.ContributerSheetLink);

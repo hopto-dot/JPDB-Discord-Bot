@@ -50,6 +50,7 @@ namespace JPDB_Bot.Commands
 
         [Command("scan")]
         [Cooldown(1, 20, CooldownBucketType.Channel)]
+        [Hidden]
         [Description("Search for content in the JPDB database and get statistics.\nFor example: !content steins gate")]
         public async Task scanDatabase(CommandContext ctx,
             [DescriptionAttribute("Type of scan")] [RemainingText]

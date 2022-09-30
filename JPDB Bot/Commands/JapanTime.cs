@@ -80,12 +80,12 @@ namespace JPDB_Bot.Commands
             DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
             String alemaxTime = localTime.ToString("dd/MM/yyyy HH:mm:ss");
 
-            await ctx.RespondAsync($"CET: {alemaxTime}").ConfigureAwait(false);
+            await ctx.RespondAsync($"Europe Time: {alemaxTime}\n").ConfigureAwait(false);
         }
 
-        [Command("jawgboitime")]
+        [Command("uktime")]
         [Hidden]
-        [Aliases("moekyunkyuntime", "teatime", "moekyuntime", "moetime", "uktime", "britishtime", "utc+1", "utc+1time", "jawtime", "jawgtime", "rebekahtime", "rebtime", "scottishtime", "scotstime", "scottstime", "kitsunetime", "foxtime", "queentime", "bri'ishtime", "briishtime")]
+        [Aliases("moemoekyuntime", "teatime", "moekyuntime", "moetime", "kingtime", "britishtime", "utc+1", "utc+1time", "jawtime", "jawgtime", "jawgboitime", "scottishtime", "scotstime", "queentime", "bri'ishtime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in the UK")]
         public async Task jawgboitime(CommandContext ctx)

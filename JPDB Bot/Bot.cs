@@ -534,7 +534,7 @@ namespace JPDB_Bot
 
         private static Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
         {
-            Client.UpdateStatusAsync(new DiscordActivity() { Name = "Maintenance" }, UserStatus.Online).ConfigureAwait(false);
+            Client.UpdateStatusAsync(new DiscordActivity() { Name = "jpdb.io" }, UserStatus.Online).ConfigureAwait(false);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"JPDB Bot is online in {sender.Guilds.Count()} servers");
             Console.ForegroundColor = ConsoleColor.White;
