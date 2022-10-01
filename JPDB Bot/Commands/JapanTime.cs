@@ -55,7 +55,7 @@ namespace JPDB_Bot.Commands
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check CST time")]
         [Hidden]
-        [Aliases("powtime", "powzukiatime", "lottetime", "jpdbsluttime", "peanutqueentime", "srsqueentime", "100%retentiontime")]
+        [Aliases("powtime", "powzukiatime", "lottetime", "jpdbsluttime", "peanutqueentime", "srsqueentime", "100%retentiontime", "centraltime")]
         public async Task csttime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
@@ -64,7 +64,7 @@ namespace JPDB_Bot.Commands
             DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
             String timeInJapan = localTime.ToString("yyyy/MM/dd HH:mm:ss");
             
-            await ctx.RespondAsync("CET time: " + timeInJapan).ConfigureAwait(false);
+            await ctx.RespondAsync("CST time: " + timeInJapan).ConfigureAwait(false);
         }
 
         [Command("flynttime")]
