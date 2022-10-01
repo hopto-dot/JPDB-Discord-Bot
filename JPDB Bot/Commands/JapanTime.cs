@@ -51,6 +51,22 @@ namespace JPDB_Bot.Commands
             }
         }
 
+        [Command("csttime")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Description("Check CST time")]
+        [Hidden]
+        [Aliases("powtime", "powzukiatime", "lottetime", "jpdbsluttime", "peanutqueentime", "srsqueentime", "100%retentiontime")]
+        public async Task csttime(CommandContext ctx)
+        {
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
+            var info = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+            DateTimeOffset localServerTime = DateTimeOffset.Now;
+            DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
+            String timeInJapan = localTime.ToString("yyyy/MM/dd HH:mm:ss");
+            
+            await ctx.RespondAsync("CET time: " + timeInJapan).ConfigureAwait(false);
+        }
+
         [Command("flynttime")]
         [Aliases("esttime", "utc-5time", "utc-5", "flunttime", "cattime", "500cardsadaytime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
@@ -71,7 +87,7 @@ namespace JPDB_Bot.Commands
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in Germany")]
         [Hidden]
-        [Aliases("germanytime", "deutschtime", "germantime", "cesttime", "kaztime", "frenchtime", "françaistime", "francaistime", "francetime", "cettime", "schnitzeltime", "alextime", "aletime", "n6time", "certifiedn6time")]
+        [Aliases("germanytime", "deutschtime", "germantime", "cesttime", "kaztime", "duditime", "frenchtime", "françaistime", "francaistime", "francetime", "cettime", "schnitzeltime", "alextime", "aletime", "n6time", "certifiedn6time")]
         public async Task alemaxtime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
@@ -85,7 +101,7 @@ namespace JPDB_Bot.Commands
 
         [Command("uktime")]
         [Hidden]
-        [Aliases("moemoekyuntime", "teatime", "moekyuntime", "moetime", "kingtime", "britishtime", "utc+1", "utc+1time", "jawtime", "jawgtime", "jawgboitime", "scottishtime", "scotstime", "queentime", "bri'ishtime")]
+        [Aliases("moemoekyuntime", "teatime", "moetime", "kingtime", "britishtime", "utc+1", "utc+1time", "jawtime", "jawgtime", "jawgboitime", "scottishtime", "scotstime", "queentime", "bri'ishtime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in the UK")]
         public async Task jawgboitime(CommandContext ctx)
