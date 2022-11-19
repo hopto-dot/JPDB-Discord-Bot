@@ -101,7 +101,7 @@ namespace JPDB_Bot.Commands
 
         [Command("uktime")]
         [Hidden]
-        [Aliases("moemoekyuntime", "teatime", "moetime", "kingtime", "britishtime", "utc+1", "utc+1time", "jawtime", "jawgtime", "jawgboitime", "scottishtime", "scotstime", "queentime", "bri'ishtime")]
+        [Aliases("moemoekyuntime", "teatime", "moetime", "kingtime", "britishtime", "utc+1", "utc+1time", "jawtime", "jawgtime", "jawgboitime", "scottishtime", "scotstime", "queentime", "bri'ishtime", "kitunetime", "kitsunetime", "foxtime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
         [Description("Check the time in the UK")]
         public async Task jawgboitime(CommandContext ctx)
@@ -265,11 +265,24 @@ namespace JPDB_Bot.Commands
 
         [Command("tadokutime")]
         [Cooldown(2, 10, CooldownBucketType.User)]
-        [Description("Check the time that Tadoku uses for its leader")]
+        [Description("Check the time that Tadoku uses for its leaderboard")]
         public async Task tadokuTime(CommandContext ctx)
         {
             Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
             var info = TimeZoneInfo.FindSystemTimeZoneById("UTC");
+            DateTimeOffset localServerTime = DateTimeOffset.Now;
+            DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
+            String tadokuTime = localTime.ToString("yyyy/MM/dd HH:mm:ss");
+            await ctx.RespondAsync("Tadoku time: " + tadokuTime).ConfigureAwait(false);
+        }
+
+        [Command("spanishtime")]
+        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Description("Check the time in spain (GMT +1)")]
+        public async Task spanishTime(CommandContext ctx)
+        {
+            Program.printCommandUse(ctx.User.Username, ctx.Message.Content);
+            var info = TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
             DateTimeOffset localServerTime = DateTimeOffset.Now;
             DateTimeOffset localTime = TimeZoneInfo.ConvertTime(localServerTime, info);
             String tadokuTime = localTime.ToString("yyyy/MM/dd HH:mm:ss");

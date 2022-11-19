@@ -18,10 +18,9 @@ namespace JPDB_Bot.Commands
         [Command("newcontent")]
         [Aliases("nc")]
         //[Cooldown(1, 10, CooldownBucketType.User)]
-        [Description("See how much content is getting added in the next update")]
+        [Description("See how much content will be added in the next content update")]
         public async Task newContentCommand(CommandContext ctx)
         {
-            return;
             var handler = new HttpClientHandler();
             var client = new HttpClient(handler);
             var request = new HttpRequestMessage(new HttpMethod("GET"), Bot.configJson.ContributerSheetLink);
@@ -29,70 +28,81 @@ namespace JPDB_Bot.Commands
             var response = await client.SendAsync(request);
             var html = response.Content.ReadAsStringAsync().Result;
 
-            HtmlDocument document = new HtmlDocument();
-            document.LoadHtml(html);
+            int novelsAS = -1;
+            int DramasAS = -1;
+            int AnimeAS = -1;
+            int VNsAS = -1;
 
-            var scriptNodeChildren = document.DocumentNode.ChildNodes[1].ChildNodes[1].ChildNodes;
-            HtmlNode cellsNode = null;
-            foreach (var node in scriptNodeChildren)
+            int novelsBP = -1;
+            int DramasBP = -1;
+            int AnimeBP = -1;
+            int VNsBP = -1;
+            try
             {
-                if (node.Name == "div" & node.Attributes != null)
-                {
-                    Console.WriteLine();
-                    if (node.Attributes.Count == 2)
-                    {
-                        if (node.Attributes[0].Value == "docs-editor-container")
-                        {
-                            cellsNode = node;
-                            goto foundNode; //please don't scold me
-                        }
-                    }
-                }
-                Console.WriteLine();
+                html = snipStart(html, "<td class=\"s16\">");
+                novelsAS = int.Parse(snipTo(html, " "));
+
+                html = snipStart(html, "<td class=\"s16\">");
+                DramasAS = int.Parse(snipTo(html, " "));
+
+                html = snipStart(html, "<td class=\"s16\">");
+                AnimeAS = int.Parse(snipTo(html, " "));
+
+                html = snipStart(html, "<td class=\"s16\">");
+                VNsAS = int.Parse(snipTo(html, " "));
+                //////////////////////////////////////////////
+                html = snipStart(html, "<td class=\"s17\">");
+                novelsBP = int.Parse(snipTo(html, " "));
+
+                html = snipStart(html, "<td class=\"s17\">");
+                DramasBP = int.Parse(snipTo(html, " "));
+
+                html = snipStart(html, "<td class=\"s17\">");
+                AnimeBP = int.Parse(snipTo(html, " "));
+
+                html = snipStart(html, "<td class=\"s17\">");
+                VNsBP = int.Parse(snipTo(html, " "));
             }
-            if (cellsNode == null) { return; }
-foundNode:
-            cellsNode = cellsNode.ChildNodes[0].ChildNodes[5];
-            Console.WriteLine();
+             catch
+            {
+                await ctx.Message.RespondAsync("Something went wrong - Error code `JawGBoiShouldntBeUsingStringManipulation`");
+                return;
+            }
 
-            getCell(cellsNode, "S15");
-
-
-            //var infoEmbed = new DiscordEmbedBuilder()
-            //{
-            //    Title = "New Content",
-            //    Description =
-            //    $"__Novels__\n" +
-            //    $"**Prepared:** {novelsAdd}\n" +
-            //    $"**Not ready yet:** {novelsPreparing}\n" +
-            //    $"\n" +
-            //    $"__Dramas__\n" +
-            //    $"**Prepared:** {dramasAdd}\n" +
-            //    $"**Not ready yet:** {dramasPreparing}\n" +
-            //    $"\n" +
-            //    $"__Anime__\n" +
-            //    $"**Prepared:** {animeAdd}\n" +
-            //    $"**Not ready yet:** {animePreparing}",
-            //    Color = DiscordColor.Blue,
-            //    Footer = new DiscordEmbedBuilder.EmbedFooter()
-            //    {
-            //        Text = "How many of each type of content will be in the next update"
-            //    },
-            //    Url = "https://jpdb.io/prebuilt_decks",
-            //};
-
-            //infoEmbed.AddField("prepared novels", novelsAdd.ToString(), false);
-            //infoEmbed.AddField("prepared dramas", dramasAdd.ToString(), true);
-            //infoEmbed.AddField("preparing novels", novelsPreparing.ToString(), false);
-            //infoEmbed.AddField("preparing dramas", dramasPreparing.ToString(), true);
+            var infoEmbed = new DiscordEmbedBuilder()
+            {
+                Title = "New Content",
+                Description =
+                $"__Novels__\n" +
+                $"**Prepared:** {novelsAS}\n" +
+                $"**Not ready yet:** {novelsBP}\n" +
+                $"\n" +
+                $"__Dramas__\n" +
+                $"**Prepared:** {DramasAS}\n" +
+                $"**Not ready yet:** {DramasBP}\n" +
+                $"\n" +
+                $"__Anime__\n" +
+                $"**Prepared:** {AnimeAS}\n" +
+                $"**Not ready yet:** {AnimeBP}\n" +
+                $"\n" +
+                $"__Visual Novels__\n" +
+                $"**Prepared:** {VNsAS}\n" +
+                $"**Not ready yet:** {VNsBP}\n",
+                Color = DiscordColor.Green,
+                Footer = new DiscordEmbedBuilder.EmbedFooter()
+                {
+                    Text = "How many of each type of content will be in the next content update"
+                },
+                Url = "https://jpdb.io/prebuilt_decks",
+            };
 
             try
             {
-                //var contentEmbedMessage = await ctx.RespondAsync(embed: infoEmbed).ConfigureAwait(false);
+                var contentEmbedMessage = await ctx.RespondAsync(embed: infoEmbed).ConfigureAwait(false);
             }
             catch
             {
-                Program.printError("Failed to send content embed message.");
+                Program.printError("Failed to send newcontent embed message.");
                 return;
             }
 
@@ -100,24 +110,14 @@ foundNode:
             Console.WriteLine();
         }
 
-        private int getCell(HtmlNode node, string className)
+        private string snipStart(string HTML, string startString)
         {
-            Console.WriteLine();
-            node = node.ChildNodes[0].ChildNodes[4].ChildNodes[0].ChildNodes[0].ChildNodes[0].ChildNodes[1];
+            return HTML.Substring(HTML.IndexOf(startString) + startString.Length);
+        }
 
-            foreach (var cell in node.ChildNodes)
-            {
-                if (cell.ChildNodes.Count < 2) { continue; }
-                if (cell.ChildNodes[1] == null || cell.ChildNodes[1].Attributes.Count == 0) { continue; }
-                if (cell.ChildNodes[1].Attributes["class"].Value.Contains("s16"))
-                {
-                    Console.WriteLine();
-                }
-            }
-            //var test = node.ChildNodes.ToList().Where(c => c.ChildNodes[1].Attributes["class"].Value.Contains("s6"));
-
-
-            return 0;
+        private string snipTo(string HTML, string endString)
+        {
+            return HTML.Substring(0, HTML.IndexOf(endString));
         }
 
     }
