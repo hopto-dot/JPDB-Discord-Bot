@@ -1,8 +1,6 @@
 # JPDB-Discord-Bot
 An unofficial Discord bot for **[jpdb](https://jpdb.io/)**'s **[Discord server](https://discord.gg/dmtZdP5Ze2)** that uses **[DSharpPlus](https://github.com/DSharpPlus/DSharpPlus)**.
 
-_Note: the bot isn't online 24/7 as it is still in development._
-
 ## Main commands:
 * !help - get help on commands
 * !japantime - get the time in japan
