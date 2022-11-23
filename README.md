@@ -14,10 +14,9 @@ An unofficial Discord bot for **[jpdb's](https://jpdb.io/)** Discord server that
 ---
 
 ## To Do
-- [ ] adding meanings to kanji quiz
-- [ ] jpdb subreddit scanner
+- [X] fix !newcontent
 - [ ] migrate commands to slashcommand
-- [ ] fix !newcontent
+- [ ] adding meanings to kanji quiz
 
 ## MIT License
 
