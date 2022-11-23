@@ -27,6 +27,7 @@ namespace JPDB_Bot.Commands
         [Command("recommend")]
         [Cooldown(1, 10, CooldownBucketType.Channel)]
         [Description("Get a recommendation of content in the JPDB database")]
+        [Hidden]
         public async Task recommend(CommandContext ctx, string difficulty = "-1")
         {
             loadDatabaseContent();

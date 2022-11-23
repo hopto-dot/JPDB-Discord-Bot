@@ -18,6 +18,7 @@ namespace JPDB_Bot.ContentRequests
 
         [Command("pin")]
         [Aliases("pins", "cr")]
+        [Hidden]
         [Description("Start pinning messages")]
         [Cooldown(3, 10, CooldownBucketType.User)]
         public async Task pinCommand(CommandContext ctx, [RemainingText] string parameters = "")
@@ -131,7 +132,7 @@ namespace JPDB_Bot.ContentRequests
                 if (triggered == true)
                 {
                     Program.printMessage($"{e.Author.Username} triggered a issue redirect with the word {triggerWord}.");
-                    e.Guild.GetMemberAsync(e.Author.Id).Result.SendMessageAsync("Hello,\n\nYou triggered this message because it seems you reported an issue that should be reported at the link below:\n<https://github.com/jpdb-io/issue-tracker/issues/new/choose>\n\nAs a reminder, the following should be reported on GitHub: misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ or deck issues such as __duplicate entries in the database, wrong covers or wrong MAL links__");
+                    await e.Guild.GetMemberAsync(e.Author.Id).Result.SendMessageAsync("Hello,\n\nYou triggered this message because it seems you reported an issue that should be reported at the link below:\n<https://github.com/jpdb-io/issue-tracker/issues/new/choose>\n\nAs a reminder, the following should be reported on GitHub: misparses, no audio, wrong audio, bad bilingual sentence and bad bilingual sentence translation__ or deck issues such as __duplicate entries in the database, wrong covers or wrong MAL links__");
                 }
             }
 

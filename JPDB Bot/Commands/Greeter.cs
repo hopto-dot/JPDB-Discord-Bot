@@ -13,7 +13,7 @@ namespace JPDB_Bot.Commands
         public GreetingsData greetingsData;
 
         [Command("hi")]
-        [Cooldown(2, 10, CooldownBucketType.User)]
+        [Cooldown(2, 9, CooldownBucketType.User)]
         [Description("Get a nice (or bad) response")]
         public async Task SayHi(CommandContext ctx)
         {

@@ -157,7 +157,9 @@ namespace JPDB_Bot
             };
             slashCommands = Client.UseSlashCommands(slashCommandsConfig);
             slashCommands.RegisterCommands<JPConcept>();
-            
+            slashCommands.RegisterCommands<newContentS>();
+            slashCommands.RegisterCommands<RulesS>();
+
             await Client.ConnectAsync();
 
             jpdbGuild = await Client.GetGuildAsync(799891866924875786).ConfigureAwait(false);

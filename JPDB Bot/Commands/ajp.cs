@@ -16,6 +16,7 @@ namespace JPDB_Bot.Commands
         [Aliases("amazonjapan", "amazonjp")]
         [Description("Get information about a book on amazon")]
         [Cooldown(2, 10, CooldownBucketType.User)]
+        [Hidden]
         public async Task ajp(CommandContext ctx, [RemainingText] string userInput = "")
         {
             try
@@ -60,7 +61,6 @@ namespace JPDB_Bot.Commands
                 return;
             }
         }
-
 
         static async void sendEmbed(CommandContext ctx, string contentName, string imageURL, List<string> keywords, string url = "")
         {
