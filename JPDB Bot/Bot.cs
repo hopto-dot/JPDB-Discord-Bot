@@ -159,6 +159,7 @@ namespace JPDB_Bot
             slashCommands.RegisterCommands<JPConcept>();
             slashCommands.RegisterCommands<newContentS>();
             slashCommands.RegisterCommands<RulesS>();
+            slashCommands.RegisterCommands<MemberCountS>();
 
             await Client.ConnectAsync();
 

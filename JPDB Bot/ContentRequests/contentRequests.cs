@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity.Enums;
+using System.Linq;
+using Microsoft.VisualBasic;
 
 namespace JPDB_Bot.ContentRequests
 {
@@ -17,14 +19,13 @@ namespace JPDB_Bot.ContentRequests
         public static DiscordMessage fbMessage = null;
 
         [Command("pin")]
-        [Aliases("pins", "cr")]
+        [Aliases("pins")]
         [Hidden]
         [Description("Start pinning messages")]
         [Cooldown(3, 10, CooldownBucketType.User)]
         public async Task pinCommand(CommandContext ctx, [RemainingText] string parameters = "")
         {
-            var senderID = ctx.Message.Author.Id;
-            if (senderID != 630381088404930560 && senderID != 245371520174522368 && senderID != 399993082806009856 && senderID != 118408957416046593)
+            if (!ctx.Member.Roles.Contains(ctx.Guild.GetRole(852598011929559060)))
             {
                 try
                 {
