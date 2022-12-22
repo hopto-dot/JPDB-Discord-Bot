@@ -1,21 +1,11 @@
 # JPDB-Discord-Bot
-An unofficial Discord bot for **[jpdb's](https://jpdb.io/)** Discord server that uses **[DSharpPlus](https://github.com/DSharpPlus/DSharpPlus)**.
-
-## Main commands:
-* !help - get help on commands
-* !japantime - get the time in japan
-* !content - search for content in the jpdb database
-* !freqgame - play a frequency guess game that uses data from jpdb (Work in Progress)
-* !members - gets the number of members in a server
-* !hi - get a (usually) warm response from the bot
-
-(Not updated)
+An unofficial Discord bot for **[JPDB's](https://jpdb.io/)** Discord server that uses **[DSharpPlus](https://github.com/DSharpPlus/DSharpPlus)**.
 
 ---
 
 ## To Do
 - [X] fix !newcontent
-- [ ] migrate commands to slashcommand
+- [X] migrate commands to slashcommand
 - [ ] adding meanings to kanji quiz
 
 ## MIT License
