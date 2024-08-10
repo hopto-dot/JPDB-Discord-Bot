@@ -1,13 +1,6 @@
 # JPDB-Discord-Bot
 An unofficial Discord bot for **[JPDB's](https://jpdb.io/)** Discord server that uses **[DSharpPlus](https://github.com/DSharpPlus/DSharpPlus)**.
 
----
-
-## To Do
-- [X] fix !newcontent
-- [X] migrate commands to slashcommand
-- [ ] adding meanings to kanji quiz
-
 ## MIT License
 
 #### Copyright (c) 2024 hopto-dot
